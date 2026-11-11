@@ -1,0 +1,38 @@
+name: oracle
+
+# Différentiel Tamis ↔ secpolcompile (TAM-12). HORS PR : déclenchement manuel uniquement,
+# sur un runner ayant le SDP QNX 8.0. Sans SDP, run_oracle.sh sort 3 (prérequis manquant),
+# ce qui n'est pas un échec — le job le signale proprement.
+on:
+  workflow_dispatch:
+    inputs:
+      fixtures:
+        description: 'Dossier de corpus à tester'
+        required: false
+        default: 'fixtures/'
+
+concurrency:
+  group: oracle-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Différentiel contre secpolcompile (si SDP présent)
+        env:
+          QNX_SDP: ${{ secrets.QNX_SDP_PATH }}
+        run: |
+          set +e
+          bash oracle/run_oracle.sh --fixtures "${{ github.event.inputs.fixtures || 'fixtures/' }}"
+          rc=$?
+          case "$rc" in
+            0) echo "OK accord total Tamis ↔ secpolcompile" ;;
+            3) echo "ATTENTION SDP absent sur ce runner — TAM-12 optionnel, différentiel C↔Python reste la preuve" ;;
+            4) echo "INFO dry-run" ;;
+            *) echo "KO désaccord ou erreur (code $rc)"; exit "$rc" ;;
+          esac

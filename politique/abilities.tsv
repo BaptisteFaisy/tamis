@@ -1,0 +1,79 @@
+# ability	portée	autorise	source
+# Inventaire relevé depuis qnx-inventaire-officiel.md (ability_reference.html). La colonne
+# « autorise » est une glose NOMINALE déduite du nom ; la description autoritaire est dans
+# abilities_reference.html — À VÉRIFIER page à page dès accès à la doc officielle.
+able_create	statique (procmgr)	créer/initialiser des abilities	abilities_reference.html
+able_priv	statique (procmgr)	opérations privilégiées génériques	abilities_reference.html
+channel_connect	statique (procmgr)	se connecter à un canal	abilities_reference.html
+child_newapp	statique (procmgr)	spawner un enfant comme nouvelle application	abilities_reference.html
+chroot	statique (procmgr)	chroot	abilities_reference.html
+clockset	statique (procmgr)	régler l'horloge système	abilities_reference.html
+confset	statique (procmgr)	modifier la configuration système	abilities_reference.html
+connection	statique (procmgr)	établir une connexion	abilities_reference.html
+cpumode	statique (procmgr)	changer le mode CPU	abilities_reference.html
+default_timer_tolerance	statique (procmgr)	tolérance de timer par défaut	abilities_reference.html
+event	statique (procmgr)	envoyer/recevoir des événements	abilities_reference.html
+fork	statique (procmgr)	forker	abilities_reference.html
+getid	statique (procmgr)	obtenir des identifiants	abilities_reference.html
+high_resolution_timer	statique (procmgr)	timers haute résolution	abilities_reference.html
+hyp	statique (procmgr)	opérations d'hyperviseur	abilities_reference.html
+interrupt	statique (procmgr)	attacher/configurer des interruptions	abilities_reference.html
+io	statique (procmgr)	opérations d'E/S	abilities_reference.html
+mac_policy	statique (procmgr)	politique MAC	abilities_reference.html
+map_fixed	statique (procmgr)	mmap avec MAP_FIXED	abilities_reference.html
+mem_add	statique (procmgr)	ajouter de la mémoire	abilities_reference.html
+mem_lock	statique (procmgr)	verrouiller la mémoire (mlock)	abilities_reference.html
+mem_peer	statique (procmgr)	mémoire peer	abilities_reference.html
+mem_phys	statique (procmgr)	accéder à la mémoire physique	abilities_reference.html
+mem_special	statique (procmgr)	mémoire spéciale	abilities_reference.html
+mountifs	statique (procmgr)	monter un système de fichiers	abilities_reference.html
+msg_queue	statique (procmgr)	files de messages	abilities_reference.html
+pathspace	statique (procmgr)	espace de chemins	abilities_reference.html
+path_trust	statique (procmgr)	pathtrust (exécution de code fiable)	abilities_reference.html
+pgrp	statique (procmgr)	groupes de processus	abilities_reference.html
+power	statique (procmgr)	gestion de l'alimentation	abilities_reference.html
+priority	statique (procmgr)	priorité d'ordonnancement	abilities_reference.html
+privreg	statique (procmgr)	registre privilégié	abilities_reference.html
+prot_exec	statique (procmgr)	protection en exécution	abilities_reference.html
+prot_write_and_exec	statique (procmgr)	protection write+exec (W^X)	abilities_reference.html
+public_channel	statique (procmgr)	canal public	abilities_reference.html
+reboot	statique (procmgr)	redémarrer le système	abilities_reference.html
+rlimit	statique (procmgr)	limites de ressources	abilities_reference.html
+rlimit_peer	statique (procmgr)	limites de ressources du peer	abilities_reference.html
+rsrcdbmgr	statique (procmgr)	resource database manager	abilities_reference.html
+runstate	statique (procmgr)	état d'exécution	abilities_reference.html
+schedule	statique (procmgr)	ordonnancement	abilities_reference.html
+server_monitor	statique (procmgr)	monitoring serveur	abilities_reference.html
+session	statique (procmgr)	sessions	abilities_reference.html
+setgid	statique (procmgr)	changer le gid	abilities_reference.html
+settypeid	statique (procmgr)	changer le type de sécurité	abilities_reference.html
+setuid	statique (procmgr)	changer l'uid	abilities_reference.html
+sigev_thread	statique (procmgr)	threads sigev	abilities_reference.html
+signal	statique (procmgr)	signaux	abilities_reference.html
+spawn	statique (procmgr)	spawn	abilities_reference.html
+spawn_setgid	statique (procmgr)	spawn avec setgid	abilities_reference.html
+spawn_setuid	statique (procmgr)	spawn avec setuid	abilities_reference.html
+srandom	statique (procmgr)	seed du générateur aléatoire	abilities_reference.html
+swap	statique (procmgr)	swap	abilities_reference.html
+trace	statique (procmgr)	traçage	abilities_reference.html
+umask	statique (procmgr)	umask	abilities_reference.html
+untrusted_exec	statique (procmgr)	exécution non fiable	abilities_reference.html
+wait	statique (procmgr)	attendre un processus enfant	abilities_reference.html
+xprocess_able	statique (procmgr)	abilities cross-process	abilities_reference.html
+xprocess_debug	statique (procmgr)	débogage cross-process	abilities_reference.html
+xprocess_mem_read	statique (procmgr)	lecture mémoire cross-process	abilities_reference.html
+xprocess_query	statique (procmgr)	requête cross-process	abilities_reference.html
+fsevmgr/*	custom (dynamique, par nom)	famille fsevmgr (toutes)	abilities_reference.html
+iofunc/chown	custom (dynamique, par nom)	chown sur iofunc	abilities_reference.html
+iofunc/dup	custom (dynamique, par nom)	dup sur iofunc	abilities_reference.html
+iofunc/exec	custom (dynamique, par nom)	exec sur iofunc	abilities_reference.html
+iofunc/read	custom (dynamique, par nom)	read sur iofunc	abilities_reference.html
+io-gpio/all	custom (dynamique, par nom)	GPIO (toutes)	abilities_reference.html
+network/privport	custom (dynamique, par nom)	port réseau privilégié	abilities_reference.html
+network/rawsocket	custom (dynamique, par nom)	socket raw	abilities_reference.html
+network/reuseport	custom (dynamique, par nom)	réutilisation de port	abilities_reference.html
+network/ipsec	custom (dynamique, par nom)	ipsec	abilities_reference.html
+network/admin	custom (dynamique, par nom)	administration réseau	abilities_reference.html
+network/jailroot	custom (dynamique, par nom)	jail root réseau	abilities_reference.html
+smmu/*	custom (dynamique, par nom)	SMMU (toutes)	abilities_reference.html
+vfs/*	custom (dynamique, par nom)	VFS (toutes)	abilities_reference.html

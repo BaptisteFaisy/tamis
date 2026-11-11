@@ -86,10 +86,18 @@ ERROR  TAMIS_PATH_FOUND  policy.secpol:214  app_tiers -> pompe_critique (3 sauts
 WARN   TAMIS_UNTYPED_PROCESS  policy.secpol:88  processus non typé : /bin/foo
 INFO   TAMIS_DEAD_RULE  policy.secpol:120  règle jamais atteinte : R42
 ```
-Préfixes : `ERROR `, `WARN `, `INFO ` (deux espaces après INFO/WARN pour aligner).
-Séparateur de position : `:`. Chemin : `src -> dst (N sauts)` si path présent.
-Règles : join par `,`. Termine par une ligne de synthèse : `OK` si aucun error,
-sinon `FAILED <n> error(s)`.
+Format exact d'une ligne de verdict (les séparateurs sont **2 espaces**) :
+`<PRÉFIXE><CODE>  <POSITION>  <DÉTAIL>`
+- `<PRÉFIXE>` = label de sévérité (`ERROR`/`WARN`/`INFO`) aligné à gauche sur
+  **5 caractères** puis **2 espaces** (champ de 7 caractères) : `ERROR  `, `WARN   `, `INFO   `.
+- `<CODE>` = nom canonique du verdict (ex. `TAMIS_PATH_FOUND`).
+- `<POSITION>` = `<file>` si présent sinon `?`, puis `:<line>` si line>0, puis
+  `:<column>` si column>0. Ex. `policy.secpol:214`.
+- `<DÉTAIL>` : si un chemin est présent (`path_len>0`) →
+  `<src> -> <dst> (<hops> sauts)` suivi de ` : <règles join ",">` si rules présent ;
+  sinon → le `message`.
+Termine par une ligne de synthèse : `OK` si aucun verdict de sévérité error,
+sinon `FAILED <n> error(s)`. Les lignes sont jointes par `\n`, avec un `\n` final.
 
 ### 5.2 JSON (`tamis_report_json`) — **une ligne par verdict**, compact
 Ordre des clés **figé** : `code`, `sev`, `src`, `dst`, `hops`, `path`, `rules`,
