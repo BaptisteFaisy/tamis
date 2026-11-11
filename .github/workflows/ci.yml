@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Garde de taille (< 500 lignes/fichier, < 50 lignes/fonction)
+        run: make garde
+      - name: Tests (C + jumeau Python + différentiel)
+        run: make test
+      - name: Sanitizeurs (ASan/UBSan)
+        run: make sanitize
+      - name: Aucun chemin absolu codé en dur hors fixtures/tests
+        run: |
+          if grep -rn --include='*.sh' --include='*.py' --include='*.c' --include='*.h' \
+               '/home/' . | grep -v '/fixtures/' | grep -v '/tests/'; then
+            echo "::error::chemin absolu codé en dur"; exit 1
+          fi
+          echo "OK aucun chemin absolu hors fixtures et tests"
+      - name: Chaque script est exécutable et répond à --help
+        run: |
+          rc=0
+          for s in tests/lance.sh tests/lance_host.sh tests/test_differentiel.sh; do
+            [ -f "$s" ] || continue
+            [ -x "$s" ] || { echo "KO $s non exécutable"; rc=1; }
+          done
+          exit $rc

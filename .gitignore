@@ -1,0 +1,20 @@
+# Artefacts de build
+*.o
+*.a
+*.so
+build/
+obj/
+# Binaires de test
+core/tests/test_*
+!core/tests/test_*.c
+# Python
+__pycache__/
+*.pyc
+.venv/
+# Éditeurs
+*.swp
+*~
+.idea/
+.vscode/
+# Artefacts de preuve (régénérés, jamais commités)
+artefacts/
