@@ -1,0 +1,67 @@
+%6u %6u  %c%c%c%c %s
+%6u %6u  %s
+ability data array
+ability(%u)
+ allow
+allow_attach %s %s%s;%s
+allow_attach %s %s%s %s;%s
+allow_link %s %s%s;%s
+blob type != SECPOL_BLOB_DERIVE
+blob type != SECPOL_BLOB_PMA_RULES
+blob type != SECPOL_BLOB_PMR
+blob type != SECPOL_BLOB_QNET
+channel types array
+ deny
+derive_type %s %s %s;
+domains array
+domains array at index %d references rule outside rule array
+duplicate type at index %d
+dynamic abilities:
+dynamic ability index
+dynamic ability names array
+dynamic ability permission array
+EOL
+id to name array
+index array
+ inherit
+invalid type %u in channel type array
+invalid type %u in type array
+ lock
+ %lu-%lu
+mapping array
+mapping array at index %d references string outside string table
+name table
+ no-inherit
+ nonroot
+Non-zero flags
+Non-zero reserved zero field
+NOT immutable
+offset   size  class
+offset   size  type
+path table
+permission array
+permissions:
+policy_id:%x  %s
+range array
+ root
+rule array at index %d references path outside path string table
+rules array
+ <%s>
+%s can connect to:
+%s  crc:%x
+SECPOL_BLOB_CUSTOM_INDEX
+SECPOL_BLOB_CUSTOM %s: OK
+SECPOL_BLOB_DERIVE
+SECPOL_BLOB_PMA_RULES
+SECPOL_BLOB_RANGE
+SECPOL_BLOB_TYPE_MAP
+%s extends beyond blob
+%s has too many elements
+sorted id array
+spawn types:
+%s size too large
+string table
+ subrange
+type array
+type array at index %d references mapping outside mapping array
+Unknown flags

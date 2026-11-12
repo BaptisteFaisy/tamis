@@ -1,0 +1,37 @@
+### uname
+QNX vm1 7.1.0 2022/07/12-18:14:39EDT x86pc x86_64
+
+### version système
+
+### procnto (politique chargée ?)
+     pid name
+       1 proc/boot/procnto-smp-instr 
+   16387 proc/boot/slogger2 
+   28676 proc/boot/pci-server 
+   40965 proc/boot/devb-eide 
+
+### /proc/boot (extrait secpol)
+lrwxrwxrwx   1 root      root              2 Aug 17  2022 ability -> on
+lrwxrwxrwx   1 root      root             14 Aug 11  2022 libsecpol.so -> libsecpol.so.1
+-r-xr-xr-x   1 root      root          21139 Aug 11  2022 libsecpol.so.1
+
+### libsecpol présente
+lrwxrwxrwx   1 root      root             14 Aug 11  2022 /proc/boot/libsecpol.so -> libsecpol.so.1
+-r-xr-xr-x   1 root      root          21139 Aug 11  2022 /proc/boot/libsecpol.so.1
+
+### secpol sans politique
+/proc/boot/secpol.bin: No such file or directory
+rc=1
+
+### secpolmonitor sans option
+Nothing to do, none of the options -a, -p, -q or -u were specified
+rc=1
+
+### secpolmonitor -a (5 s)
+sh: timeout: cannot execute - No such file or directory
+rc=0
+
+### outils hôtes absents
+secpolcompile: absent (outil hôte SDP)
+secpolgenerate: absent (outil hôte SDP)
+secpolpush: absent (outil hôte SDP)

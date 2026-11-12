@@ -2,6 +2,12 @@
 # Inventaire relevé depuis qnx-inventaire-officiel.md (ability_reference.html). La colonne
 # « autorise » est une glose NOMINALE déduite du nom ; la description autoritaire est dans
 # abilities_reference.html — À VÉRIFIER page à page dès accès à la doc officielle.
+#
+# ⚠ Les 66 noms RÉELS extraits d'un binaire QNX 7.1.0 (secpolmonitor) sont dans
+#   preuve/qnx71/abilities-binaires.txt — ils font foi sur l'orthographe et la casse
+#   (ex. SPAWN_SETUID, SETTYPEID, PATH_TRUST, MEM_GLOBAL, V86, QNET, KEYDATA, RCONSTRAINT,
+#   APS_ROOT, SANDBOX, QVM, RUNSTATE_BURST, XTHREAD_THREADCTL, INTERRUPTEVENT, CLOCKPERIOD).
+#   À recouper avec ce tableau dès le SDP 8.0 installé.
 able_create	statique (procmgr)	créer/initialiser des abilities	abilities_reference.html
 able_priv	statique (procmgr)	opérations privilégiées génériques	abilities_reference.html
 channel_connect	statique (procmgr)	se connecter à un canal	abilities_reference.html
