@@ -67,6 +67,34 @@ typedef struct ability_lien {
     struct ability_lien *suivant;
 } ability_lien;
 
+/* Une classe custom déclarée (class file { read write };). */
+typedef struct classe_lien {
+    char  *nom;
+    char **perms;   /* permissions déclarées, terminées par NULL */
+    size_t n_perms;
+    struct classe_lien *suivant;
+} classe_lien;
+
+/* Un attribut déclaré (attribute secure;). */
+typedef struct attr_lien {
+    char *nom;
+    struct attr_lien *suivant;
+} attr_lien;
+
+/* Une plage nommée déclarée (range gpu_mem;). */
+typedef struct range_lien {
+    char *nom;
+    struct range_lien *suivant;
+} range_lien;
+
+/* Le relabel de canal d'un type : soit aucune règle ne relabelle, soit toutes
+   relabelent vers le même type (allow_attach T chemin [T2]). */
+typedef struct relabel_lien {
+    char *type;        /* type dont les canaux sont relabelés */
+    char *cible;       /* NULL : aucune règle de ce type ne relabelle */
+    struct relabel_lien *suivant;
+} relabel_lien;
+
 typedef struct {
     lexique      lx;
     tamis_arena *a;
@@ -76,6 +104,10 @@ typedef struct {
     regle_lien  *regles;
     membre_attr *attributs;
     ability_lien *abilites;
+    classe_lien *classes;
+    attr_lien   *attrs;
+    range_lien  *ranges;
+    relabel_lien *relabels;
     long         n_types;
     long         n_regles;
     int          default_spawn;
@@ -97,8 +129,21 @@ int  attendre_pt(parseur *p, char c);
 int  ajouter_type(parseur *p, char *nom, long ligne);
 int  ajouter_regle(parseur *p, char *src, char *dst, char *ability, long ligne, int obligatoire);
 int  ajouter_membre_attr(parseur *p, char *attr, char *membre);
+int  est_type_declare(parseur *p, const char *nom);
 int  ajouter_ability(parseur *p, char *nom);
 int  est_transition(const char *mot);
+int  ajouter_classe(parseur *p, char *nom);
+int  ajouter_permission(parseur *p, char *nom, char *perm);
+int  ajouter_attribut(parseur *p, char *nom);
+int  ajouter_range(parseur *p, char *nom);
+int  ajouter_relabel(parseur *p, char *type, char *cible, long ligne, long colonne);
+int  classe_declaree(parseur *p, const char *nom);
+int  permission_declaree(parseur *p, const char *classe, const char *perm);
+int  attribut_declare(parseur *p, const char *nom);
+int  range_declaree(parseur *p, const char *nom);
+int  ability_declaree(parseur *p, const char *nom);
+int  plage_valide(const char *plage);
+int  portee_attribut(parseur *p, const char *nom);
 int  p_ability_item(parseur *p, char *src, long ligne_regle);
 int  p_bloc_abilities(parseur *p, char *src, long ligne_regle);
 int  p_sauter_bloc(parseur *p);

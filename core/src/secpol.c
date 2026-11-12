@@ -9,6 +9,7 @@
  */
 #include "tamis/secpol.h"
 #include "secpol_priv.h"
+#include <ctype.h>
 #include <string.h>
 
 /* ————————————————————— erreurs et aides ————————————————————— */
@@ -100,17 +101,6 @@ int ajouter_membre_attr(parseur *p, char *attr, char *membre)
     return 0;
 }
 
-/* Enregistre une ability dynamique déclarée (ability network/bind/privport;). */
-int ajouter_ability(parseur *p, char *nom)
-{
-    ability_lien *n = tamis_arena_alloc(p->a, sizeof *n);
-    if (!n) { return -2; }
-    n->nom = nom;
-    n->suivant = p->abilites;
-    p->abilites = n;
-    return 0;
-}
-
 /* type <nom> [ , <attribut> … ] ; */
 static int p_type(parseur *p)
 {
@@ -126,6 +116,9 @@ static int p_type(parseur *p)
         lx_avance(&p->lx, 1);       /* la virgule */
         char *attr = NULL;
         if (attendre_ident(p, &attr, &lg, &cl) != 0) { return -1; }
+        if (!attribut_declare(p, attr)) {
+            return echec(p, lg, cl, "attribut non déclaré");
+        }
         rc = ajouter_membre_attr(p, attr, nom);
         if (rc != 0) { return rc; }
     }
@@ -136,10 +129,13 @@ static int p_type(parseur *p)
 static int p_ability_decl(parseur *p)
 {
     char *nom = lx_brut(&p->lx, p->a, " \t\r\n;", NULL, NULL);
+    int rc;
     if (nom[0] == '\0') {
         return echec(p, p->lx.ligne, p->lx.colonne, "nom d'ability attendu");
     }
-    if (ajouter_ability(p, nom) != 0) { return -2; }
+    rc = ajouter_ability(p, nom);
+    if (rc == -3) { return echec(p, p->lx.ligne, p->lx.colonne, "ability déjà déclarée"); }
+    if (rc != 0) { return rc; }
     return attendre_pt(p, ';');
 }
 
@@ -156,13 +152,57 @@ static int index_de(const char **noms, size_t n, const char *nom)
     return -1;
 }
 
-static int est_type_declare(parseur *p, const char *nom)
+/*
+ * Valide une plage d'ability : « N », « N-M », « N- » (borne ouverte), et les formes
+ * hexadécimales. Renvoie 1 si valide, 0 si mal formée, 2 si la fin est avant le début.
+ * Un nom non numérique (plage nommée) renvoie 0 : sa déclaration se vérifie séparément.
+ */
+int plage_valide(const char *plage)
 {
-    type_lien *t;
-    for (t = p->types; t; t = t->suivant) {
-        if (strcmp(t->nom, nom) == 0) { return 1; }
+    const char *p = plage;
+    unsigned long debut = 0, fin = 0;
+    int chiffres = 0, hexa = 0;
+    if (!plage || plage[0] == '\0') { return 0; }
+    if (p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
+        hexa = 1;
+        p += 2;
+        if (!isxdigit((unsigned char)*p)) { return 0; }
+        while (isxdigit((unsigned char)*p)) {
+            debut = debut * 16 + (unsigned long)(isdigit((unsigned char)*p)
+                        ? *p - '0' : (tolower((unsigned char)*p) - 'a' + 10));
+            chiffres = 1;
+            p++;
+        }
+    } else {
+        while (isdigit((unsigned char)*p)) {
+            debut = debut * 10 + (unsigned long)(*p - '0');
+            chiffres = 1;
+            p++;
+        }
     }
-    return 0;
+    if (!chiffres) { return 0; }
+    if (*p == '\0') { return 1; }
+    if (*p != '-') { return 0; }
+    p++;
+    if (*p == '\0') { return 1; }              /* borne ouverte : « 96- » */
+    if (p[0] == '0' && (p[1] == 'x' || p[1] == 'X')) {
+        p += 2;
+        if (!isxdigit((unsigned char)*p)) { return 0; }
+        while (isxdigit((unsigned char)*p)) {
+            fin = fin * 16 + (unsigned long)(isdigit((unsigned char)*p)
+                    ? *p - '0' : (tolower((unsigned char)*p) - 'a' + 10));
+            p++;
+        }
+    } else {
+        while (isdigit((unsigned char)*p)) {
+            fin = fin * 10 + (unsigned long)(*p - '0');
+            p++;
+        }
+        if (fin == 0 && !isdigit((unsigned char)*p)) { return 0; }
+    }
+    if (*p != '\0') { return 0; }              /* « 4-6-9 » : reste des caractères */
+    (void)hexa;
+    return (fin < debut) ? 2 : 1;
 }
 
 /* Résout un terme (type ou attribut) en liste de noms de types (terminée par NULL). */
@@ -278,6 +318,33 @@ static int construire(parseur *p)
 
 /* ————————————————————— pilote ————————————————————— */
 
+/* attribute <nom> ; */
+static int p_attribute(parseur *p)
+{
+    char *attr = NULL;
+    long lg = 0, cl = 0;
+    int rc;
+    if (attendre_ident(p, &attr, &lg, &cl) != 0) { return -1; }
+    if (attribut_declare(p, attr)) {
+        return echec(p, lg, cl, "attribut déjà déclaré");
+    }
+    rc = ajouter_attribut(p, attr);
+    if (rc != 0) { return rc; }
+    return attendre_pt(p, ';');
+}
+
+/* range <nom> ; */
+static int p_range(parseur *p)
+{
+    char *rg = NULL;
+    long rgl = 0, rgc = 0;
+    int rc;
+    if (attendre_ident(p, &rg, &rgl, &rgc) != 0) { return -1; }
+    rc = ajouter_range(p, rg);
+    if (rc != 0) { return rc; }
+    return attendre_pt(p, ';');
+}
+
 static int analyser(parseur *p)
 {
     jeton j;
@@ -294,9 +361,10 @@ static int analyser(parseur *p)
             if (p_type(p) != 0) { return -1; }
         } else if (strcmp(j.txt, "ability") == 0) {
             if (p_ability_decl(p) != 0) { return -1; }
-        } else if (strcmp(j.txt, "range") == 0 || strcmp(j.txt, "attribute") == 0) {
-            if (attendre_ident(p, NULL, NULL, NULL) != 0) { return -1; }
-            if (attendre_pt(p, ';') != 0) { return -1; }
+        } else if (strcmp(j.txt, "attribute") == 0) {
+            if (p_attribute(p) != 0) { return -1; }
+        } else if (strcmp(j.txt, "range") == 0) {
+            if (p_range(p) != 0) { return -1; }
         } else if (strcmp(j.txt, "class") == 0) {
             if (p_class(p) != 0) { return -1; }
         } else if (strcmp(j.txt, "allow") == 0) {

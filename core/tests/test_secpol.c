@@ -89,6 +89,7 @@ static void test_abilities_et_plages(void)
 {
     int rc = parse("type a;\nrange gpu_mem;\nattribute secure;\n"
                    "class file { read write };\n"
+                   "ability network/bind/privport;\n"
                    "allow a self:ability {\n"
                    "  mem_phys:1024-4096,0x1200000-0x24000000\n"
                    "  setuid:4-6,23,96-\n"
