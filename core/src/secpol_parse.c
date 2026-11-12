@@ -3,6 +3,24 @@
 #include "secpol_priv.h"
 #include <string.h>
 
+/* Enregistre une règle d'allow SANS arête : elle sert à valider que les types référencés
+   sont bien déclarés (le compilateur refuse « undefined type » même si la règle ne crée
+   aucune transition). dst = NULL marque une simple validation. */
+static int ajouter_regle_valide(parseur *p, char *src, long ligne)
+{
+    regle_lien *r = tamis_arena_alloc(p->a, sizeof *r);
+    if (!r) { return -2; }
+    r->src = src;
+    r->dst = NULL;
+    r->ability = NULL;
+    r->ligne = ligne;
+    r->type_obligatoire = 1;
+    r->suivant = p->regles;
+    p->regles = r;
+    p->n_regles++;
+    return 0;
+}
+
 /* Un élément d'ability : « mot » ou « mot:args ». Les transitions (settypeid, gain_priv)
    portent le graphe de privilège ; les autres ne portent qu'une ability. */
 int p_ability_item(parseur *p, char *src, long ligne_regle)
@@ -164,6 +182,9 @@ int p_allow(parseur *p)
         }
         for (s = src; s; s = s->suivant) {
             rc = p_bloc_abilities(p, s->nom, lg);
+            if (rc != 0) { return rc; }
+            /* La règle doit référencer des types DÉCLARÉS, même sans transition. */
+            rc = ajouter_regle_valide(p, s->nom, lg);
             if (rc != 0) { return rc; }
         }
         return attendre_pt(p, ';');

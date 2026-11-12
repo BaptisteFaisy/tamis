@@ -206,9 +206,16 @@ function parseType(lx, etat) {
   attendrePt(lx, ";");
 }
 
-/* range IDENT ;  |  attribute IDENT ;  |  ability <nom> ; */
+/* range IDENT ;  |  attribute IDENT ; */
 function parseDeclSimple(lx) {
   attendreIdent(lx);
+  attendrePt(lx, ";");
+}
+
+/* ability <nom> ; — déclaration d'ability dynamique (le nom peut contenir « / »). */
+function parseAbilityDecl(lx) {
+  const mot = lx.brut(" \t\r\n;");
+  if (mot.txt === "") throw erreur(mot.ligne, mot.colonne, "nom d'ability attendu");
   attendrePt(lx, ";");
 }
 
@@ -226,6 +233,25 @@ function parseClass(lx) {
   }
   if (n === 0) throw erreur(lx.ligne, lx.colonne, "permission attendue");
   attendrePt(lx, ";");
+}
+
+/* Une plage d'ability : NOMBRE, NOMBRE-NOMBRE, NOMBRE- ou un nom (§3). */
+function validerArg(arg) {
+  const t = arg.txt;
+  if (t.indexOf(":") >= 0) {
+    const parts = t.split(":");
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i] !== "*" && !estNom(parts[i])) {
+        throw erreur(arg.ligne, arg.colonne, "argument d'ability mal formé : « " + t + " »");
+      }
+    }
+    return;
+  }
+  if (estPlage(t) || estNom(t)) return;
+  if (t.length > 1 && t[0] === "0" && (t[1] === "x" || t[1] === "X")) {
+    throw erreur(arg.ligne, arg.colonne, "nombre hexadécimal sans chiffres : « " + t + " »");
+  }
+  throw erreur(arg.ligne, arg.colonne, "argument d'ability mal formé : « " + t + " »");
 }
 
 /* Un élément d'ability : MOT [ ':' liste_args ]. */
@@ -252,25 +278,6 @@ function parseAbilityItem(lx, transitions) {
   }
   lx.sauter();
   if (lx.cur() === ";") lx.avancer(1);
-}
-
-/* Une plage d'ability : NOMBRE, NOMBRE-NOMBRE, NOMBRE- ou un nom. */
-function validerArg(arg) {
-  const t = arg.txt;
-  if (t.indexOf(":") >= 0) {
-    const parts = t.split(":");
-    for (let i = 0; i < parts.length; i++) {
-      if (parts[i] !== "*" && !estNom(parts[i])) {
-        throw erreur(arg.ligne, arg.colonne, "argument d'ability mal formé : « " + t + " »");
-      }
-    }
-    return;
-  }
-  if (estPlage(t) || estNom(t)) return;
-  if (t.length > 1 && t[0] === "0" && (t[1] === "x" || t[1] === "X")) {
-    throw erreur(arg.ligne, arg.colonne, "nombre hexadécimal sans chiffres : « " + t + " »");
-  }
-  throw erreur(arg.ligne, arg.colonne, "argument d'ability mal formé : « " + t + " »");
 }
 
 /* bloc_ability : suite d'éléments jusqu'à '}'. */
@@ -305,8 +312,8 @@ function parseAllow(lx, etat, ligneRegle) {
         ajouterRegle(etat, src[i], transitions[j].dst, transitions[j].ability,
                      ligneRegle, transitions[j].obligatoire);
       }
+      etat.sources.push({ nom: src[i], ligne: ligneRegle });
     }
-    etat.sources.push({ nom: src[0], ligne: ligneRegle });
     return;
   }
   if (mot.txt === "channel") {
@@ -342,7 +349,7 @@ function parseChemin(lx, deuxChemins) {
   if (lx.cur() === "{") {
     lx.avancer(1);
     lx.sauterBloc();
-    attendrePt(lx, ";");
+    attentePt(lx, ";");
     return;
   }
   lx.brut(" \t\r\n;{}");
@@ -448,7 +455,8 @@ function parseProgramme(lx, etat) {
     }
     switch (kw.txt) {
       case "type": parseType(lx, etat); break;
-      case "range": case "attribute": case "ability": parseDeclSimple(lx); break;
+      case "range": case "attribute": parseDeclSimple(lx); break;
+      case "ability": parseAbilityDecl(lx); break;
       case "class": parseClass(lx); break;
       case "allow": parseAllow(lx, etat, kw.ligne); break;
       case "allow_attach": parseChemin(lx, true); break;

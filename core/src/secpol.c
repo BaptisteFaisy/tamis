@@ -208,6 +208,9 @@ static int resoudre_regles(parseur *p, paire_regle **paires_out, size_t *npaires
         if (!srcs) {
             return echec(p, r->ligne, 1, "type source non déclaré");
         }
+        if (r->dst == NULL) {
+            continue; /* simple validation : le type source est déclaré, pas d'arête */
+        }
         dsts = resoudre(p, r->dst, &nd);
         if (!dsts) {
             if (r->type_obligatoire) {
