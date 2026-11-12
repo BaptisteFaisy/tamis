@@ -1,0 +1,58 @@
+# Politique réelle au format QNX 8.0 (syntaxe relevée dans la doc officielle du SDP 8.0,
+# docs : secpol_language.html). C'est le fixture du différentiel oracle (TAM-12) :
+# secpolcompile doit l'accepter, et Tamis doit produire le même verdict.
+#
+# Le graphe de privilège est porté par les ARGUMENTS des abilities de transition :
+#   settypeid:<type>  = ce type peut devenir <type>
+#   gain_priv:<type>  = ce type peut hériter des privilèges de <type>
+# D'où : app_tiers -> journal -> diag -> pompe_critique.
+#
+# La cible d'une règle d'abilities est `self` : un type n'accorde pas les abilities
+# d'un autre type (erreur du compilateur officiel : « cannot target the abilities of
+# another type »).
+
+type app_tiers;
+type journal;
+type diag;
+type pompe_critique;
+type reseau;
+type server3;
+type mm_client;
+type mm_server;
+type file1_t;
+
+# Plage nommée : résolue au boot via le fichier de plages (named_range_file.html).
+range gpu_mem;
+
+# Classe custom : permissions fines sur un objet non-canal (using_security_policy_types.html).
+class file { read write delete execute };
+
+# Premier saut : app_tiers peut devenir journal.
+allow app_tiers self:ability {
+    mem_phys:1024-4096,0x1200000-0x24000000
+    setuid:4,6,23
+    able_create
+    settypeid:journal
+};
+
+# Deuxième saut : journal peut devenir diag, et se connecter au canal de server3.
+allow journal self:ability {
+    nonroot
+    settypeid:diag
+    channel_connect:server3
+};
+
+# Troisième saut : diag hérite des privilèges de pathspace et devient la pompe critique.
+allow diag self:ability {
+    gain_priv:pathspace
+    interrupt:gpu_mem
+    settypeid:pompe_critique
+};
+
+# Connexion de canal : forme sur une ligne, cible un autre type (autorisé pour les canaux).
+allow mm_client mm_server:channel connect;
+
+# Permission de classe custom : file:read:<type>.
+allow app_tiers self:ability {
+    gain_priv: file:read:file1_t
+};

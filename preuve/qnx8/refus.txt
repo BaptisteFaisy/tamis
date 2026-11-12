@@ -1,0 +1,2 @@
+/tmp/invalide.secpol:1:7: error: undefined type 'app_tiers'
+1 error, 0 warnings

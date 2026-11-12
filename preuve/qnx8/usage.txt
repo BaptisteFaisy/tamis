@@ -1,0 +1,11 @@
+secpolcompile: invalid option -- '-'
+secpolcompile: invalid option -- 'h'
+secpolcompile: invalid option -- 'l'
+secpolcompile: option requires an argument -- 'p'
+usage: secpolcompile [-em] [-p policy-id] [-o output-file] file ...
+
+  -e Output as a secpolgenerate event file instead of a binary policy
+  -m Create a mutable policy allowing subsequent versions to be
+     pushed to procnto during development
+  -o Path for output file
+  -p Policy id (see docs)

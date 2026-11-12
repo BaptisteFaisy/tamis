@@ -73,7 +73,7 @@ version 90 s (n°3 du top 10) est montée en 2 h mais ne remplace pas l'exigence
 3 minutes » ; sans prise de vue avant le 12/12, la soumission part sans la preuve vidéo —
 c'est le premier motif de non-quorum identifié dans le top 10. Il faut 1 jour de tournage
 + 1 jour de montage + 1 jour de sous-titres FR/EN + 1 jour de contrôle : le 10/12 est la
-derniere date utile, pas une date commerciale.
+dernière date utile, pas une date commerciale.
 
 **3. Soumission Devpost — le 12/12.**
 Compte d'équipe + 13 champs + lien vidéo + lien dépôt. *Conséquence précise du retard :*

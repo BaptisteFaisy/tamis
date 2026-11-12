@@ -10,22 +10,51 @@ Pages analysées : **1** · productions relevées : **10**
 
 ## secpol_language.html
 
-| Production | Source |
-|---|---|
-| `type <type_name> ;` | secpol_language.html |
-| `attribute <name> { <type_list> } ;` | secpol_language.html |
-| `range <name> ;` | secpol_language.html |
-| `allow <src> <dst>:<ability> { <ability_list> } ;` | secpol_language.html |
-| `allow <src> <dst>:channel connect ;` | secpol_language.html |
-| `allow_attach <type> <path> [ <ftype> : ] ;` | secpol_language.html |
-| `allow_link <type> <path> ;` | secpol_language.html |
-| `default_spawn_type <type> ;` | secpol_language.html |
-| `derive_type <type> <base> ;` | secpol_language.html |
-| `mount_point <uid>:<gid> <perms> ;` | secpol_language.html |
+```
+type <type_name> ;
+```
+
+```
+attribute <name> { <type_list> } ;
+```
+
+```
+range <name> ;
+```
+
+```
+allow <src> <dst>:<ability> { <ability_list> } ;
+```
+
+```
+allow <src> <dst>:channel connect ;
+```
+
+```
+allow_attach <type> <path> [ <ftype> : ] ;
+```
+
+```
+allow_link <type> <path> ;
+```
+
+```
+default_spawn_type <type> ;
+```
+
+```
+derive_type <type> <base> ;
+```
+
+```
+mount_point <uid>:<gid> <perms> ;
+```
 
 ## Vocabulaire relevé
 
 - Mots-clés vus : `allow, allow_attach, allow_link, attribute, default_spawn_type, derive_type, mount_point, range, type`
-- Modificateurs vus : `allow, deny, inherit, lock, no-inherit, nonroot, root, subrange`
+- Modificateurs vus : ``
+- Modificateurs de référence (QNX 7.1 réel) : `allow, deny, inherit, no-inherit, nonroot, root, lock, subrange`
+- Abilities vues (0) : ``
 
 À comparer avec les modificateurs attestés sur QNX 7.1 (`preuve/qnx71/syntaxe-attenstee.txt`) : toute divergence est un signal fort.

@@ -1,0 +1,5 @@
+warning: type app_tiers has unneeded gain_priv abilities:
+    file:read:file1_t
+warning: type diag has unneeded gain_priv abilities:
+    pathspace
+0 errors, 2 warnings

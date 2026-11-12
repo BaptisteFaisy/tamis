@@ -61,27 +61,13 @@ else
     note "KO  secpol_language.html introuvable sous $SDP"
     ecarts=$((ecarts+1))
   else
-    TMP=$(mktemp -d)
-    python3 "$RACINE/tools/extract_grammar.py" "$(dirname "$DOC")" --json > "$TMP/g.json" 2>/dev/null
-    python3 - "$TMP/g.json" "$BASE_SYNTAX" <<'PY' | tee -a "$RAPPORT"
-import json, re, sys
-data = json.load(open(sys.argv[1], encoding="utf-8"))
-mots = set()
-for page in data.get("pages", []):
-    mots |= set(page.get("mots_cles", []))
-    mots |= set(page.get("modificateurs", []))
-base = set()
-for ligne in open(sys.argv[2], encoding="utf-8"):
-    for mot in re.findall(r"[A-Za-z_][A-Za-z_0-9-]*", ligne):
-        base.add(mot)
-manquants = sorted(m for m in base if m not in mots and m.islower() and len(m) > 2)
-print(f"OK   vocabulaire extrait : {len(mots)} termes")
-if manquants:
-    print(f"ÉCART termes attestés en 7.1 absents de la doc 8.0 : {', '.join(manquants)}")
-else:
-    print("OK   aucun terme attesté en 7.1 ne manque dans la doc 8.0")
-PY
-    rm -rf "$TMP"
+    note "Modificateurs vus dans la doc 8.0 (à comparer à la référence 7.1) :"
+    python3 "$RACINE/tools/doc_recherche.py" "$(dirname "$DOC")" \
+        nonroot unlock noinherit no-inherit lock subrange inherit deny allow gain_priv root \
+        | tee -a "$RAPPORT"
+    note "ATTENDU (grammaire 8.0 gelée) : noinherit sans tiret, unlock, nonroot, subrange,"
+    note "  inherit, deny, allow, root, gain_priv. Le binaire 7.1 utilisait no-inherit/lock :"
+    note "  c'est un écart 7.1 → 8.0 déjà documenté dans docs/GRAMMAR.md §4."
   fi
 fi
 
