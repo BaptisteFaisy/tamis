@@ -38,7 +38,7 @@ function makeEl(id, tag) {
 }
 
 const byId = {};
-const TABS = ["playground", "features", "proofs", "submission", "codelab", "ideas", "grammar"];
+const TABS = ["playground", "features", "proofs", "submission", "codelab", "ideas", "bench", "grammar"];
 const CMDS = ["lint", "reach", "proof", "explain", "minimize", "diff", "view"];
 const FMTS = ["text", "json", "md"];
 const LANGS = ["fr", "en"];
@@ -46,8 +46,14 @@ const LANGS = ["fr", "en"];
 TABS.forEach((t) => { byId[t] = makeEl(t, "section"); });
 ["policyA", "policyB"].forEach((t) => { byId[t] = makeEl(t, "textarea"); });
 ["src", "dst", "example"].forEach((t) => { byId[t] = makeEl(t, "select"); });
-["output", "graph", "graphStatus", "pairHint", "exitBadge", "panelB", "copy", "loadExample", "langNote"]
+["output", "graph", "graphStatus", "pairHint", "exitBadge", "panelB", "copy", "loadExample", "langNote",
+  "bridgeUrl", "bridgeToken", "bridgeConnect", "bridgeState", "bridgeInfo", "benchPanels",
+  "runReal", "cmpVerdict", "runCmd", "outC", "outJS", "qnxState", "qnxRefresh", "qnxBoot",
+  "qnxStop", "qnxPresets", "qnxOut"]
   .forEach((t) => { byId[t] = makeEl(t); });
+/* dans le vrai HTML, ces deux panneaux portent l'attribut `hidden` */
+byId.benchPanels.hidden = true;
+byId.panelB.hidden = true;
 
 const navBtns = TABS.map((t) => { const b = makeEl("", "button"); b.dataset.tab = t; return b; });
 const toolBtns = CMDS.map((c) => { const b = makeEl("", "button"); b.dataset.cmd = c; return b; });
@@ -60,12 +66,42 @@ global.localStorage = {
   setItem: (k, v) => { store[k] = String(v); },
 };
 
+/* ——— faux pont local (fetch) pour tester l'onglet « Banc réel » ——— */
+let FETCH_MODE = "ok";
+let TAMIS_C_OUT = "";
+global.AbortController = class { constructor() { this.signal = {}; } abort() {} };
+global.fetch = async (url) => {
+  const path = String(url).replace(/^https?:\/\/[^/]+/, "");
+  if (FETCH_MODE === "down") throw new Error("ECONNREFUSED");
+  let body = { error: "chemin inconnu" };
+  if (path === "/ping") {
+    body = { ok: true, service: "tamis-bridge", version: "0.1.0", cli_c: true,
+      qnx: { configured: true, running: false, ssh_ready: false } };
+  } else if (path === "/presets") {
+    body = FETCH_MODE === "badtoken" ? { error: "jeton absent ou invalide" }
+      : { presets: [{ id: "uname", label: "Version du système QNX" }, { id: "secpol", label: "secpol" }] };
+  } else if (path === "/qnx/status") {
+    body = { configured: true, running: false, ssh_ready: false, status: "arrete" };
+  } else if (path === "/tamis") {
+    body = { stdout: TAMIS_C_OUT, exit: 0, argv: "tamis lint <politique> --format json" };
+  } else if (path === "/qnx/exec") {
+    body = { preset: "uname", label: "Version", remote_cmd: "uname -a",
+      stdout: "QNX vm1 7.1.0 x86pc x86_64\n", stderr: "", exit: 0 };
+  } else if (path === "/qnx/boot") {
+    body = { ok: true, boot: "QNX 7.1 demarre", elapsed_s: 42 };
+  } else if (path === "/qnx/stop") {
+    body = { stdout: "arrete\n", stderr: "", exit: 0 };
+  }
+  return { json: async () => body };
+};
+
 global.document = {
   body: makeEl("", "body"),
   documentElement: makeEl("", "html"),
   getElementById: (id) => byId[id] || (byId[id] = makeEl(id)),
   createElement: (t) => makeEl("", t),
   createElementNS: (ns, t) => makeEl("", t),
+  querySelector: () => null,
   querySelectorAll: (sel) => {
     if (sel === "#nav button") return navBtns;
     if (sel === "#toolbar button") return toolBtns;
@@ -186,4 +222,57 @@ toolBtns.find((b) => b.dataset.cmd === "lint").onclick();
 ck(out.textContent.indexOf("TAMIS_PARSE_ERROR") >= 0, "politique invalide : TAMIS_PARSE_ERROR affiché");
 ck(byId.exitBadge.textContent.indexOf("exit 1") === 0, "politique invalide : exit 1");
 
-console.log(process.exitCode ? "FAILED test_site" : "OK " + checks + " checks");
+/* ——— onglet « Banc réel » : pont local (vrai cœur C + vraie VM QNX) ——— */
+const fs = require("fs");
+FETCH_MODE = "down";                       // auto-détection au chargement : silencieuse
+require(path.join(__dirname, "..", "site", "bridge.js"));
+
+(async () => {
+  await byId.bridgeConnect.onclick();
+  ck(byId.bridgeState.className.indexOf("ko") >= 0, "pont absent : badge en échec");
+  ck(byId.bridgeInfo.textContent.indexOf("tools/tamis-bridge.py") >= 0, "pont absent : mode d'emploi affiché");
+  ck(byId.benchPanels.hidden === true, "pont absent : panneaux masqués");
+
+  FETCH_MODE = "ok";
+  await byId.bridgeConnect.onclick();
+  ck(byId.bridgeState.className.indexOf("ok") >= 0, "pont présent : badge connecté");
+  ck(byId.benchPanels.hidden === false, "pont présent : panneaux affichés");
+  ck(byId.qnxPresets.children.length === 2, "préréglages QNX reçus du pont (liste blanche)");
+  ck(byId.bridgeInfo.textContent.indexOf("0.1.0") >= 0, "version du pont affichée");
+
+  /* comparaison C réel ↔ jumeau JS : même sortie -> identiques */
+  const texte = fs.readFileSync(path.join(__dirname, "..", "fixtures", "attaque.mpf"), "utf8");
+  byId.policyA.value = texte;
+  const Core = global.TamisCore, Rendu = global.TamisRender;
+  const modele = Core.parseModel(texte);
+  TAMIS_C_OUT = Rendu.renderJson(Core.lint(modele, "policy.mpf").verdicts, Core.verdictName, Core.sevName);
+  await byId.runReal.onclick();
+  ck(byId.outJS.textContent.trim() === TAMIS_C_OUT.trim(), "sortie du jumeau JS conforme");
+  ck(byId.cmpVerdict.className.indexOf("ok") >= 0, "C et JS identiques -> badge vert");
+  ck(byId.outC.textContent.indexOf("exit 0") >= 0, "code de retour du vrai binaire affiché");
+
+  /* divergence simulée : le badge doit passer au rouge */
+  TAMIS_C_OUT = '{"code":"TAMIS_OK","sev":"info","message":"autre chose"}\n';
+  await byId.runReal.onclick();
+  ck(byId.cmpVerdict.className.indexOf("ko") >= 0, "divergence C/JS détectée -> badge rouge");
+
+  /* banc QNX : commande sur liste blanche, démarrage, arrêt */
+  byId.qnxPresets.children[0].onclick();
+  await new Promise((r) => setTimeout(r, 10));
+  ck(byId.qnxOut.textContent.indexOf("QNX vm1 7.1.0") >= 0, "sortie réelle de la VM affichée");
+  ck(byId.qnxOut.textContent.indexOf("uname -a") >= 0, "commande distante affichée");
+  await byId.qnxRefresh.onclick();
+  ck(byId.qnxState.textContent.length > 0, "état du banc QNX renseigné");
+  await byId.qnxBoot.onclick();
+  ck(byId.qnxOut.textContent.indexOf("elapsed_s") >= 0, "démarrage VM : réponse du pont affichée");
+  await byId.qnxStop.onclick();
+  ck(byId.qnxOut.textContent.indexOf("arrete") >= 0, "arrêt VM : sortie affichée");
+
+  /* jeton refusé */
+  FETCH_MODE = "badtoken";
+  await byId.bridgeConnect.onclick();
+  ck(byId.bridgeState.className.indexOf("ko") >= 0, "mauvais jeton : connexion refusée");
+
+  console.log(process.exitCode ? "FAILED test_site" : "OK " + checks + " checks");
+  process.exit(process.exitCode || 0);
+})();

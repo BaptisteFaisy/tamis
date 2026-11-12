@@ -28,6 +28,7 @@
       <button data-tab="submission"><span data-lang="fr">Soumission</span><span data-lang="en">Submission</span></button>
       <button data-tab="codelab">Codelab</button>
       <button data-tab="ideas"><span data-lang="fr">100 idées</span><span data-lang="en">100 ideas</span></button>
+      <button data-tab="bench"><span data-lang="fr">Banc réel</span><span data-lang="en">Real bench</span></button>
       <button data-tab="grammar"><span data-lang="fr">Grammaire &amp; preuve QNX</span><span data-lang="en">Grammar &amp; QNX evidence</span></button>
     </nav>
     <div class="lang" id="lang">
@@ -532,6 +533,78 @@ OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div></
 <!-- IDEES:END -->
 </section>
 
+<!-- ══════════════════ BANC RÉEL ══════════════════ -->
+<section id="bench" class="tab">
+  <h2><span data-lang="fr">Banc réel — le vrai cœur C et la vraie VM QNX</span><span data-lang="en">Real bench — the actual C core and the actual QNX VM</span></h2>
+  <p class="lead">
+    <span data-lang="fr">Ce site est <b>statique</b> (GitHub Pages) : il ne peut héberger ni le binaire C, ni un hyperviseur, ni l'image QNX de 6 Gio (non redistribuable). Le <b>pont local</b> comble l'écart : il tourne sur <b>ta</b> machine, sur <code>127.0.0.1</code> uniquement, et le site s'y connecte quand tu le décides. Sans pont, tout l'onglet Playground reste pleinement fonctionnel via le jumeau JS.</span>
+    <span data-lang="en">This site is <b>static</b> (GitHub Pages): it can host neither the C binary, nor a hypervisor, nor the 6 GiB QNX image (not redistributable). The <b>local bridge</b> closes that gap: it runs on <b>your</b> machine, on <code>127.0.0.1</code> only, and the site connects to it when you decide. Without the bridge, the whole Playground still works through the JS twin.</span>
+  </p>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h3><span data-lang="fr">1 · Connexion au pont</span><span data-lang="en">1 · Connect to the bridge</span></h3>
+      <span id="bridgeState" class="badge warn"><span data-lang="fr">non connecté</span><span data-lang="en">not connected</span></span>
+    </div>
+    <pre class="cmd">python3 tools/tamis-bridge.py</pre>
+    <p class="hint">
+      <span data-lang="fr">Le pont imprime un <b>jeton</b> au démarrage — colle-le ici. Sans jeton, aucun site ne peut rien faire, même en devinant le port.</span>
+      <span data-lang="en">The bridge prints a <b>token</b> at startup — paste it here. Without it no site can do anything, even guessing the port.</span>
+    </p>
+    <div class="row">
+      <input id="bridgeUrl" value="http://127.0.0.1:8787" aria-label="URL du pont" spellcheck="false">
+      <input id="bridgeToken" type="password" placeholder="X-Tamis-Token" aria-label="Jeton">
+      <button id="bridgeConnect"><span data-lang="fr">Connecter</span><span data-lang="en">Connect</span></button>
+    </div>
+    <div id="bridgeInfo" class="hint"></div>
+  </div>
+
+  <div id="benchPanels" hidden>
+    <div class="two">
+      <div class="panel">
+        <div class="panel-head">
+          <h3><span data-lang="fr">2 · Cœur C réel vs jumeau navigateur</span><span data-lang="en">2 · Real C core vs browser twin</span></h3>
+          <span id="cmpVerdict" class="badge" hidden></span>
+        </div>
+        <p class="hint">
+          <span data-lang="fr">Même politique, même commande : à gauche le <b>vrai binaire C</b> (<code>build/tamis</code>) via le pont, à droite le <b>jumeau JS</b> de ce site. Les deux doivent être identiques — c'est le différentiel, en direct.</span>
+          <span data-lang="en">Same policy, same command: on the left the <b>real C binary</b> (<code>build/tamis</code>) through the bridge, on the right this site's <b>JS twin</b>. Both must match — that is the differential, live.</span>
+        </p>
+        <div class="row"><button id="runReal"><span data-lang="fr">Comparer maintenant</span><span data-lang="en">Compare now</span></button><span class="hint" id="runCmd"></span></div>
+        <h4>C — build/tamis</h4><pre id="outC" class="output short"></pre>
+        <h4>JS — <span data-lang="fr">navigateur</span><span data-lang="en">browser</span></h4><pre id="outJS" class="output short"></pre>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3><span data-lang="fr">3 · Banc QNX réel</span><span data-lang="en">3 · Real QNX bench</span></h3>
+          <span id="qnxState" class="badge warn">?</span>
+        </div>
+        <div class="row">
+          <button id="qnxRefresh"><span data-lang="fr">État</span><span data-lang="en">Status</span></button>
+          <button id="qnxBoot"><span data-lang="fr">Démarrer la VM</span><span data-lang="en">Boot VM</span></button>
+          <button id="qnxStop"><span data-lang="fr">Arrêter</span><span data-lang="en">Stop</span></button>
+        </div>
+        <p class="hint">
+          <span data-lang="fr">Commandes <b>sur liste blanche</b> uniquement (le navigateur choisit un nom, jamais une commande). Démarrage ≈ 1 min, arrêt immédiat. Ce sont de vraies sorties d'un vrai QNX Neutrino.</span>
+          <span data-lang="en"><b>Whitelisted</b> commands only (the browser picks a name, never a command). Boot ≈ 1 min, stop immediate. These are real outputs from a real QNX Neutrino.</span>
+        </p>
+        <div class="toolbar" id="qnxPresets"></div>
+        <pre id="qnxOut" class="output short"></pre>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3><span data-lang="fr">Ce que le banc prouve — et ce qu'il attend</span><span data-lang="en">What the bench proves — and what it waits for</span></h3>
+      <ul>
+        <li><span data-lang="fr"><b>Prouvé maintenant</b> : le navigateur ne triche pas — le jumeau JS rend exactement ce que rend le vrai binaire C, sur ta machine, à la demande.</span><span data-lang="en"><b>Proved now</b>: the browser is not faking it — the JS twin renders exactly what the real C binary renders, on your machine, on demand.</span></li>
+        <li><span data-lang="fr"><b>Prouvé maintenant</b> : l'environnement QNX est réel — version du noyau, <code>libsecpol</code>, outils <code>secpol</code>/<code>secpolmonitor</code> et leur comportement exact sans politique.</span><span data-lang="en"><b>Proved now</b>: the QNX environment is real — kernel version, <code>libsecpol</code>, the <code>secpol</code>/<code>secpolmonitor</code> tools and their exact behaviour with no policy loaded.</span></li>
+        <li><span data-lang="fr"><b>En attente du SDP 8.0</b> : la boucle <i>prédit ↔ observé</i>. Il manque <code>secpolcompile</code> (outil hôte) pour produire un <code>secpol.bin</code>, l'insérer dans l'IFS et faire constater par QNX les refus que Tamis prédit. Le harnais <code>oracle/</code> est déjà écrit.</span><span data-lang="en"><b>Waiting for the 8.0 SDP</b>: the <i>predicted ↔ observed</i> loop. <code>secpolcompile</code> (a host tool) is missing to produce a <code>secpol.bin</code>, insert it in the IFS and have QNX confirm the denials Tamis predicts. The <code>oracle/</code> harness is already written.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <!-- ══════════════════ GRAMMAIRE & CONTRAT ══════════════════ -->
 <section id="grammar" class="tab">
   <h2><span data-lang="fr">Ce qui est gelé, ce qui est honnêtement en attente</span><span data-lang="en">What is frozen, and what is honestly pending</span></h2>
@@ -608,5 +681,6 @@ OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div></
 <script src="tamis-core.js"></script>
 <script src="tamis-render.js"></script>
 <script src="app.js"></script>
+<script src="bridge.js"></script>
 </body>
 </html>

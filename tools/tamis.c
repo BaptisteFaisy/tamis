@@ -15,7 +15,7 @@
 #define MAX_VERDICTS 8192
 
 typedef struct {
-    const char *cmd, *file, *file2, *src, *dst, *format;
+    const char *cmd, *file, *file2, *src, *dst, *format, *label;
 } args;
 
 /* Politique chargée : texte, arène, modèle construit, empreinte. */
@@ -34,8 +34,9 @@ static void usage(void)
         "tamis " TAMIS_VERSION " — analyse statique de politiques de sécurité QNX\n"
         "Usage : tamis <commande> <fichier> [options]\n"
         "Commandes : lint | reach | proof | minimize | diff <fichier2> | view | version\n"
-        "Options : --src <type> --dst <type> --format text|json|md\n"
-        "  reach/proof : --src et --dst requis. diff : <fichier>=base, <fichier2>=candidat.\n"
+        "Options : --src <type> --dst <type> --format text|json|md --label <nom>\n"
+        "  reach/proof/explain : --src et --dst requis. diff : <fichier>=base, <fichier2>=candidat.\n"
+        "  --label : nom rapporté dans les verdicts (défaut : le chemin du fichier).\n"
         "  view : émet le graphe de privilèges en JSON (pour le visualiseur HTML).\n",
         stderr);
 }
@@ -87,11 +88,18 @@ static int parse_args(int argc, char **argv, args *a)
         if (!strcmp(argv[i], "--src") && i + 1 < argc) { a->src = argv[++i]; }
         else if (!strcmp(argv[i], "--dst") && i + 1 < argc) { a->dst = argv[++i]; }
         else if (!strcmp(argv[i], "--format") && i + 1 < argc) { a->format = argv[++i]; }
+        else if (!strcmp(argv[i], "--label") && i + 1 < argc) { a->label = argv[++i]; }
         else if (argv[i][0] != '-') {
             if (!a->file) { a->file = argv[i]; } else { a->file2 = argv[i]; }
         } else { fprintf(stderr, "KO option inconnue : %s\n", argv[i]); return -1; }
     }
     return (strcmp(a->cmd, "version") && !a->file) ? -1 : 0;
+}
+
+/* Nom rapporté dans les verdicts : --label s'il est fourni, sinon le chemin du fichier. */
+static const char *nom_analyse(const args *a)
+{
+    return a->label ? a->label : a->file;
 }
 
 static void render(const tamis_verdict *v, size_t n, const args *a, const char *sha)
@@ -102,7 +110,7 @@ static void render(const tamis_verdict *v, size_t n, const args *a, const char *
     char *buf;
     int md = !strcmp(a->format, "md");
     now_iso(ts);
-    meta.policy_file = a->file;
+    meta.policy_file = nom_analyse(a);
     meta.policy_sha256 = sha;
     meta.timestamp_utc = ts;
     meta.tamis_version = TAMIS_VERSION;
@@ -230,7 +238,7 @@ static int cmd_engine(const args *a)
         return 1;
     }
     vs = calloc(MAX_VERDICTS, sizeof *vs);
-    tamis_out_init(&o, vs, MAX_VERDICTS, &L.arena, a->file);
+    tamis_out_init(&o, vs, MAX_VERDICTS, &L.arena, nom_analyse(a));
     rc = run_engine(a, &L.model, NULL, &o);
     if (rc < 0) {
         fprintf(stderr, "KO moteur '%s' en erreur (type inconnu ?)\n", a->cmd);
@@ -274,7 +282,7 @@ static int cmd_diff(const args *a)
         return rc == -1 ? 1 : 2;
     }
     vs = calloc(MAX_VERDICTS, sizeof *vs);
-    tamis_out_init(&o, vs, MAX_VERDICTS, &base.arena, a->file);
+    tamis_out_init(&o, vs, MAX_VERDICTS, &base.arena, nom_analyse(a));
     tamis_diff(&o, &base.model, &cand.model);
     render(o.v, o.n, a, base.sha);
     rc = tamis_report_exit_code(o.v, o.n);

@@ -128,6 +128,29 @@ erreur de syntaxe).
 make site     # régénère site/ et docs/devpost-form.md depuis leurs sources
 ```
 
+## Banc réel — le vrai cœur C et la vraie VM QNX derrière le site
+
+Un site statique ne peut héberger ni le binaire C, ni un hyperviseur, ni l'image QNX de 6 Gio
+(non redistribuable). Le **pont local** comble l'écart : il tourne sur ta machine, sur
+`127.0.0.1` uniquement, et l'onglet **Banc réel** du site s'y connecte.
+
+```
+make cli
+python3 tools/tamis-bridge.py     # imprime l'URL et le jeton
+```
+
+Il donne deux choses : le **différentiel en direct** (même politique analysée par le vrai
+`build/tamis` et par le jumeau JS du navigateur, affichés côte à côte, avec verdict
+identique/différent) et le **banc QNX réel** (démarrage/arrêt de la VM, commandes sur liste
+blanche : `uname`, `secpol`, `secpolmonitor`, `libsecpol`, `hosttools`, `procnto`).
+
+Sécurité en quatre couches : écoute `127.0.0.1` seule, **jeton aléatoire** obligatoire,
+`Origin` contrôlée, aucune commande libre (listes blanches + `subprocess` sans shell + fichier
+temporaire). Tout est vérifié par `tests/test_bridge.sh` (15 vérifications, dont « injoignable
+depuis l'interface réseau »). Détails : [`docs/BANC-REEL.md`](docs/BANC-REEL.md).
+
+Sans pont, le Playground reste entièrement fonctionnel via le jumeau JS.
+
 ## Licence
 
 MIT — voir [`LICENSE`](LICENSE).
