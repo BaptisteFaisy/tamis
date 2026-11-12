@@ -1,0 +1,9 @@
+# Banc QNX — secrets et artefacts, jamais commités
+.pw
+.askpass.sh
+qemu.pid
+qemu.out
+serial.log
+mon.sock
+*.img
+*.img.zst

@@ -586,8 +586,8 @@ OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div></
           <button id="qnxStop"><span data-lang="fr">Arrêter</span><span data-lang="en">Stop</span></button>
         </div>
         <p class="hint">
-          <span data-lang="fr">Commandes <b>sur liste blanche</b> uniquement (le navigateur choisit un nom, jamais une commande). Démarrage ≈ 1 min, arrêt immédiat. Ce sont de vraies sorties d'un vrai QNX Neutrino.</span>
-          <span data-lang="en"><b>Whitelisted</b> commands only (the browser picks a name, never a command). Boot ≈ 1 min, stop immediate. These are real outputs from a real QNX Neutrino.</span>
+          <span data-lang="fr">Commandes <b>sur liste blanche</b> uniquement (le navigateur choisit un nom, jamais une commande). Démarrage ≈ 30 s avec KVM (plusieurs minutes en émulation logicielle), arrêt immédiat. Ce sont de vraies sorties d'un vrai QNX Neutrino.<br>Le banc peut tourner <b>sur le poste</b> ou <b>sur le serveur</b> : <code>TAMIS_QNX_HOST=r630 python3 tools/tamis-bridge.py</code> — voir <code>banc/LISEZMOI.md</code>.</span>
+          <span data-lang="en"><b>Whitelisted</b> commands only (the browser picks a name, never a command). Boot ≈ 30 s with KVM (several minutes under software emulation), stop immediate. These are real outputs from a real QNX Neutrino.<br>The bench can run <b>on your workstation</b> or <b>on the server</b>: <code>TAMIS_QNX_HOST=r630 python3 tools/tamis-bridge.py</code> — see <code>banc/LISEZMOI.md</code>.</span>
         </p>
         <div class="toolbar" id="qnxPresets"></div>
         <pre id="qnxOut" class="output short"></pre>

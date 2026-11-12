@@ -152,7 +152,9 @@ def main(argv: list) -> int:
     print(f"  URL     : http://127.0.0.1:{a.port}", flush=True)
     print(f"  JETON   : {Pont.token}", flush=True)
     print(f"  cœur C  : {'présent' if B.CLI.is_file() else 'absent (make cli au premier appel)'}", flush=True)
-    print(f"  banc QNX: {'configuré — ' + ('en marche' if qnx.get('running') else 'arrêté') if qnx.get('configured') else 'non configuré (TAMIS_QNX_VM)'}")
+    print(f"  banc QNX: {B.banc_label()} — " + (
+        ("en marche" if qnx.get("running") else "arrêté") if qnx.get("configured")
+        else "non configuré (TAMIS_QNX_VM ou TAMIS_QNX_HOST)"), flush=True)
     print("  Colle le jeton dans l'onglet « Banc réel » du site. Ctrl-C pour arrêter.")
     print("=" * 68, flush=True)
     try:

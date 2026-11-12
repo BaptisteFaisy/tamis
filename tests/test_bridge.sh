@@ -73,6 +73,14 @@ ckc "$(curl -s --max-time 5 "$BASE/presets" -H "X-Tamis-Token: $JETON")" '"uname
 out=$(curl -s --max-time 10 -X POST "$BASE/qnx/exec" -H 'Content-Type: application/json' -H "X-Tamis-Token: $JETON" -d '{"preset":"reboot"}')
 ckc "$out" 'refusé' "préréglage inconnu refusé"
 
+# 9b. l'état du banc est rapporté (local, distant ou non configuré) — jamais de plantage
+ckc "$(curl -s --max-time 20 "$BASE/qnx/status" -H "X-Tamis-Token: $JETON")" '"banc"' "état du banc QNX rapporté"
+
+# 9c. banc distant injoignable : dégradation propre, pas d'exception
+out=$(TAMIS_QNX_HOST=hote-inexistant.invalid TAMIS_QNX_DIR='~/x' timeout 60 python3 -c \
+  'import sys; sys.path.insert(0,"tools"); import bridge_backend as B; print(B.qnx_status().get("running"))' 2>&1 | tail -1)
+ck "$out" "False" "banc distant injoignable : dégradation propre"
+
 # 10. n'écoute PAS sur les interfaces réseau
 IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 if [ -n "${IP:-}" ] && [ "$IP" != "127.0.0.1" ]; then

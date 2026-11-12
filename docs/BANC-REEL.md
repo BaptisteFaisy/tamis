@@ -100,6 +100,23 @@ attendant. C'est **le seul maillon manquant** de la démonstration complète.
 | VM « non configurée » | dossier introuvable | `--vm /chemin/vers/qnx71-vm` ou `TAMIS_QNX_VM=…` |
 | `qnx/boot` dépasse le délai | l'invité met du temps ou SSH n'est pas up | réessayer ; `./qnx-vm.sh status` côté dépôt du banc |
 
+## Banc déporté sur le serveur (r630)
+
+L'émulateur peut tourner **sur le serveur** plutôt que sur le poste : il y reste disponible
+en permanence, ne mobilise pas la RAM du poste, et le pont le pilote à distance.
+
+```sh
+TAMIS_QNX_HOST=r630 python3 tools/tamis-bridge.py     # banc distant
+TAMIS_QNX_VM=~/Bureau/qnx71-vm python3 tools/tamis-bridge.py   # banc local (défaut)
+```
+
+`TAMIS_QNX_DIR` (défaut `~/qnx71-vm`) indique le dossier du banc sur l'hôte distant. Les
+commandes distantes passent par `ssh` en `BatchMode`, **citées une par une** (`shlex.quote`) :
+rien n'est interpolé dans un shell, et seules les listes blanches sont exécutées.
+
+Installation complète du banc côté serveur (harnais, image, service utilisateur systemd,
+empreintes, les **2 commandes `sudo`** nécessaires) : **[`banc/LISEZMOI.md`](../banc/LISEZMOI.md)**.
+
 ## Tests
 
 ```sh

@@ -1,0 +1,24 @@
+[Unit]
+# SPDX-License-Identifier: MIT
+# Banc QNX de Tamis — service utilisateur systemd (aucun sudo nécessaire).
+# Installation : voir banc/LISEZMOI.md
+Description=Banc QNX 7.1 pour Tamis (invite QEMU)
+After=network-online.target
+Wants=network-online.target
+# évite une boucle de relance si qemu n'est pas encore installé
+StartLimitIntervalSec=600
+StartLimitBurst=3
+
+[Service]
+Type=simple
+ExecStart=%h/qnx71-vm/qnx-vm.sh foreground
+ExecStop=%h/qnx71-vm/qnx-vm.sh stop
+Restart=on-failure
+RestartSec=15
+TimeoutStartSec=120
+TimeoutStopSec=30
+# L'invite ecrit sur son disque : on ne tue pas brutalement.
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=default.target

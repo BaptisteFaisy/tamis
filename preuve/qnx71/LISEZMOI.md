@@ -18,10 +18,18 @@ chercher sur un système QNX réel.
 |---|---|
 | Système invité | QNX Neutrino **7.1.0** (2022/07/12-18:14:39EDT), x86pc, x86_64 |
 | Image | communautaire `autosarai/qemu_qnx7_1`, disque brut 3 partitions QNX (b1/b2/b3) |
-| Taille | 6 500 959 232 octets (6,05 GiB) |
-| **SHA-256 de l'image** | `03180f99d38af98066d459427ebbe41859b10de6eb9f10763c02c5b4a50c3d43` |
+| Taille | 6 500 959 232 octets (6,05 Gio) |
+| **SHA-256 avant démarrage** | `03180f99d38af98066d459427ebbe41859b10de6eb9f10763c02c5b4a50c3d43` |
+| **SHA-256 après la session** | `30c0a7bfa896ea7bcb5b3522d697c4238ca779201464ad5d6b32f44d1e3d5d5e` |
+| **SHA-256 image amont intacte** | `671a12dbfaa2aabe8e55713abe2734ab7b2b01b581e22021feeef3dafcab5e7f` |
 | Hyperviseur | QEMU 8.2.2 (hôte Linux), 1 Go RAM, 2 vCPU, console VGA + SSH |
 | Noyau observé | `proc/boot/procnto-smp-instr` (pid 1) |
+
+> **Note d'honnêteté sur les empreintes** : un disque d'invité **change à chaque démarrage**
+> (l'invité y écrit : journaux, horodatages, état du système de fichiers). Une empreinte
+> identifie donc un **état**, pas une version. Les trois valeurs ci-dessus sont données pour
+> ça : avant la session de capture, après, et celle de l'image amont jamais démarrée.
+> **Toute affirmation de ce dossier a été capturée pendant la session `03180f99… → 30c0a7bf…`.**
 
 ## Reproduction
 

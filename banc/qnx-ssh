@@ -1,0 +1,26 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+#
+# qnx-ssh — exécuter une commande dans l'invité QNX via le sshd de l'image communautaire.
+#
+# Le mot de passe par défaut de cette image est « root » ; il est surchargeable par la
+# variable QNX_SSH_PASS. Aucun secret n'est commité : le fichier .pw est créé à la volée
+# en mode 0600 et figure dans .gitignore.
+#
+# Usage : ./qnx-ssh 'uname -a; ls /proc/boot'
+set -eu
+
+DIR=$(cd "$(dirname "$0")" && pwd)
+PORT="${QNX_SSH_PORT:-2225}"
+ASKPASS="$DIR/.askpass.sh"
+PW="$DIR/.pw"
+
+[ -f "$PW" ] || { printf '%s' "${QNX_SSH_PASS:-root}" > "$PW"; chmod 600 "$PW"; }
+[ -x "$ASKPASS" ] || { printf '#!/bin/sh\ncat "%s"\n' "$PW" > "$ASKPASS"; chmod 700 "$ASKPASS"; }
+
+SSH_ASKPASS="$ASKPASS" SSH_ASKPASS_REQUIRE=force DISPLAY="${DISPLAY:-:0}" setsid -w \
+    ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+        -o NumberOfPasswordPrompts=1 -o ConnectTimeout=10 \
+        -o PreferredAuthentications=password,keyboard-interactive \
+        -o PubkeyAuthentication=no \
+        -p "$PORT" root@127.0.0.1 "$@" 2>/dev/null

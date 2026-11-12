@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import subprocess
 import tempfile
 import time
@@ -114,40 +115,84 @@ def run_tamis(cmd: str, policy: str, policy2: str | None = None,
         return res
 
 
+QNX_HOST = os.environ.get("TAMIS_QNX_HOST", "").strip()
+QNX_DIR = os.environ.get("TAMIS_QNX_DIR", "~/qnx71-vm")
+
+
+def banc_dispo() -> bool:
+    """Vrai si un banc QNX est joignable : distant (TAMIS_QNX_HOST) ou local."""
+    return bool(QNX_HOST) or vm_dir() is not None
+
+
+def banc_label() -> str:
+    if QNX_HOST:
+        return f"distant ({QNX_HOST}:{QNX_DIR})"
+    d = vm_dir()
+    return f"local ({d})" if d else "non configuré"
+
+
+def _dir_distant() -> str:
+    """Expression shell du dossier distant, avec $HOME développé mais le reste cité."""
+    d = QNX_DIR
+    if d.startswith("~/"):
+        return '"$HOME"/' + shlex.quote(d[2:])
+    if d == "~":
+        return '"$HOME"'
+    return shlex.quote(d)
+
+
+def _harness(args: list, timeout: int) -> dict:
+    """Exécute le harnais du banc : localement, ou sur TAMIS_QNX_HOST via ssh.
+
+    `args[0]` est le nom du script du banc, le reste ses arguments. Les arguments
+    viennent exclusivement de listes blanches internes ; ils sont passés en argv (jamais
+    de shell côté local) et cités un par un pour le shell distant.
+    """
+    if QNX_HOST:
+        remote = f"{_dir_distant()}/{shlex.quote(args[0])} " + \
+                 " ".join(shlex.quote(a) for a in args[1:])
+        return run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", QNX_HOST, remote],
+                   timeout=timeout)
+    d = vm_dir()
+    if d is None:
+        return {"exit": 3, "stdout": "",
+                "stderr": "banc QNX non configuré (TAMIS_QNX_VM ou TAMIS_QNX_HOST)"}
+    return run(["./" + args[0]] + list(args[1:]), cwd=d, timeout=timeout)
+
+
+def _ssh_pret(timeout: int = 25) -> bool:
+    return "PRET" in _harness(["qnx-ssh", "echo PRET"], timeout)["stdout"]
+
+
 def qnx_status() -> dict:
-    d = vm_dir()
-    if d is None:
-        return {"configured": False,
-                "hint": "définir TAMIS_QNX_VM vers un dossier contenant qnx-vm.sh"}
-    st = run(["./qnx-vm.sh", "status"], cwd=d, timeout=20)
+    if not banc_dispo():
+        return {"configured": False, "banc": banc_label(),
+                "hint": "définir TAMIS_QNX_VM (banc local) ou TAMIS_QNX_HOST (banc distant)"}
+    st = _harness(["qnx-vm.sh", "status"], 25)
     running = "en marche" in st["stdout"]
-    ssh = False
-    if running:
-        ssh = "PRET" in run(["./qnx-ssh", "echo PRET"], cwd=d, timeout=25)["stdout"]
-    return {"configured": True, "dir": str(d), "running": running,
-            "ssh_ready": ssh, "status": st["stdout"].strip()}
+    return {"configured": True, "banc": banc_label(), "running": running,
+            "ssh_ready": _ssh_pret() if running else False,
+            "status": st["stdout"].strip(), "stderr": st.get("stderr", "")}
 
 
-def qnx_boot(wait_s: int = 180) -> dict:
-    d = vm_dir()
-    if d is None:
-        return {"error": "banc QNX non configuré (TAMIS_QNX_VM)"}
-    out = run(["./qnx-vm.sh", "start"], cwd=d, timeout=90)
+def qnx_boot(wait_s: int = 300) -> dict:
+    if not banc_dispo():
+        return {"error": "banc QNX non configuré (TAMIS_QNX_VM ou TAMIS_QNX_HOST)"}
+    out = _harness(["qnx-vm.sh", "start"], 120)
     t0 = time.time()
     while time.time() - t0 < wait_s:
-        if "PRET" in run(["./qnx-ssh", "echo PRET"], cwd=d, timeout=25)["stdout"]:
+        if _ssh_pret():
             return {"ok": True, "boot": out["stdout"].strip(),
-                    "elapsed_s": round(time.time() - t0, 1)}
+                    "elapsed_s": round(time.time() - t0, 1), "banc": banc_label()}
         time.sleep(10)
-    return {"ok": False, "boot": out["stdout"].strip(),
-            "error": f"SSH non prêt après {wait_s} s"}
+    return {"ok": False, "boot": (out["stdout"] + out.get("stderr", "")).strip(),
+            "error": f"SSH non prêt après {wait_s} s", "banc": banc_label()}
 
 
 def qnx_stop() -> dict:
-    d = vm_dir()
-    if d is None:
-        return {"error": "banc QNX non configuré (TAMIS_QNX_VM)"}
-    return run(["./qnx-vm.sh", "stop"], cwd=d, timeout=40)
+    if not banc_dispo():
+        return {"error": "banc QNX non configuré (TAMIS_QNX_VM ou TAMIS_QNX_HOST)"}
+    return _harness(["qnx-vm.sh", "stop"], 60)
 
 
 def qnx_exec(preset: str) -> dict:
@@ -155,10 +200,9 @@ def qnx_exec(preset: str) -> dict:
     # refusée quel que soit l'état du banc (et sans révéler cet état).
     if preset not in PRESETS:
         return {"error": f"préréglage refusé (hors liste blanche) : {preset}"}
-    d = vm_dir()
-    if d is None:
-        return {"error": "banc QNX non configuré (TAMIS_QNX_VM)"}
+    if not banc_dispo():
+        return {"error": "banc QNX non configuré (TAMIS_QNX_VM ou TAMIS_QNX_HOST)"}
     label, cmd = PRESETS[preset]
-    res = run(["./qnx-ssh", cmd], cwd=d, timeout=90)
-    res.update(preset=preset, label=label, remote_cmd=cmd)
+    res = _harness(["qnx-ssh", cmd], 90)
+    res.update(preset=preset, label=label, remote_cmd=cmd, banc=banc_label())
     return res
