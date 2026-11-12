@@ -151,11 +151,13 @@ def qnx_stop() -> dict:
 
 
 def qnx_exec(preset: str) -> dict:
+    # La liste blanche est vérifiée AVANT toute autre chose : une commande inconnue est
+    # refusée quel que soit l'état du banc (et sans révéler cet état).
+    if preset not in PRESETS:
+        return {"error": f"préréglage refusé (hors liste blanche) : {preset}"}
     d = vm_dir()
     if d is None:
         return {"error": "banc QNX non configuré (TAMIS_QNX_VM)"}
-    if preset not in PRESETS:
-        return {"error": f"préréglage refusé (hors liste blanche) : {preset}"}
     label, cmd = PRESETS[preset]
     res = run(["./qnx-ssh", cmd], cwd=d, timeout=90)
     res.update(preset=preset, label=label, remote_cmd=cmd)
