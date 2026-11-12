@@ -32,19 +32,19 @@
 29. Exposer un endpoint /journal restreint au jeton, listant les vingt derniers appels sans leur contenu.
 30. Refuser toute commande distante du banc absente de la liste blanche des préréglages figés.
 31. Fixer un budget de durée par job dans un fichier ci-budget.yml, et échouer si un job le dépasse.
-32. Publier le temps passé par étape dans le résumé du job, pour repérer les dérives de durée.
+32. Programmer l'échec du pipeline dès qu'une étape dépasse le double de sa durée médiane.
 33. Restreindre le GITHUB_TOKEN au strict nécessaire : lecture seule par défaut, écriture seulement pour pages.
 34. Interdire les workflows pull_request_target, qui exposent les secrets aux pull requests externes.
 35. Bloquer la CI si un secret est détecté dans l'historique complet du dépôt par gitleaks.
-36. Activer CODEOWNERS pour exiger deux revues sur core/ et tools/ avant toute fusion.
+36. Exiger deux relecteurs distincts sur toute modification de reach.c, proof.c ou diff.c.
 37. Exiger le statut ci réussi comme condition obligatoire de fusion sur la branche principale.
 38. Protéger la branche principale par ruleset : interdiction du force-push et de la suppression.
 39. Programmer la fusion automatique des correctifs Dependabot, seulement après passage de la CI.
-40. Cacher les artefacts de build avec une clé dérivée de l'empreinte du verrou de dépendances.
-41. Restaurer le cache de build avec une clé de repli, pour ne pas pénaliser la première exécution.
+40. Programmer l'installation de la toolchain depuis un fichier versionné, pour ne pas dépendre de l'image runner.
+41. Désactiver le cache sur le job mutants, pour garantir une reconstruction à froid de chaque mutant.
 42. Conserver les artefacts de job sept jours, et les purger automatiquement au-delà.
-43. Joindre au job de tests un rapport JUnit XML, lisible par tout runner de CI.
-44. Publier le rapport de couverture et le rapport des mutants dans le résumé de la pull request.
+43. Mesurer la couverture du jumeau JavaScript comparée au cœur C, et publier l'écart résiduel.
+44. Joindre au run un rapport détaillant chaque mutation et le test qui la tue.
 45. Rejouer en priorité les mutants du diff de la pull request, avant la campagne complète du core.
 46. Vérifier que le site régénéré est identique au site commité, et échouer sur toute dérive.
 47. Valider la syntaxe de tous les workflows YAML avec actionlint, avant le lancement du premier job.
@@ -53,7 +53,7 @@
 50. Exécuter le déploiement pages seulement si le job de tests a réussi sur le même commit.
 51. Publier un manifeste SHA256SUMS de tous les artefacts, et le vérifier avant tout téléchargement.
 52. Épingler les images de runner et les conteneurs par empreinte, jamais par étiquette flottante.
-53. Journaliser dans le résumé du run la version du compilateur, de Python et du système utilisés.
+53. Plafonner la taille des artefacts uploadés par le job de couverture, pour tenir le quota GitHub.
 54. Reconstruire le cœur deux fois dans le même job, et exiger des binaires identiques octet pour octet.
 55. Comparer le coût en minutes de la CI au budget hebdomadaire, et alerter dès qu'il est dépassé.
 56. Publier une GitHub Release automatique au tag v*, contenant le binaire et les notes de version.
@@ -64,20 +64,20 @@
 61. Distribuer le pont dans une image OCI non-root publiée sur GHCR, avec le binaire C embarqué.
 62. Épingler le pont et le site sur une version commune, et tester leur compatibilité dans la CI.
 63. Épingler la version du pont dans le schéma du protocole, et refuser un client incompatible.
-64. Publier le binaire avec un fichier SHA256SUMS signé, et un script de vérification séparé.
-65. Vérifier à l'installation que l'empreinte du binaire correspond à celle publiée avec la release.
+64. Joindre au tag de release un fichier SHA256SUMS, vérifié automatiquement par un job dédié.
+65. Publier le binaire dans une archive versionnée contenant la licence, le NOTICE et le contrat.
 66. Épingler la version de QEMU utilisée par le banc dans un fichier de verrou versionné du dépôt.
 67. Décrire l'image QNX comme non redistribuable dans l'artefact de release, sans jamais l'inclure.
-68. Publier dans la release le rapport d'acceptation du banc, avec l'empreinte de la session.
-69. Étiqueter le dépôt et le site avec le même numéro de version, vérifié automatiquement.
+68. Joindre au tag de release le rapport d'acceptation du banc, avec la date de mesure.
+69. Auditer la liste des actions GitHub utilisées, et justifier chacune dans un fichier de revue.
 70. Graver la version de build dans la sortie de la CLI, pour tracer précisément l'artefact exécuté.
-71. Horodater les artefacts avec l'empreinte du commit, et non avec l'heure de compilation.
-72. Générer un manifeste JSON des artefacts, avec empreinte, taille et commit source.
-73. Rendre ce manifeste append-only, et refuser toute retouche d'une entrée déjà publiée.
-74. Enregistrer la version exacte du compilateur et de la bibliothèque C dans chaque rapport de build.
+71. Rendre chaque nom d'artefact auto-descriptif : version, commit et empreinte courte.
+72. Consigner dans chaque artefact le numéro de version, le commit source et la date de build.
+73. Rendre le manifeste des artefacts append-only, et refuser toute retouche d'une entrée publiée.
+74. Vérifier que le binaire publié ne contient aucune chaîne de chemin absolu de build.
 75. Vérifier que le dépôt n'importe aucun module Python hors bibliothèque standard.
 76. Construire le binaire de release dans un conteneur épinglé, et publier l'empreinte de son image.
-77. Reproduire le schéma JSON du rapport depuis la CI, et le publier avec chaque version du binaire.
+77. Interdire toute modification du schéma JSON sans incrémenter le numéro de version du contrat.
 78. Comparer l'empreinte du binaire publié à celle du job de test du même commit.
 79. Publier la commande unique de reconstruction, et la faire vérifier par un job dédié.
 80. Reconstruire le binaire depuis la release dans un conteneur vierge, et exiger la même empreinte.
@@ -91,7 +91,7 @@
 88. Isoler le réseau de l'invité : pas de passerelle, pas de DNS sortant, seulement SSH local.
 89. Faire expirer les sessions du banc après une heure, avec déconnexion puis arrêt de l'invité.
 90. Interdire toute commande du pont déclenchant l'arrêt de la VM sans confirmation explicite du client.
-91. Horodater chaque session du banc, et publier l'empreinte correspondante dans le dossier de preuve.
+91. Programmer une alerte de maintenance quand l'image QNX du banc dépasse six mois d'ancienneté.
 92. Vérifier l'intégrité de l'image QNX par empreinte avant chaque démarrage, et refuser tout écart.
 93. Vérifier en CI que chaque fichier du dépôt porte un en-tête SPDX, et l'exiger pour les nouveaux.
 94. Maintenir un fichier NOTICE listant les licences tierces et leurs obligations de redistribution.

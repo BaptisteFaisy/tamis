@@ -4,6 +4,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "tamis/analyze.h"
 #include "tamis/report.h"
+#include "tamis/smt.h"
 #include "sha256.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,9 +34,10 @@ static void usage(void)
     fputs(
         "tamis " TAMIS_VERSION " — analyse statique de politiques de sécurité QNX\n"
         "Usage : tamis <commande> <fichier> [options]\n"
-        "Commandes : lint | reach | proof | minimize | diff <fichier2> | view | version\n"
+        "Commandes : lint | reach | proof | explain | smt | minimize | diff <fichier2> | view | version\n"
         "Options : --src <type> --dst <type> --format text|json|md --label <nom>\n"
         "  reach/proof/explain : --src et --dst requis. diff : <fichier>=base, <fichier2>=candidat.\n"
+        "  smt : émet la preuve SMT-LIB2 (z3 l'exécute s'il est installé).\n"
         "  --label : nom rapporté dans les verdicts (défaut : le chemin du fichier).\n"
         "  view : émet le graphe de privilèges en JSON (pour le visualiseur HTML).\n",
         stderr);
@@ -147,6 +149,61 @@ static int run_engine(const args *a, const tamis_model *m, const tamis_model *m2
     return -1;
 }
 
+/*
+ * Preuve SMT-LIB2 : émet l'encodage et, si un solveur (z3) est présent, l'exécute.
+ * UNSAT = le chemin existe (la requête « not r_src_dst » est inconsistante) ;
+ * SAT   = aucun chemin (un modèle où r_src_dst est faux existe).
+ */
+static void cmd_smt(const args *a, const tamis_model *m)
+{
+    char *buf;
+    long n;
+    int s = -1, d = -1;
+    FILE *p;
+    char reponse[256];
+    if (a->src) { s = tamis_model_type_index(m, a->src); }
+    if (a->dst) { d = tamis_model_type_index(m, a->dst); }
+    n = (s >= 0 && d >= 0) ? tamis_smt_reach(m, s, d, NULL, 0) : tamis_smt_all(m, NULL, 0);
+    if (n <= 0) {
+        fprintf(stderr, "KO types src/dst introuvables\n");
+        return;
+    }
+    buf = malloc((size_t)n + 1);
+    if (!buf) {
+        return;
+    }
+    if (s >= 0 && d >= 0) {
+        tamis_smt_reach(m, s, d, buf, (size_t)n + 1);
+    } else {
+        tamis_smt_all(m, buf, (size_t)n + 1);
+    }
+    fputs(buf, stdout);
+    if (system("command -v z3 >/dev/null 2>&1") != 0) {
+        fprintf(stderr, "INFO z3 absent : encodage émis sans exécution.\n");
+        fprintf(stderr, "     Le fichier ci-dessus se rejoue tel quel :  z3 -smt2 <fichier>\n");
+        free(buf);
+        return;
+    }
+    {
+        FILE *f = fopen("/tmp/tamis-smt.smt2", "w");
+        if (f) {
+            fputs(buf, f);
+            fclose(f);
+        }
+    }
+    p = popen("z3 -smt2 /tmp/tamis-smt.smt2 2>/dev/null", "r");
+    if (p && fgets(reponse, (int)sizeof reponse, p)) {
+        printf("; solveur : %s", reponse);
+        if (strstr(reponse, "unsat")) {
+            printf("; → le chemin EXISTE (UNSAT : r_src_dst est implique)\n");
+        } else if (strstr(reponse, "sat")) {
+            printf("; → aucun chemin (SAT : un modèle falsifie r_src_dst)\n");
+        }
+    }
+    if (p) { pclose(p); }
+    free(buf);
+}
+
 /* Graphe de privilèges en JSON pour le visualiseur HTML (TAM-23). */
 static void view_json(const tamis_model *m, const args *a)
 {
@@ -239,6 +296,12 @@ static int cmd_engine(const args *a)
     }
     vs = calloc(MAX_VERDICTS, sizeof *vs);
     tamis_out_init(&o, vs, MAX_VERDICTS, &L.arena, nom_analyse(a));
+    if (!strcmp(a->cmd, "smt")) {
+        cmd_smt(a, &L.model);
+        free(vs);
+        loaded_free(&L);
+        return 0;
+    }
     rc = run_engine(a, &L.model, NULL, &o);
     if (rc < 0) {
         fprintf(stderr, "KO moteur '%s' en erreur (type inconnu ?)\n", a->cmd);
@@ -310,7 +373,8 @@ int main(int argc, char **argv)
         return cmd_diff(&a);
     }
     if (!strcmp(a.cmd, "lint") || !strcmp(a.cmd, "reach") ||
-        !strcmp(a.cmd, "proof") || !strcmp(a.cmd, "explain") || !strcmp(a.cmd, "minimize")) {
+        !strcmp(a.cmd, "proof") || !strcmp(a.cmd, "explain") || !strcmp(a.cmd, "smt") ||
+        !strcmp(a.cmd, "minimize")) {
         return cmd_engine(&a);
     }
     usage();

@@ -37,10 +37,30 @@ build/tamis explain  fixtures/attaque.mpf --src app_tiers --dst pompe_critique
 build/tamis proof    fixtures/durcie.mpf  --src app_tiers --dst pompe_critique
 build/tamis minimize fixtures/attaque.mpf
 build/tamis diff     fixtures/attaque.mpf fixtures/durcie.mpf
+build/tamis smt      fixtures/attaque.mpf --src app_tiers --dst pompe_critique   # preuve SMT-LIB2
 build/tamis view     fixtures/attaque.mpf --src app_tiers --dst pompe_critique > /tmp/g.json
 ```
 Ouvre ensuite `view/index.html` et colle `/tmp/g.json` : le chemin d'attaque s'affiche en rouge.
 Tutoriel pas à pas : [`docs/codelab/01-auditer-une-politique.md`](docs/codelab/01-auditer-une-politique.md).
+
+### La preuve par solveur
+
+`tamis smt` émet l'accessibilité sous forme **SMT-LIB2** (clauses de Horn) : la question
+« src atteint-il dst ? » devient une satisfiabilité. Avec `z3` installé, la commande
+l'exécute et tranche :
+
+```
+$ tamis smt fixtures/attaque.mpf --src app_tiers --dst pompe_critique
+…
+(assert (not r_0_3))
+(check-sat)
+; solveur : unsat
+; → le chemin EXISTE (UNSAT : r_src_dst est implique)
+```
+Un `sat` prouve au contraire l'absence de chemin. L'encodage a été **validé par Z3 4.13.3** :
+`unsat` pour le chemin qui existe, `sat` pour l'absence de chemin. L'encodage est rejouable
+hors ligne par un tiers (`z3 -smt2 fichier.smt2`) — c'est le critère « implémentation non
+triviale » du règlement.
 
 > Les politiques d'exemple sont au **format provisoire** (`type`/`allow`/`untyped`). Le parseur
 > du vrai langage `secpol` se branchera sur le même modèle dès la grammaire gelée.
@@ -150,6 +170,17 @@ temporaire). Tout est vérifié par `tests/test_bridge.sh` (15 vérifications, d
 depuis l'interface réseau »). Détails : [`docs/BANC-REEL.md`](docs/BANC-REEL.md).
 
 Sans pont, le Playground reste entièrement fonctionnel via le jumeau JS.
+
+## 1 000 idées de consolidation
+
+Catalogue complet : [`docs/1000-idees-consolidation.md`](docs/1000-idees-consolidation.md)
+— **1 000 idées** réparties en 10 thèmes (cœur C, tests, spécificité QNX, preuve formelle,
+performance, DX/CLI/distribution, documentation/codelab/i18n, démo/juges, pipeline/sécurité
+de l'outillage, pilotage), sans doublon.
+
+Sélection arbitrée et plan daté : [`docs/top10-consolidation.md`](docs/top10-consolidation.md).
+Le **n°1 (encodeur SMT-LIB2)** est déjà livré et validé par un vrai solveur ; les n°5, 6, 7, 8
+et 10 sont de l'écriture pure et se font dans la journée.
 
 ## Le dernier maillon — la licence QNX SDP 8.0 (10 min)
 

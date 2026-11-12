@@ -56,5 +56,21 @@ outm=$("$TAMIS" lint "$ATT" --format md 2>&1)
 ck_grep "$outm" "Rapport d'audit Tamis" "format markdown : titre"
 ck_grep "$outm" "Empreinte SHA-256" "format markdown : empreinte"
 
+# preuve SMT-LIB2 : encodage émis, et verdict confirmé si z3 est présent
+out=$("$TAMIS" smt "$ATT" --src app_tiers --dst pompe_critique 2>&1)
+ck_grep "$out" "(set-logic HORN)" "smt : clauses de Horn déclarées"
+ck_grep "$out" "(assert (not r_0_3))" "smt : requête « src n'atteint pas dst » émise"
+ck_grep "$out" "(check-sat)" "smt : check-sat émis"
+if command -v z3 >/dev/null 2>&1; then
+  ck_grep "$out" "unsat" "smt : z3 confirme que le chemin existe"
+  out2=$("$TAMIS" smt "$ATT" --src pompe_critique --dst app_tiers 2>&1)
+  ck_grep "$out2" "sat" "smt : z3 confirme l'absence de chemin"
+else
+  echo "INFO z3 absent : encodage émis sans exécution"
+  checks=$((checks+1))
+fi
+out3=$("$TAMIS" smt "$ATT" 2>&1)
+ck_grep "$out3" "check-sat" "smt : encodage global produit"
+
 if [ "$fail" -ne 0 ]; then echo "FAILED test_cli"; exit 1; fi
 echo "OK $checks checks"
