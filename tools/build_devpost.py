@@ -16,8 +16,8 @@ import pathlib
 import sys
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
-SITE_URL = "https://baptistefaisy.github.io/tamis/"
-REPO_URL = "https://github.com/BaptisteFaisy/tamis"
+SITE_URL = "https://tradoooo.github.io/tamis/"
+REPO_URL = "https://github.com/Tradoooo/tamis"
 
 
 def bullets(items: list) -> list:

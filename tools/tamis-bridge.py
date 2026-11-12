@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 """Pont local Tamis — le site public pilote le VRAI cœur C et le VRAI banc QNX.
 
-Le site (https://baptistefaisy.github.io/tamis/) est statique : il ne peut héberger ni le
+Le site (https://tradoooo.github.io/tamis/) est statique : il ne peut héberger ni le
 binaire C, ni un hyperviseur, ni l'image QNX (6 Gio, non redistribuable). Ce pont comble
 l'écart : il tourne sur TA machine, le site s'y connecte quand tu le lui demandes.
 
@@ -30,7 +30,7 @@ import bridge_backend as B  # noqa: E402
 
 VERSION = "0.1.0"
 MAX_BODY = 1024 * 1024
-SITE = "https://baptistefaisy.github.io"
+SITE = "https://tradoooo.github.io"
 
 
 def origin_ok(origin: str | None) -> bool:

@@ -46,9 +46,9 @@ out "# Hôte : $(hostname) · utilisateur : $(id -un)"
 DOCTOR=$(cd "$VM" && ./qnx-vm.sh doctor 2>&1)
 out ""; out "### doctor"; out "$DOCTOR"
 DOCTOR_Q=$(printf '%s' "$DOCTOR" | grep -E "^qemu" | head -1)
-printf '%s' "$DOCTOR_Q" | grep -q "qemu-system-x86_64"
+grep -q "qemu-system-x86_64" <<< "$DOCTOR_Q"
 ck $? "qemu-system-x86_64 disponible (système ou préfixe utilisateur)"
-printf '%s' "$DOCTOR" | grep -q "kvm        : accessible"
+grep -q "kvm        : accessible" <<< "$DOCTOR"
 if [ $? -eq 0 ]; then
   ck 0 "KVM accessible (démarrage ~30 s)"
 else
@@ -66,7 +66,7 @@ DEBUT=$(date +%s)
 out ""; out "### démarrage"; out "$(cat "$VM/.start.log")"
 PRET=1
 for _ in $(seq 1 $((ATTENTE_SSH / 10))); do
-  if (cd "$VM" && timeout 25 ./qnx-ssh 'echo PRET' 2>/dev/null | grep -q PRET); then PRET=0; break; fi
+  if R=$(cd "$VM" && timeout 25 ./qnx-ssh 'echo PRET' 2>/dev/null) && grep -q PRET <<< "$R"; then PRET=0; break; fi
   sleep 10
 done
 DUREE=$(( $(date +%s) - DEBUT ))
@@ -83,19 +83,19 @@ fi
 
 # ── 3. preuves réelles attendues ──────────────────────────────────────────
 run_preset "uname"            'uname -a'
-printf '%s' "$SORTIE" | grep -q "QNX"
+grep -q "QNX" <<< "$SORTIE"
 ck $? "le noyau se déclare QNX"
 
 run_preset "secpol"           'secpol 2>&1; echo rc=$?'
-printf '%s' "$SORTIE" | grep -q "/proc/boot/secpol.bin"
+grep -q "/proc/boot/secpol.bin" <<< "$SORTIE"
 ck $? "secpol lit bien /proc/boot/secpol.bin"
 
 run_preset "secpolmonitor"    'secpolmonitor 2>&1; echo rc=$?'
-printf '%s' "$SORTIE" | grep -qE "Nothing to do|-a, -p, -q or -u"
+grep -qE "Nothing to do|-a, -p, -q or -u" <<< "$SORTIE"
 ck $? "secpolmonitor présent et bavard sur ses options"
 
 run_preset "libsecpol"        'ls -la /proc/boot/libsecpol*'
-printf '%s' "$SORTIE" | grep -q "libsecpol.so"
+grep -q "libsecpol.so" <<< "$SORTIE"
 ck $? "libsecpol présente dans l'IFS"
 
 run_preset "outils hotes"     'for b in secpolcompile secpolgenerate secpolpush; do command -v $b || echo "$b: absent"; done'
@@ -104,7 +104,7 @@ N=$(printf '%s\n' "$SORTIE" | grep -c "absent")
 ck $? "les 3 outils hôtes sont bien absents de la cible (preuve qu'ils sont dans le SDP)"
 
 run_preset "procnto"          "pidin -F '%a %n' | head -5"
-printf '%s' "$SORTIE" | grep -q "procnto"
+grep -q "procnto" <<< "$SORTIE"
 ck $? "le noyau procnto tourne"
 
 # ── 4. arrêt propre ───────────────────────────────────────────────────────

@@ -6,7 +6,7 @@ RACINE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$RACINE"
 checks=0; fail=0
 ck() { checks=$((checks+1)); if [ "$1" -eq 0 ]; then echo "OK   $2"; else echo "KO   $2"; fail=1; fi; }
-ckc() { checks=$((checks+1)); if printf '%s' "$1" | grep -qF "$2"; then echo "OK   $3"; else echo "KO   $3 (absent)"; fail=1; fi; }
+ckc() { checks=$((checks+1)); if grep -qF "$2" <<< "$1"; then echo "OK   $3"; else echo "KO   $3 (absent)"; fail=1; fi; }
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT

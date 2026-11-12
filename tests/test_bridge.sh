@@ -13,7 +13,7 @@ BASE="http://127.0.0.1:$PORT"
 checks=0; fail=0
 
 ck() { checks=$((checks+1)); if [ "$1" != "$2" ]; then echo "KO   $3 (obtenu [$1], attendu [$2])"; fail=1; else echo "OK   $3"; fi; }
-ckc() { checks=$((checks+1)); if printf '%s' "$1" | grep -qF "$2"; then echo "OK   $3"; else echo "KO   $3 (absent de la sortie)"; fail=1; fi; }
+ckc() { checks=$((checks+1)); if grep -qF "$2" <<< "$1"; then echo "OK   $3"; else echo "KO   $3 (absent de la sortie)"; fail=1; fi; }
 
 python3 tools/tamis-bridge.py --port "$PORT" --token-fixe "$JETON" >/tmp/bridge-$PORT.log 2>&1 &
 PID=$!

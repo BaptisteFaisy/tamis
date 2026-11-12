@@ -60,12 +60,12 @@ aucune allocation (l'appelant fournit les tampons). Les métadonnées passent pa
 **Conséquence.** Le cœur est testable unitairement et embarquable (plus tard en WASM). Le
 calcul SHA-256 et l'horodatage vivent dans `host/`, jamais dans `core/`.
 
-## D-001 — Dépôt standalone `BaptisteFaisy/tamis` (2026-11-11)
+## D-001 — Dépôt standalone `Tradoooo/tamis` (2026-11-11)
 
 **Contexte.** Le socle partagé vit dans `qnx-kit/tamis/` (lot F, sans remote). La soumission
 au QNX Global Hackathon exige un **dépôt public** dédié (cahier §13).
 
-**Décision.** Dépôt public standalone `BaptisteFaisy/tamis` (MIT), suivant l'architecture du
+**Décision.** Dépôt public standalone `Tradoooo/tamis` (MIT), suivant l'architecture du
 cahier §4. `GaiaSG94` invité **contributor** (permission write). Le lot F de `qnx-kit` a
 vocation à être replié dans ce dépôt.
 

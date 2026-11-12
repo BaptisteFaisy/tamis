@@ -89,7 +89,8 @@ sonde() { # sonde <commande invité>
   fi
 }
 
-if ! sonde "echo PRET" | grep -q PRET; then
+PR=$(sonde "echo PRET")
+if ! grep -q PRET <<< "$PR"; then
   note "INFO aucun invité joignable : phase B ignorée (prérequis manquant)"
   note ""
   note "== $verifs vérifications, $ecarts écart(s) — prérequis manquants, non concluant =="

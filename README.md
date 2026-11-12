@@ -1,6 +1,6 @@
 # Tamis 🦀
 
-> **Site de démonstration : https://baptistefaisy.github.io/tamis/** —
+> **Site de démonstration : https://tradoooo.github.io/tamis/** —
 > toutes les fonctionnalités sont **essayables en direct dans le navigateur**
 > (playground), zéro installation.
 
@@ -120,7 +120,7 @@ différence d'opinion.
 
 ## Site de démonstration & dossier de soumission
 
-**https://baptistefaisy.github.io/tamis/** — publié sur GitHub Pages depuis `site/`
+**https://tradoooo.github.io/tamis/** — publié sur GitHub Pages depuis `site/`
 (workflow `pages.yml`), **bilingue FR/EN** (bascule en haut à droite, anglais par défaut pour
 les juges). Sept onglets :
 
@@ -206,3 +206,6 @@ Détail et plan B : [`docs/SDP.md`](docs/SDP.md).
 ## Licence
 
 MIT — voir [`LICENSE`](LICENSE).
+
+Dépôt public : <https://github.com/Tradoooo/tamis> · Site de démonstration :
+<https://tradoooo.github.io/tamis/>

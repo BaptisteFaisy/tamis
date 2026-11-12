@@ -163,7 +163,7 @@ doctor() {
     echo "ssh invité : 127.0.0.1:$PORT -> $GUEST_IP:22"
     if running; then
         echo "état       : en marche (pid $(cat "$PIDFILE"))"
-        printf 'ssh répond : '; ./qnx-ssh 'echo PRET' 2>/dev/null | grep -q PRET && echo oui || echo "non (pas encore)"
+        printf 'ssh répond : '; R=$(./qnx-ssh 'echo PRET' 2>/dev/null); grep -q PRET <<< "$R" && echo oui || echo "non (pas encore)"
     else
         echo "état       : arrêté"
     fi

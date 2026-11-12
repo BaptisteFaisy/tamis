@@ -3,7 +3,7 @@
 
 ## Pourquoi un pont local
 
-Le site <https://baptistefaisy.github.io/tamis/> est servi par **GitHub Pages : un hébergement
+Le site <https://tradoooo.github.io/tamis/> est servi par **GitHub Pages : un hébergement
 statique**. Il ne peut donc pas :
 
 | Voulu | Pourquoi c'est impossible sur un site statique |
@@ -43,7 +43,7 @@ Un serveur local qui exécute des commandes est dangereux s'il est mal tenu. Ici
 2. **Jeton aléatoire** (`secrets.token_urlsafe(18)`) imprimé au démarrage et exigé dans
    l'en-tête `X-Tamis-Token` sur tout sauf `/ping`. **Sans jeton, un site tiers malveillant que
    tu visites ne peut rien faire, même en devinant le port.**
-3. **En-tête `Origin` contrôlé** : seuls `https://baptistefaisy.github.io`, `http://localhost:*`
+3. **En-tête `Origin` contrôlé** : seuls `https://tradoooo.github.io`, `http://localhost:*`
    et `http://127.0.0.1:*` sont admis (403 sinon).
 4. **Aucune commande libre** : `cmd` et `format` sont sur liste blanche, `src`/`dst`/`label`
    sont validés par expression rationnelle, les politiques passent par un **fichier temporaire**

@@ -8,7 +8,7 @@
 ## Prérequis
 
 - `gcc` (C11), `python3` (≥ 3.8, stdlib seule), `make`. Aucune dépendance à installer.
-- Le dépôt : `git clone https://github.com/BaptisteFaisy/tamis && cd tamis`.
+- Le dépôt : `git clone https://github.com/Tradoooo/tamis && cd tamis`.
 
 > ⚠️ Les politiques de ce codelab sont au **format provisoire** (`type`/`allow`/`untyped`,
 > voir `core/src/model.c`). Le parseur du vrai langage `secpol` arrive dès que la grammaire

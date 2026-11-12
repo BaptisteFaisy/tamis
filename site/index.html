@@ -361,7 +361,7 @@
 <tr><td>2:10–2:40</td><td>tamis diff v1.secpol v2.secpol in a PR: a privilege widening flagged, CI turns red, automatic comment.</td></tr>
 <tr><td>2:40–3:00</td><td>The evidence: check count, mutants killed, fuzz, the C ↔ Python ↔ JS differential, and (when available) agreement with secpolcompile.</td></tr>
 </tbody></table></div>
-<h3><span data-lang="fr">Liens</span><span data-lang="en">Links</span></h3><ul class="links"><li><span data-lang="fr">Dépôt public</span><span data-lang="en">Public repository</span> : <a href="https://github.com/BaptisteFaisy/tamis">https://github.com/BaptisteFaisy/tamis</a></li><li><span data-lang="fr">Ce site</span><span data-lang="en">This site</span> : <a href="https://baptistefaisy.github.io/tamis/">https://baptistefaisy.github.io/tamis/</a></li><li><span data-lang="fr">Contrat gelé</span><span data-lang="en">Frozen contract</span> : <a href="https://github.com/BaptisteFaisy/tamis/blob/main/CONTRACT.md">https://github.com/BaptisteFaisy/tamis/blob/main/CONTRACT.md</a></li><li><span data-lang="fr">Codelab</span><span data-lang="en">Codelab</span> : <a href="https://github.com/BaptisteFaisy/tamis/blob/main/docs/codelab/01-auditer-une-politique.md">https://github.com/BaptisteFaisy/tamis/blob/main/docs/codelab/01-auditer-une-politique.md</a></li><li><span data-lang="fr">Grammaire relevée</span><span data-lang="en">Recorded grammar</span> : <a href="https://github.com/BaptisteFaisy/tamis/blob/main/docs/GRAMMAR.md">https://github.com/BaptisteFaisy/tamis/blob/main/docs/GRAMMAR.md</a></li><li><span data-lang="fr">100 idées</span><span data-lang="en">100 ideas</span> : <a href="https://github.com/BaptisteFaisy/tamis/blob/main/docs/100-idees.md">https://github.com/BaptisteFaisy/tamis/blob/main/docs/100-idees.md</a></li></ul>
+<h3><span data-lang="fr">Liens</span><span data-lang="en">Links</span></h3><ul class="links"><li><span data-lang="fr">Dépôt public</span><span data-lang="en">Public repository</span> : <a href="https://github.com/Tradoooo/tamis">https://github.com/Tradoooo/tamis</a></li><li><span data-lang="fr">Ce site</span><span data-lang="en">This site</span> : <a href="https://tradoooo.github.io/tamis/">https://tradoooo.github.io/tamis/</a></li><li><span data-lang="fr">Contrat gelé</span><span data-lang="en">Frozen contract</span> : <a href="https://github.com/Tradoooo/tamis/blob/main/CONTRACT.md">https://github.com/Tradoooo/tamis/blob/main/CONTRACT.md</a></li><li><span data-lang="fr">Codelab</span><span data-lang="en">Codelab</span> : <a href="https://github.com/Tradoooo/tamis/blob/main/docs/codelab/01-auditer-une-politique.md">https://github.com/Tradoooo/tamis/blob/main/docs/codelab/01-auditer-une-politique.md</a></li><li><span data-lang="fr">Grammaire relevée</span><span data-lang="en">Recorded grammar</span> : <a href="https://github.com/Tradoooo/tamis/blob/main/docs/GRAMMAR.md">https://github.com/Tradoooo/tamis/blob/main/docs/GRAMMAR.md</a></li><li><span data-lang="fr">100 idées</span><span data-lang="en">100 ideas</span> : <a href="https://github.com/Tradoooo/tamis/blob/main/docs/100-idees.md">https://github.com/Tradoooo/tamis/blob/main/docs/100-idees.md</a></li></ul>
 <!-- SUBMISSION:END -->
 </section>
 
@@ -371,10 +371,10 @@
 <div data-lang="fr"><h2>Codelab — Auditer une politique de sécurité QNX en 20 minutes</h2><p class="lead">Objectif : partir d&#x27;une politique trouée, trouver le chemin d&#x27;attaque, le prouver, le corriger, puis prouver la non-interférence — sans QNX, sans QEMU, sans licence.</p></div>
 <div data-lang="en"><h2>Codelab — Audit a QNX security policy in 20 minutes</h2><p class="lead">Goal: start from a holey policy, find the attack path, prove it, fix it, then prove non-interference — with no QNX, no QEMU, no licence.</p></div>
 <div class="steps">
-<div class="step"><div data-lang="fr"><h4>1. Prérequis et construction</h4><p>gcc (C11), python3 (≥ 3.8, bibliothèque standard seule) et make. Aucune dépendance à installer.</p><pre class="cmd">git clone https://github.com/BaptisteFaisy/tamis &amp;&amp; cd tamis
+<div class="step"><div data-lang="fr"><h4>1. Prérequis et construction</h4><p>gcc (C11), python3 (≥ 3.8, bibliothèque standard seule) et make. Aucune dépendance à installer.</p><pre class="cmd">git clone https://github.com/Tradoooo/tamis &amp;&amp; cd tamis
 make cli
 build/tamis version</pre><pre class="out">tamis 0.1.0</pre></div>
-<div data-lang="en"><h4>1. Prerequisites and build</h4><p>gcc (C11), python3 (≥ 3.8, standard library only) and make. Nothing to install.</p><pre class="cmd">git clone https://github.com/BaptisteFaisy/tamis &amp;&amp; cd tamis
+<div data-lang="en"><h4>1. Prerequisites and build</h4><p>gcc (C11), python3 (≥ 3.8, standard library only) and make. Nothing to install.</p><pre class="cmd">git clone https://github.com/Tradoooo/tamis &amp;&amp; cd tamis
 make cli
 build/tamis version</pre><pre class="out">tamis 0.1.0</pre></div></div>
 <div class="step"><div data-lang="fr"><h4>2. La politique vulnérable</h4><p>fixtures/attaque.mpf modélise un système où app_tiers atteint pompe_critique de proche en proche. R999 est un doublon de R112, deux processus ne sont pas typés, et aucun default_spawn_type n&#x27;est déclaré.</p><pre class="cmd">cat fixtures/attaque.mpf</pre><pre class="out">type app_tiers
@@ -674,7 +674,7 @@ OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div></
 </main>
 
 <footer>
-  <span>MIT · <a href="https://github.com/BaptisteFaisy/tamis">github.com/BaptisteFaisy/tamis</a></span>
+  <span>MIT · <a href="https://github.com/Tradoooo/tamis">github.com/Tradoooo/tamis</a></span>
   <span>QNX Global Hackathon 2026 — Developer Tooling &amp; Host Tools · Best use of QNX-specific Technologies · Best Codelab</span>
 </footer>
 

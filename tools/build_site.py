@@ -204,14 +204,14 @@ def _sub_video(c: dict) -> str:
 
 def _sub_links() -> str:
     rows = [
-        ["Dépôt public", "Public repository", "https://github.com/BaptisteFaisy/tamis"],
-        ["Ce site", "This site", "https://baptistefaisy.github.io/tamis/"],
-        ["Contrat gelé", "Frozen contract", "https://github.com/BaptisteFaisy/tamis/blob/main/CONTRACT.md"],
+        ["Dépôt public", "Public repository", "https://github.com/Tradoooo/tamis"],
+        ["Ce site", "This site", "https://tradoooo.github.io/tamis/"],
+        ["Contrat gelé", "Frozen contract", "https://github.com/Tradoooo/tamis/blob/main/CONTRACT.md"],
         ["Codelab", "Codelab",
-         "https://github.com/BaptisteFaisy/tamis/blob/main/docs/codelab/01-auditer-une-politique.md"],
+         "https://github.com/Tradoooo/tamis/blob/main/docs/codelab/01-auditer-une-politique.md"],
         ["Grammaire relevée", "Recorded grammar",
-         "https://github.com/BaptisteFaisy/tamis/blob/main/docs/GRAMMAR.md"],
-        ["100 idées", "100 ideas", "https://github.com/BaptisteFaisy/tamis/blob/main/docs/100-idees.md"],
+         "https://github.com/Tradoooo/tamis/blob/main/docs/GRAMMAR.md"],
+        ["100 idées", "100 ideas", "https://github.com/Tradoooo/tamis/blob/main/docs/100-idees.md"],
     ]
     items = "".join(
         f'<li><span data-lang="fr">{inline(a)}</span><span data-lang="en">{inline(b)}</span>'

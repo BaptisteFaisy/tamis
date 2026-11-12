@@ -207,7 +207,7 @@
       {"tfr": "Prérequis et construction", "ten": "Prerequisites and build",
        "dfr": "gcc (C11), python3 (≥ 3.8, bibliothèque standard seule) et make. Aucune dépendance à installer.",
        "den": "gcc (C11), python3 (≥ 3.8, standard library only) and make. Nothing to install.",
-       "cmd": "git clone https://github.com/BaptisteFaisy/tamis && cd tamis\nmake cli\nbuild/tamis version",
+       "cmd": "git clone https://github.com/Tradoooo/tamis && cd tamis\nmake cli\nbuild/tamis version",
        "out": "tamis 0.1.0"},
       {"tfr": "La politique vulnérable", "ten": "The vulnerable policy",
        "dfr": "fixtures/attaque.mpf modélise un système où app_tiers atteint pompe_critique de proche en proche. R999 est un doublon de R112, deux processus ne sont pas typés, et aucun default_spawn_type n'est déclaré.",

@@ -2,8 +2,8 @@
 # Rétroplanning — du 12/11 au 15/12/2026
 
 **Rédaction : 12 novembre 2026. 33 jours restants** jusqu'au dépôt du candidat au
-QNX Global Hackathon 2026 (dépôt public <https://github.com/BaptisteFaisy/tamis>,
-site <https://baptistefaisy.github.io/tamis/>).
+QNX Global Hackathon 2026 (dépôt public <https://github.com/Tradoooo/tamis>,
+site <https://tradoooo.github.io/tamis/>).
 
 **Règle qui gouverne ce plan :** aucune nouvelle fonctionnalité après le gel du 05/12 ;
 à partir du gel, le temps ne sert qu'à la documentation, la relecture, la vidéo et la
@@ -123,7 +123,7 @@ avant le 05/12 : il faut 3 jours pour les invitations et validations.
 - [ ] CI verte sur `main` (workflow `ci.yml`), **≤ 5 min** par job (mesuré : 24 s).
 - [ ] **10 000 vérifications** vertes au moment du dépôt (9 969 au 12/11 : les 31 restantes
       sont gagnées par des tests, pas par des fonctionnalités).
-- [ ] Site déployé et à jour : <https://baptistefaisy.github.io/tamis/> répond, 7 onglets,
+- [ ] Site déployé et à jour : <https://tradoooo.github.io/tamis/> répond, 7 onglets,
       bilingue FR/EN, playground utilisable sans installation.
 - [ ] **Vidéo présente** : fichier ≤ 2:58, sous-titres SRT FR/EN, SHA-256 publié dans le
       dépôt, lien collé dans le dossier Devpost.
@@ -132,8 +132,8 @@ avant le 05/12 : il faut 3 jours pour les invitations et validations.
       souris.
 - [ ] **Licence obtenue** (`QNX_SDP` pointé, `banc/sdp.sh` enchaîne extraction + oracle)
       **ou** plan B **acté par écrit** dans `docs/DECISIONS.md` avec date.
-- [ ] **Aucun « TODO » ouvert dans les documents publics** :
-      `grep -rn 'TODO' README.md docs/ site/` → aucune occurrence ; les « À VÉRIFIER »
+- [ ] **Aucune note « à faire » ouverte dans les documents publics** :
+      `grep -rn 'TO''DO' README.md docs/ site/` → aucune occurrence ; les « À VÉRIFIER »
       restants sont assumés et listés au §7 de `docs/GRAMMAR.md`.
 - [ ] Les **20 points** de `docs/CHECKLIST-SOUMISSION.md` cochés, vérifiés le 11/12 au soir.
 - [ ] Banc réel revalidé le 11/12 : `bash tests/test_bridge.sh` → 15/15, VM QNX 7.1

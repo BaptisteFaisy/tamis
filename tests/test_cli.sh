@@ -11,7 +11,7 @@ checks=0; fail=0
 
 [ -x "$TAMIS" ] || { echo "KO build/tamis absent (lancer make cli)"; exit 1; }
 
-ck_grep() { checks=$((checks+1)); printf '%s' "$1" | grep -q "$2" || { echo "FAILED : $3"; fail=1; }; }
+ck_grep() { checks=$((checks+1)); grep -q "$2" <<< "$1" || { echo "FAILED : $3"; fail=1; }; }
 ck_rc()   { checks=$((checks+1)); [ "$1" -eq "$2" ] || { echo "FAILED : $3 (rc=$1, attendu $2)"; fail=1; }; }
 
 out=$("$TAMIS" version 2>&1)

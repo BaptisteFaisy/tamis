@@ -6,28 +6,29 @@
 set -uo pipefail
 RACINE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$RACINE"
-SITE="https://baptistefaisy.github.io/tamis"
+SITE="https://tradoooo.github.io/tamis"
 checks=0; fail=0; warn=0
 ok()   { checks=$((checks+1)); echo "✅  $1"; }
-ko()   { checks=$((checks+1)); echo "❌  $1"; fail=1; }
-warn() { checks=$((checks+1)); echo "⚠️  $1"; warn=1; }
+ko()   { checks=$((checks+1)); echo "❌  $1"; fail=$((fail+1)); }
+warn() { checks=$((checks+1)); echo "⚠️  $1"; warn=$((warn+1)); }
 
 # 1. licence MIT
 grep -qi "MIT License" LICENSE 2>/dev/null && ok "1. licence MIT visible" || ko "1. licence MIT"
 
 # 2. README + mentions
-grep -q "github.com/BaptisteFaisy/tamis" README.md 2>/dev/null && ok "2. README mentionne le dépôt" || ko "2. README"
+grep -q "github.com/Tradoooo/tamis" README.md 2>/dev/null && ok "2. README mentionne le dépôt" || ko "2. README"
 
-# 3. site déployé
-code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$SITE" 2>/dev/null)
+# 3. site déployé (suivre la redirection du slash final)
+code=$(curl -sL -o /dev/null -w '%{http_code}' --max-time 15 "$SITE/" 2>/dev/null)
 [ "$code" = "200" ] && ok "3. site en ligne (200)" || ko "3. site en ligne (obtenu ${code:-aucun})"
 
 # 4. les 7 onglets attendus
-H=$(curl -s --max-time 15 "$SITE" 2>/dev/null)
+H=$(curl -sL --max-time 15 "$SITE/" 2>/dev/null)
+manquants=""
 for t in playground features proofs submission codelab ideas grammar; do
-  printf '%s' "$H" | grep -q "id=\"$t\"" || { ko "4. onglet « $t » absent du site"; break; }
+  grep -q "id=\"$t\"" <<< "$H" || manquants="$manquants $t"
 done
-printf '%s' "$H" | grep -q 'id="grammar"' && ok "4. les 7 onglets du site présents"
+[ -z "$manquants" ] && ok "4. les 7 onglets du site présents" || ko "4. onglet(s) absent(s) :$manquants"
 
 # 5. dossier de soumission Devpost : 13 sections
 n=$(grep -cE '^## [0-9]+\. ' docs/devpost-form.md 2>/dev/null)
@@ -62,10 +63,11 @@ python3 tests/garde.py >/dev/null 2>&1 && ok "13. garde de taille verte" || ko "
 # 14. mutants tués
 python3 tests/mutants.py >/dev/null 2>&1 && ok "14. mutants tués" || ko "14. mutants"
 
-# 15. aucun chemin absolu codé en dur
-grep -rn --include='*.sh' --include='*.py' --include='*.c' --include='*.h' '/home/' . \
-  | grep -v '/fixtures/' | grep -v '/tests/' | grep -q . \
-  && ko "15. chemin absolu codé en dur" || ok "15. aucun chemin absolu codé en dur"
+# 15. aucun chemin absolu codé en dur (le motif est assemblé pour ne pas se matcher soi-même)
+MOTIF="/hom"'e/'
+HITS=$(grep -rn --include='*.sh' --include='*.py' --include='*.c' --include='*.h' "$MOTIF" . \
+  | grep -v '/fixtures/' | grep -v '/tests/')
+[ -z "$HITS" ] && ok "15. aucun chemin absolu codé en dur" || ko "15. chemin absolu codé en dur"
 
 # 16. budget CI ≤ 5 min
 grep -q 'timeout-minutes: 5' .github/workflows/ci.yml && ok "16. budget CI ≤ 5 min" || ko "16. budget CI"
@@ -80,8 +82,8 @@ grep -rqiE '\b(TODO|FIXME|XXX)\b' README.md CONTRACT.md docs/*.md docs/codelab d
   && ko "18. TODO/FIXME dans les documents publics" || ok "18. aucun TODO/FIXME public"
 
 # 19. vidéo (humain)
-ls files/*.mp4 files/*.mov files/*.webm video.* 2>/dev/null | grep -q . \
-  && ok "19. vidéo présente" || warn "19. vidéo 3 min À FILMER (humain) + la version 90 s"
+VID=$(ls files/*.mp4 files/*.mov files/*.webm video.* 2>/dev/null)
+[ -n "$VID" ] && ok "19. vidéo présente" || warn "19. vidéo 3 min À FILMER (humain) + la version 90 s"
 
 # 20. soumission Devpost (humain)
 warn "20. soumission Devpost (compte de l'équipe) — dossier prêt dans docs/devpost-form.md"

@@ -3,7 +3,7 @@
 
 # Tamis — Devpost submission form (ready to paste)
 
-QNX Global Hackathon 2026. Everything below is also live on the demo site: <https://baptistefaisy.github.io/tamis/> (tab **Submission**), and the whole project is public: <https://github.com/BaptisteFaisy/tamis>.
+QNX Global Hackathon 2026. Everything below is also live on the demo site: <https://tradoooo.github.io/tamis/> (tab **Submission**), and the whole project is public: <https://github.com/Tradoooo/tamis>.
 
 ## 1. Project name
 
@@ -71,17 +71,17 @@ Quality: 9,876 green checks, 9,000 fuzz inputs under ASan/UBSan with no crash, 1
 
 ## 11. Requirement coverage
 
-12 of 24 spec requirements done, 2 partial, the rest blocked on the QNX SDP licence or scheduled next. Full traceability table: <https://baptistefaisy.github.io/tamis/> tab **Evidence**.
+12 of 24 spec requirements done, 2 partial, the rest blocked on the QNX SDP licence or scheduled next. Full traceability table: <https://tradoooo.github.io/tamis/> tab **Evidence**.
 
 
 ## 12. Links
 
-- Demo site (live playground, no install): https://baptistefaisy.github.io/tamis/
-- Public repository (MIT): https://github.com/BaptisteFaisy/tamis
-- Codelab (20 minutes, runnable): https://github.com/BaptisteFaisy/tamis/blob/main/docs/codelab/01-auditer-une-politique.md
-- Frozen contract: https://github.com/BaptisteFaisy/tamis/blob/main/CONTRACT.md
-- Recorded QNX grammar (sourced, with TO VERIFY markers): https://github.com/BaptisteFaisy/tamis/blob/main/docs/GRAMMAR.md
-- 100-idea roadmap: https://github.com/BaptisteFaisy/tamis/blob/main/docs/100-idees.md
+- Demo site (live playground, no install): https://tradoooo.github.io/tamis/
+- Public repository (MIT): https://github.com/Tradoooo/tamis
+- Codelab (20 minutes, runnable): https://github.com/Tradoooo/tamis/blob/main/docs/codelab/01-auditer-une-politique.md
+- Frozen contract: https://github.com/Tradoooo/tamis/blob/main/CONTRACT.md
+- Recorded QNX grammar (sourced, with TO VERIFY markers): https://github.com/Tradoooo/tamis/blob/main/docs/GRAMMAR.md
+- 100-idea roadmap: https://github.com/Tradoooo/tamis/blob/main/docs/100-idees.md
 
 ## 13. Checklist
 
