@@ -1,148 +1,202 @@
 <!DOCTYPE html>
 <!-- SPDX-License-Identifier: MIT -->
-<!-- Tamis — site de démonstration : toutes les fonctionnalités, en direct dans le navigateur. -->
-<!-- Le moteur est le jumeau JS du cœur C (tamis-core.js), vérifié par différentiel JS↔C. -->
+<!-- Tamis — site de démonstration et dossier de soumission (QNX Global Hackathon 2026). -->
+<!-- Contenu bilingue GÉNÉRÉ depuis site/content.json, fixtures/ et docs/ par tools/build_site.py. -->
+<!-- Ne pas éditer les blocs entre marqueurs : ils sont régénérés (dérive contrôlée en CI). -->
 <html lang="fr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tamis — analyse statique et preuve des politiques de sécurité QNX 8.0</title>
-<meta name="description" content="Tamis : analyseur statique de politiques de sécurité QNX (secpol). Accessibilité, certificats de non-interférence, minimisation prouvée, diff sémantique. Playground en direct, zéro installation.">
+<title>Tamis — static analysis and proof for QNX 8.0 security policies</title>
+<meta name="description" content="Tamis: static analyzer for QNX security policies (secpol). Reachability, non-interference certificates, proved minimization, semantic diff. Live in-browser playground, no install. QNX Global Hackathon 2026.">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="lang-en">
 <header>
   <div class="brand">
     <h1>🦀 Tamis</h1>
-    <p class="tagline">Analyse statique et <b>preuve</b> des politiques de sécurité QNX 8.0 —
-      en direct dans le navigateur, zéro installation.</p>
+    <p class="tagline">
+      <span data-lang="fr">Analyse statique et <b>preuve</b> des politiques de sécurité QNX 8.0 — en direct dans le navigateur, zéro installation.</span>
+      <span data-lang="en">Static analysis and <b>proof</b> for QNX 8.0 security policies — live in your browser, nothing to install.</span>
+    </p>
   </div>
-  <nav id="nav">
-    <button data-tab="playground" class="active">Playground</button>
-    <button data-tab="features">Fonctionnalités</button>
-    <button data-tab="proofs">Preuves</button>
-    <button data-tab="ideas">100 idées</button>
-    <button data-tab="grammar">Grammaire &amp; contrat</button>
-  </nav>
+  <div class="head-row">
+    <nav id="nav">
+      <button data-tab="playground" class="active">Playground</button>
+      <button data-tab="features"><span data-lang="fr">Fonctionnalités</span><span data-lang="en">Features</span></button>
+      <button data-tab="proofs"><span data-lang="fr">Preuves</span><span data-lang="en">Evidence</span></button>
+      <button data-tab="submission"><span data-lang="fr">Soumission</span><span data-lang="en">Submission</span></button>
+      <button data-tab="codelab">Codelab</button>
+      <button data-tab="ideas"><span data-lang="fr">100 idées</span><span data-lang="en">100 ideas</span></button>
+      <button data-tab="grammar"><span data-lang="fr">Grammaire &amp; contrat</span><span data-lang="en">Grammar &amp; contract</span></button>
+    </nav>
+    <div class="lang" id="lang">
+      <button data-lang-set="fr" title="Français">FR</button>
+      <button data-lang-set="en" class="active" title="English">EN</button>
+    </div>
+  </div>
 </header>
 
 <main>
-<!-- ══════════════════════════ PLAYGROUND ══════════════════════════ -->
+<!-- ══════════════════ PLAYGROUND ══════════════════ -->
 <section id="playground" class="tab active">
   <div class="pg">
     <div class="col">
       <div class="panel">
         <div class="panel-head">
-          <h2>Politique analysée</h2>
+          <h2><span data-lang="fr">Politique analysée</span><span data-lang="en">Policy under analysis</span></h2>
           <span class="mini">
             <select id="example" aria-label="Exemple">
-              <option value="attaque">attaque.mpf — politique trouée</option>
-              <option value="durcie">durcie.mpf — politique corrigée</option>
+              <option value="attaque">attaque.mpf — trouée / holey</option>
+              <option value="durcie">durcie.mpf — durcie / hardened</option>
             </select>
-            <button id="loadExample" class="ghost">Charger</button>
+            <button id="loadExample" class="ghost"><span data-lang="fr">Charger</span><span data-lang="en">Load</span></button>
           </span>
         </div>
-        <textarea id="policyA" spellcheck="false" aria-label="Politique A"></textarea>
+        <textarea id="policyA" spellcheck="false" aria-label="Policy A"></textarea>
       </div>
       <div class="panel" id="panelB" hidden>
-        <div class="panel-head"><h2>Politique candidate <small>(cible du diff)</small></h2></div>
-        <textarea id="policyB" spellcheck="false" aria-label="Politique B"></textarea>
+        <div class="panel-head">
+          <h2><span data-lang="fr">Politique candidate</span><span data-lang="en">Candidate policy</span>
+            <small> <span data-lang="fr">(cible du diff)</span><span data-lang="en">(diff target)</span></small></h2>
+        </div>
+        <textarea id="policyB" spellcheck="false" aria-label="Policy B"></textarea>
       </div>
       <div class="hint">
-        Format provisoire : <code>type N</code> · <code>allow SRC DST [ability] [@id]</code> ·
-        <code>untyped P</code> · <code>default_spawn</code>. Le parseur du vrai langage
-        <code>secpol</code> se branchera sur le même modèle dès la licence QNX obtenue.
+        <span data-lang="fr">Format provisoire : <code>type N</code> · <code>allow SRC DST [ability] [@id]</code> · <code>untyped P</code> · <code>default_spawn</code>. Le parseur du vrai langage <code>secpol</code> se branchera sur le même modèle dès la licence QNX obtenue.</span>
+        <span data-lang="en">Provisional format: <code>type N</code> · <code>allow SRC DST [ability] [@id]</code> · <code>untyped P</code> · <code>default_spawn</code>. The real <code>secpol</code> parser will plug into this same model as soon as the QNX licence lands.</span>
       </div>
       <div class="toolbar" id="toolbar">
-        <button data-cmd="lint" title="Moindre privilège : processus non typés, default_spawn_type">lint</button>
-        <button data-cmd="reach" title="Accessibilité : chemin de privilège entre deux types">reach</button>
-        <button data-cmd="proof" title="Certificat de non-interférence (parcours exhaustif)">proof</button>
-        <button data-cmd="explain" title="Pourquoi ce refus + correctif minimal + angles morts">explain</button>
-        <button data-cmd="minimize" title="Règles redondantes + preuve d'équivalence">minimize</button>
-        <button data-cmd="diff" title="Diff sémantique entre deux politiques">diff</button>
-        <button data-cmd="view" title="Graphe de privilèges">view</button>
+        <button data-cmd="lint" title="Least privilege: untyped processes, missing default_spawn_type">lint</button>
+        <button data-cmd="reach" title="Reachability: privilege path between two types">reach</button>
+        <button data-cmd="proof" title="Non-interference certificate (exhaustive traversal)">proof</button>
+        <button data-cmd="explain" title="Why this denial + minimal fix + blind spots">explain</button>
+        <button data-cmd="minimize" title="Redundant rules + equivalence proof">minimize</button>
+        <button data-cmd="diff" title="Semantic diff between two policies">diff</button>
+        <button data-cmd="view" title="Privilege graph">view</button>
       </div>
       <div class="pair">
-        <label>src <select id="src" aria-label="Type source"></select></label>
-        <label>dst <select id="dst" aria-label="Type cible"></select></label>
-        <span class="hint" id="pairHint"></span>
+        <label>src <select id="src" aria-label="Source type"></select></label>
+        <label>dst <select id="dst" aria-label="Target type"></select></label>
       </div>
     </div>
 
     <div class="col">
       <div class="panel">
         <div class="panel-head">
-          <h2>Résultat</h2>
+          <h2><span data-lang="fr">Résultat</span><span data-lang="en">Result</span></h2>
           <span class="mini">
             <span class="fmt" id="fmt">
-              <button data-fmt="text" class="active">texte</button>
+              <button data-fmt="text" class="active"><span data-lang="fr">texte</span><span data-lang="en">text</span></button>
               <button data-fmt="json">JSON</button>
               <button data-fmt="md">Markdown</button>
             </span>
             <span id="exitBadge" class="badge" hidden></span>
-            <button id="copy" class="ghost">Copier</button>
+            <button id="copy" class="ghost"><span data-lang="fr">Copier</span><span data-lang="en">Copy</span></button>
           </span>
         </div>
-        <pre id="output" class="output" tabindex="0">Choisis une commande ci-dessous.</pre>
+        <pre id="output" class="output" tabindex="0"></pre>
+        <p class="hint" id="langNote"></p>
       </div>
       <div class="panel">
         <div class="panel-head">
-          <h2>Graphe de privilèges</h2>
+          <h2><span data-lang="fr">Graphe de privilèges</span><span data-lang="en">Privilege graph</span></h2>
           <span class="hint" id="graphStatus"></span>
         </div>
         <div class="graph" id="graph"></div>
-        <p class="hint">Rouge = chemin d'attaque (focus src → dst). Le graphe se met à jour à chaque analyse.</p>
+        <p class="hint">
+          <span data-lang="fr">Rouge = chemin d'attaque (focus src → dst). Le graphe se met à jour à chaque analyse.</span>
+          <span data-lang="en">Red = attack path (src → dst focus). The graph refreshes on every analysis.</span>
+        </p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ══════════════════════════ FONCTIONNALITÉS ══════════════════════════ -->
+<!-- ══════════════════ FONCTIONNALITÉS ══════════════════ -->
 <section id="features" class="tab">
-  <h2>Toutes les fonctionnalités</h2>
-  <p class="lead">Chaque ligne est <b>essayable dans le Playground</b> ci-dessus, ou en ligne de commande
-    (<code>build/tamis &lt;commande&gt;</code>). Le moteur du navigateur est un jumeau du cœur C,
-    vérifié par différentiel — les deux rendent le même JSON, octet pour octet.</p>
-  <table class="feat">
-    <thead><tr><th>Fonctionnalité</th><th>Commande</th><th>Ce que ça apporte</th><th>Exigence</th><th>État</th></tr></thead>
-    <tbody>
-      <tr><td><b>Lint moindre privilège</b></td><td><code>lint</code></td><td>Processus non typés, <code>default_spawn_type</code> absent : les deux trous que la doc QNX dit manuels (S7, S10)</td><td>TAM-06</td><td class="ok">✅</td></tr>
-      <tr><td><b>Accessibilité</b></td><td><code>reach</code></td><td>Chemin de privilège entre deux types, avec le chemin complet et les règles coupables</td><td>TAM-04</td><td class="ok">✅</td></tr>
-      <tr><td><b>Certificat de non-interférence</b></td><td><code>proof</code></td><td>Absence de chemin <b>prouvée</b> par parcours exhaustif, compteur de visites publié — pas seulement « non trouvée »</td><td>TAM-05/20</td><td class="ok">✅</td></tr>
-      <tr><td><b>Explication pédagogique</b></td><td><code>explain</code></td><td>« Pourquoi ce refus » en clair, chaîne coupable, <b>correctif minimal</b>, périmètre et angles morts bornés</td><td>Palier 1 / TAM-21</td><td class="ok">✅</td></tr>
-      <tr><td><b>Minimisation prouvée</b></td><td><code>minimize</code></td><td>Règles redondantes retirées + <b>preuve d'équivalence</b> (accessibilité toute-paire identique avant/après)</td><td>TAM-07</td><td class="ok">✅</td></tr>
-      <tr><td><b>Diff sémantique</b></td><td><code>diff</code></td><td>Élargissements et réductions de privilège entre deux versions : la non-régression devient vérifiable</td><td>TAM-08</td><td class="ok">✅</td></tr>
-      <tr><td><b>Graphe de privilèges</b></td><td><code>view</code></td><td>Visualisation interactive, chemin d'attaque en surbrillance, zéro dépendance</td><td>TAM-23</td><td class="ok">✅</td></tr>
-      <tr><td><b>Rapport d'audit</b></td><td><code>--format md</code></td><td>Markdown versable en dossier de certification : synthèse, verdicts, <b>empreinte SHA-256</b>, horodatage, version</td><td>TAM-16</td><td class="ok">✅</td></tr>
-      <tr><td><b>13 verdicts normalisés</b></td><td>—</td><td>Contrat gelé : codes, sévérités, positions, chemins — identiques en C, Python et JS</td><td>CONTRACT §3</td><td class="ok">✅</td></tr>
-      <tr><td><b>Sortie CI</b></td><td>code de retour</td><td>0 si sain, 1 si un verdict <code>error</code> : branchable tel quel dans un pipeline</td><td>TAM-10</td><td class="ok">✅</td></tr>
-      <tr><td><b>Jumeau Python + différentiel</b></td><td><code>make test</code></td><td>Deux implémentations indépendantes comparées sur 250/300/500 verdicts : 0 divergence</td><td>TAM-09</td><td class="ok">✅</td></tr>
-      <tr><td><b>Fuzz + mutants</b></td><td><code>make test</code>, <code>make mutants</code></td><td>9 000 entrées aléatoires sous ASan/UBSan sans crash ; 12 mutants, tous tués</td><td>TAM-11</td><td class="ok">✅</td></tr>
-      <tr><td><b>Différentiel vs <code>secpolcompile</code></b></td><td><code>oracle/</code></td><td>La preuve la plus forte : accord avec le compilateur officiel QNX, sans cible</td><td>TAM-12</td><td class="wait">⏳ harnais prêt, attend le SDP</td></tr>
-      <tr><td><b>Parseur du vrai <code>secpol</code></b></td><td>lot L1</td><td>Lecture du langage officiel QNX à la place du format provisoire</td><td>TAM-01/02</td><td class="wait">🚧 grammaire À VÉRIFIER (licence)</td></tr>
-      <tr><td><b>Plages nommées à froid</b></td><td>lot L8</td><td>Existence, disjonction, couverture des <code>range</code> avant déploiement (trou S13)</td><td>TAM-13</td><td class="wait">⏳</td></tr>
-      <tr><td><b>Graphe <code>gain_priv</code>/<code>settypeid</code></b></td><td>lot L8</td><td>Cycles et élévations atteignables, là où la doc prescrit l'essai-erreur (trou S8)</td><td>TAM-14</td><td class="wait">⏳</td></tr>
-      <tr><td><b><code>tamis-ci</code> (bot de PR)</b></td><td>lot L7</td><td>Commente la PR avec le diff sémantique, bloque sur élargissement non approuvé</td><td>TAM-17</td><td class="wait">⏳</td></tr>
-      <tr><td><b>Fusion à 3 voies / stabilisateur</b></td><td>lot L8</td><td>Base + généré + édité à la main ; alignement de N politiques générées instables (trous S6, S9)</td><td>TAM-18/19</td><td class="wait">⏳</td></tr>
-      <tr><td><b>Encodeur SMT (Z3)</b></td><td>idée 5</td><td>Équivalence, minimalité et inaccessibilité prouvées par solveur</td><td>Palier 2</td><td class="wait">⏳</td></tr>
-      <tr><td><b>Mapping certification</b></td><td>idées 52–55</td><td>ISO 26262, IEC 62304, EN 50128, UNECE R155 : propriétés prouvées → artefacts d'audit</td><td>Palier 2</td><td class="wait">⏳</td></tr>
-    </tbody>
-  </table>
+  <h2><span data-lang="fr">Toutes les fonctionnalités</span><span data-lang="en">Every feature</span></h2>
+  <p class="lead">
+    <span data-lang="fr">Chaque ligne est <b>essayable dans le Playground</b> ci-dessus ou en ligne de commande (<code>build/tamis &lt;commande&gt;</code>). Le moteur de ce site est un jumeau du cœur C, vérifié par différentiel : les deux rendent le même JSON, octet pour octet.</span>
+    <span data-lang="en">Every row is <b>runnable in the Playground</b> above or on the command line (<code>build/tamis &lt;command&gt;</code>). This site's engine is a twin of the C core, checked by differential testing: both render byte-identical JSON.</span>
+  </p>
+  <!-- FEATURES:START -->
+<div data-lang="fr"><table class="feat">
+<thead><tr>
+<th>Fonctionnalité</th>
+<th>Commande</th>
+<th>Ce que ça apporte</th>
+<th>Exigence</th>
+<th>État</th>
+</tr></thead><tbody>
+<tr><td><b>Lint moindre privilège</b></td><td><code>lint</code></td><td>Processus non typés et default_spawn_type absent : les deux revues que la doc QNX déclare manuelles (gaps S7, S10)</td><td>TAM-06</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Accessibilité</b></td><td><code>reach</code></td><td>Chemin de privilège entre deux types, avec le chemin complet et les règles coupables</td><td>TAM-04</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Certificat de non-interférence</b></td><td><code>proof</code></td><td>Absence de chemin prouvée par parcours exhaustif, compteur de visites publié — pas seulement « non trouvée »</td><td>TAM-05/20</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Explication pédagogique</b></td><td><code>explain</code></td><td>« Pourquoi ce refus » : chaîne coupable en clair, correctif minimal proposé, périmètre et angles morts bornés</td><td>TAM-21</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Minimisation prouvée</b></td><td><code>minimize</code></td><td>Règles redondantes retirées + preuve d&#x27;équivalence (accessibilité toute-paire identique avant/après)</td><td>TAM-07</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Diff sémantique</b></td><td><code>diff</code></td><td>Élargissements et réductions de privilège entre deux versions : la non-régression devient vérifiable</td><td>TAM-08</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Graphe de privilèges</b></td><td><code>view</code></td><td>Visualisation interactive, chemin d&#x27;attaque en surbrillance, zéro dépendance</td><td>TAM-23</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Rapport d&#x27;audit</b></td><td><code>--format md</code></td><td>Markdown versable en dossier de certification : synthèse, verdicts, empreinte SHA-256, horodatage, version</td><td>TAM-16</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>13 verdicts normalisés</b></td><td><code>—</code></td><td>Contrat gelé : codes, sévérités, positions, chemins — identiques en C, Python et JS</td><td>CONTRACT §3</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Sortie CI</b></td><td><code>exit code</code></td><td>0 si sain, 1 si un verdict error : branchable tel quel dans un pipeline</td><td>TAM-10</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Jumeau Python + différentiel</b></td><td><code>make test</code></td><td>Deux implémentations indépendantes comparées sur 250/300/500 verdicts : 0 divergence</td><td>TAM-09</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Jumeau navigateur + différentiel</b></td><td><code>tests/test_js.sh</code></td><td>Le moteur JS de ce site rend exactement le JSON du cœur C sur 13 scénarios réels</td><td>TAM-09</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Fuzz + mutants</b></td><td><code>make mutants</code></td><td>9 000 entrées aléatoires sous ASan/UBSan sans crash ; 12 mutants, tous tués</td><td>TAM-11</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Différentiel vs secpolcompile</b></td><td><code>oracle/</code></td><td>La preuve la plus forte : accord avec le compilateur officiel QNX, sans cible</td><td>TAM-12</td><td class="wait">⏳ harnais prêt, attend le SDP</td></tr>
+<tr><td><b>Parseur du vrai secpol</b></td><td><code>lot L1</code></td><td>Lecture du langage officiel QNX à la place du format provisoire</td><td>TAM-01/02</td><td class="wait">🚧 grammaire À VÉRIFIER (licence QNX)</td></tr>
+<tr><td><b>Plages nommées à froid</b></td><td><code>lot L8</code></td><td>Existence, disjonction, couverture des range avant déploiement (gap S13)</td><td>TAM-13</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>Graphe gain_priv / settypeid</b></td><td><code>lot L8</code></td><td>Cycles et élévations atteignables, là où la doc prescrit l&#x27;essai-erreur (gap S8)</td><td>TAM-14</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>tamis-ci (bot de PR)</b></td><td><code>lot L7</code></td><td>Commente la PR avec le diff sémantique, bloque sur élargissement non approuvé</td><td>TAM-17</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>Fusion à 3 voies / stabilisateur</b></td><td><code>lot L8</code></td><td>Base + généré + édité à la main ; alignement de N politiques générées instables (gaps S6, S9)</td><td>TAM-18/19</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>Encodeur SMT (Z3)</b></td><td><code>idée 5</code></td><td>Équivalence, minimalité et inaccessibilité prouvées par solveur</td><td>Palier 2</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>Mapping certification</b></td><td><code>idées 52–55</code></td><td>ISO 26262, IEC 62304, EN 50128, UNECE R155 : propriétés prouvées → artefacts d&#x27;audit</td><td>Palier 2</td><td class="wait">⏳ à venir</td></tr>
+</tbody></table></div>
+<div data-lang="en"><table class="feat">
+<thead><tr>
+<th>Feature</th>
+<th>Command</th>
+<th>What it adds</th>
+<th>Requirement</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr><td><b>Least-privilege lint</b></td><td><code>lint</code></td><td>Untyped processes and missing default_spawn_type: the two reviews QNX&#x27;s own docs declare manual (gaps S7, S10)</td><td>TAM-06</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Reachability</b></td><td><code>reach</code></td><td>Privilege path between two types, with the full chain and the guilty rules</td><td>TAM-04</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Non-interference certificate</b></td><td><code>proof</code></td><td>Absence of a path is proved by exhaustive traversal with a published visit count — not merely «not found»</td><td>TAM-05/20</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Plain-language explanation</b></td><td><code>explain</code></td><td>«Why this denial»: the guilty chain in plain words, a minimal suggested fix, and bounded blind spots</td><td>TAM-21</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Proved minimization</b></td><td><code>minimize</code></td><td>Redundant rules removed plus an equivalence proof (all-pairs reachability identical before and after)</td><td>TAM-07</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Semantic diff</b></td><td><code>diff</code></td><td>Privilege widenings and narrowings between two versions: non-regression becomes checkable</td><td>TAM-08</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Privilege graph</b></td><td><code>view</code></td><td>Interactive rendering, attack path highlighted, zero dependencies</td><td>TAM-23</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Audit report</b></td><td><code>--format md</code></td><td>Markdown ready for a certification file: summary, verdicts, SHA-256 fingerprint, timestamp, version</td><td>TAM-16</td><td class="ok">✅ done</td></tr>
+<tr><td><b>13 normalized verdicts</b></td><td><code>—</code></td><td>Frozen contract: codes, severities, positions, paths — identical in C, Python and JS</td><td>CONTRACT §3</td><td class="ok">✅ done</td></tr>
+<tr><td><b>CI exit status</b></td><td><code>exit code</code></td><td>0 when healthy, 1 on any error verdict: drop straight into a pipeline</td><td>TAM-10</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Python twin + differential</b></td><td><code>make test</code></td><td>Two independent implementations compared over 250/300/500 verdicts: zero divergence</td><td>TAM-09</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Browser twin + differential</b></td><td><code>tests/test_js.sh</code></td><td>This site&#x27;s JS engine renders exactly the C core&#x27;s JSON across 13 real scenarios</td><td>TAM-09</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Fuzz + mutants</b></td><td><code>make mutants</code></td><td>9,000 random inputs under ASan/UBSan with no crash; 12 mutants, all killed</td><td>TAM-11</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Differential vs secpolcompile</b></td><td><code>oracle/</code></td><td>The strongest proof: agreement with the official QNX compiler, with no target needed</td><td>TAM-12</td><td class="wait">⏳ harness ready, waiting for the SDP</td></tr>
+<tr><td><b>Real secpol parser</b></td><td><code>lot L1</code></td><td>Parse the official QNX language instead of the provisional format</td><td>TAM-01/02</td><td class="wait">🚧 grammar TO VERIFY (QNX licence)</td></tr>
+<tr><td><b>Cold validation of named ranges</b></td><td><code>lot L8</code></td><td>Existence, disjointness and coverage of range entries before deployment (gap S13)</td><td>TAM-13</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>gain_priv / settypeid graph</b></td><td><code>lot L8</code></td><td>Cycles and reachable elevations, where the docs prescribe trial and error (gap S8)</td><td>TAM-14</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>tamis-ci (PR bot)</b></td><td><code>lot L7</code></td><td>Comments the PR with the semantic diff, blocks on unapproved privilege widening</td><td>TAM-17</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>Three-way merge / stabilizer</b></td><td><code>lot L8</code></td><td>Base + generated + hand-edited; aligning N unstable generated policies (gaps S6, S9)</td><td>TAM-18/19</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>SMT encoder (Z3)</b></td><td><code>idée 5</code></td><td>Equivalence, minimality and unreachability discharged by a solver</td><td>Palier 2</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>Certification mapping</b></td><td><code>idées 52–55</code></td><td>ISO 26262, IEC 62304, EN 50128, UNECE R155: proved properties turned into audit artifacts</td><td>Palier 2</td><td class="wait">⏳ next</td></tr>
+</tbody></table></div>
+<!-- FEATURES:END -->
 </section>
 
-<!-- ══════════════════════════ PREUVES ══════════════════════════ -->
+<!-- ══════════════════ PREUVES ══════════════════ -->
 <section id="proofs" class="tab">
-  <h2>Les preuves, pas les promesses</h2>
+  <h2><span data-lang="fr">Les preuves, pas les promesses</span><span data-lang="en">Evidence, not promises</span></h2>
   <div class="stats">
-    <div class="stat"><b id="statChecks">9 828</b><span>vérifications vertes</span></div>
-    <div class="stat"><b>0</b><span>divergence C ↔ Python</span></div>
-    <div class="stat"><b>9 000</b><span>entrées de fuzz, 0 crash</span></div>
-    <div class="stat"><b>12/12</b><span>mutants tués</span></div>
-    <div class="stat"><b>0</b><span>erreur ASan/UBSan</span></div>
-    <div class="stat"><b>24 s</b><span>CI complète, budget 5 min</span></div>
+    <div class="stat"><b>9 876</b><span data-lang="fr">vérifications vertes</span><span data-lang="en">green checks</span></div>
+    <div class="stat"><b>0</b><span data-lang="fr">divergence C ↔ Python ↔ JS</span><span data-lang="en">C ↔ Python ↔ JS divergence</span></div>
+    <div class="stat"><b>9 000</b><span data-lang="fr">entrées de fuzz, 0 crash</span><span data-lang="en">fuzz inputs, 0 crashes</span></div>
+    <div class="stat"><b>12/12</b><span data-lang="fr">mutants tués</span><span data-lang="en">mutants killed</span></div>
+    <div class="stat"><b>0</b><span data-lang="fr">erreur ASan/UBSan</span><span data-lang="en">ASan/UBSan findings</span></div>
+    <div class="stat"><b>24 s</b><span data-lang="fr">CI complète, budget 5 min</span><span data-lang="en">full CI, 5-min budget</span></div>
   </div>
   <!-- PREUVES:START -->
-<div class="prose">
+<div data-lang="fr"><div class="prose">
 <h3>Les 8 niveaux de vérification</h3>
 <table>
 <thead><tr>
@@ -177,187 +231,335 @@
 <tr><td>7 — Équivalence minimisation</td><td>⏳ attend <code>minimize</code></td></tr>
 <tr><td>8 — Gardes maison</td><td>✅ vert</td></tr>
 </tbody></table>
-<p class="hint">Commandes : <code>make test</code> · <code>make sanitize</code> · <code>make mutants</code> · <code>bash tests/test_js.sh</code> · <code>bash tests/test_differentiel.sh</code></p>
-</div>
+</div></div>
+<div data-lang="en"><div class="prose">
+<h3>The 8 verification levels</h3>
+<table>
+<thead><tr>
+<th>#</th>
+<th>Level</th>
+<th>How</th>
+<th>Result</th>
+</tr></thead><tbody>
+<tr><td>1</td><td><b>C unit tests</b></td><td>one binary per module, ends with <code>OK &lt;n&gt; checks</code></td><td>469 checks</td></tr>
+<tr><td>2</td><td><b>C ↔ Python differential</b></td><td><code>tests/test_differentiel.sh</code>, seeded, bisects the first disagreement</td><td>0 divergence on 250/300/500 verdicts</td></tr>
+<tr><td>3</td><td><b>C ↔ JS differential</b></td><td><code>tests/test_js.sh</code>, the browser twin against the C core</td><td>0 divergence on 13 scenarios</td></tr>
+<tr><td>4</td><td><b>Differential vs <code>secpolcompile</code></b></td><td><code>oracle/run_oracle.sh</code> — needs the host SDP</td><td>harness ready, exits 3 without SDP</td></tr>
+<tr><td>5</td><td><b>Fuzz</b></td><td><code>tools/fuzz.c</code> under ASan/UBSan, deterministic by seed</td><td>9 000 inputs, 0 crashes</td></tr>
+<tr><td>6</td><td><b>Mutation testing</b></td><td><code>tests/mutants.py</code> — every mutation must be killed</td><td>12/12 killed</td></tr>
+<tr><td>7</td><td><b>Minimization equivalence</b></td><td>all-pairs reachability replayed before and after</td><td>25 pairs identical</td></tr>
+<tr><td>8</td><td><b>House guards</b></td><td>size guard, SPDX, ci-budget ≤ 5 min per job</td><td>green</td></tr>
+</tbody></table>
+</div></div>
 <!-- PREUVES:END -->
+  <h3 class="sub"><span data-lang="fr">Couverture des 24 exigences du cahier des charges</span><span data-lang="en">Coverage of the 24 spec requirements</span></h3>
+  <!-- REQUIREMENTS:START -->
+<div data-lang="fr"><table class="feat">
+<thead><tr>
+<th>ID</th>
+<th>Niv.</th>
+<th>Exigence</th>
+<th>État</th>
+</tr></thead><tbody>
+<tr><td><b>TAM-01</b></td><td>S</td><td>Grammaire écrite depuis la doc officielle avec la page source de chaque production</td><td class="wait">🟡 partiel</td></tr>
+<tr><td><b>TAM-02</b></td><td>S</td><td>Le parseur accepte le corpus et refuse toute entrée hors grammaire avec position et cause</td><td class="wait">🚧 bloqué (licence)</td></tr>
+<tr><td><b>TAM-03</b></td><td>S</td><td>Modèle en mémoire fidèle : types, attributs, classes, règles, plages</td><td class="wait">🟡 partiel</td></tr>
+<tr><td><b>TAM-04</b></td><td>S</td><td>L&#x27;accessibilité transitive restitue le chemin complet (types intermédiaires + règles)</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-05</b></td><td>S</td><td>L&#x27;absence de chemin est prouvée, pas seulement non trouvée : parcours exhaustif, compteur publié</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-06</b></td><td>S</td><td>Le lint détecte les processus non typés et l&#x27;absence de default_spawn_type (trous S7, S10)</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-07</b></td><td>S</td><td>La minimisation retire les règles mortes et dominées et prouve l&#x27;équivalence sur le corpus de décisions</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-08</b></td><td>S</td><td>Le diff sémantique signale tout élargissement de privilège avec la règle responsable</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-09</b></td><td>S</td><td>Le jumeau Python et le cœur C donnent des verdicts identiques ; désaccord réduit dichotomiquement</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-10</b></td><td>S</td><td>CI ≤ 5 min par job, fetch-depth 1, concurrency, gardes de taille et de budget</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-11</b></td><td>S</td><td>Parseur fuzzé (déterministe par graine) sans crash ni fuite sous ASan/UBSan</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-12</b></td><td>C</td><td>Test différentiel contre secpolcompile : accord dans les deux sens</td><td class="wait">⏳ harnais prêt</td></tr>
+<tr><td><b>TAM-13</b></td><td>C</td><td>Plages nommées validées à froid : existence, disjonction, couverture, bornes (trou S13)</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>TAM-14</b></td><td>C</td><td>Graphe settypeid / gain_priv analysé : cycles, élévations atteignables, contre-exemple rejouable (trou S8)</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>TAM-15</b></td><td>C</td><td>Croisement avec /dev/secpolgenerate/unused et /errors quand ces fichiers sont fournis</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>TAM-16</b></td><td>C</td><td>Rapport Markdown de certification exploitable tel quel, avec empreinte de la politique</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-17</b></td><td>C</td><td>tamis-ci commente une demande de fusion avec le diff sémantique et bloque sur élargissement</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>TAM-18</b></td><td>C</td><td>Fusion à trois voies assistée : base / généré / édité à la main, conflits signalés</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>TAM-19</b></td><td>C</td><td>Stabilisateur : N politiques générées alignées par clé sémantique (trou S6)</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>TAM-20</b></td><td>X</td><td>Preuve de non-interférence formalisée et exportable : énoncé, hypothèses, méthode, résultat</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-21</b></td><td>X</td><td>Angles morts documentés (trou S4) signalés comme NON couverts au lieu d&#x27;être ignorés</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-22</b></td><td>X</td><td>Extension du modèle aux objets non-canaux (trou S15) : mémoire partagée, connexions</td><td class="wait">⏳ à venir</td></tr>
+<tr><td><b>TAM-23</b></td><td>X</td><td>Visualiseur HTML du graphe de privilèges, filtrable, contre-exemple en surbrillance</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>TAM-24</b></td><td>X</td><td>Contribution amont : chapitre d&#x27;audit ou outil de revue proposé au dépôt QNX</td><td class="wait">⏳ à venir</td></tr>
+</tbody></table></div>
+<div data-lang="en"><table class="feat">
+<thead><tr>
+<th>ID</th>
+<th>Lvl</th>
+<th>Requirement</th>
+<th>Status</th>
+</tr></thead><tbody>
+<tr><td><b>TAM-01</b></td><td>S</td><td>Grammar written from official docs with the source page of each production</td><td class="wait">🟡 partial</td></tr>
+<tr><td><b>TAM-02</b></td><td>S</td><td>Parser accepts the corpus and refuses anything off-grammar with position and cause</td><td class="wait">🚧 blocked (licence)</td></tr>
+<tr><td><b>TAM-03</b></td><td>S</td><td>Faithful in-memory model: types, attributes, classes, rules, ranges</td><td class="wait">🟡 partial</td></tr>
+<tr><td><b>TAM-04</b></td><td>S</td><td>Transitive reachability returns the full path (intermediate types + rules)</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-05</b></td><td>S</td><td>Absence of a path is proved, not merely not found: exhaustive traversal, visit count published</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-06</b></td><td>S</td><td>Lint detects untyped processes and missing default_spawn_type (gaps S7, S10)</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-07</b></td><td>S</td><td>Minimization removes dead/dominated rules and proves equivalence over the decision corpus</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-08</b></td><td>S</td><td>Semantic diff flags every privilege widening with the responsible rule</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-09</b></td><td>S</td><td>Python twin and C core give identical verdicts; disagreement bisected</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-10</b></td><td>S</td><td>CI ≤ 5 min per job, fetch-depth 1, concurrency, size and budget guards</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-11</b></td><td>S</td><td>Parser fuzzed (seeded, deterministic) with no crash or leak under ASan/UBSan</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-12</b></td><td>C</td><td>Differential test against secpolcompile: agreement in both directions</td><td class="wait">⏳ harness ready</td></tr>
+<tr><td><b>TAM-13</b></td><td>C</td><td>Named ranges validated cold: existence, disjointness, coverage, bounds (gap S13)</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>TAM-14</b></td><td>C</td><td>settypeid / gain_priv graph analysed: cycles, reachable elevations, replayable counter-example (gap S8)</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>TAM-15</b></td><td>C</td><td>Cross-check with /dev/secpolgenerate/unused and /errors when supplied</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>TAM-16</b></td><td>C</td><td>Markdown certification report an auditor can use as-is, with policy fingerprint</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-17</b></td><td>C</td><td>tamis-ci comments a pull request with the semantic diff and blocks on widening</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>TAM-18</b></td><td>C</td><td>Assisted three-way merge: base / generated / hand-edited, conflicts flagged</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>TAM-19</b></td><td>C</td><td>Stabilizer: N generated policies aligned by semantic key into one canonical policy (gap S6)</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>TAM-20</b></td><td>X</td><td>Non-interference proof formalized and exportable: statement, assumptions, method, result</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-21</b></td><td>X</td><td>Documented blind spots (gap S4) reported as NOT covered instead of ignored</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-22</b></td><td>X</td><td>Model extended to non-channel objects (gap S15): shared memory, connections</td><td class="wait">⏳ next</td></tr>
+<tr><td><b>TAM-23</b></td><td>X</td><td>HTML privilege-graph viewer, filterable, counter-example highlighted</td><td class="ok">✅ done</td></tr>
+<tr><td><b>TAM-24</b></td><td>X</td><td>Upstream contribution: audit chapter or review tool proposed to the QNX repo</td><td class="wait">⏳ next</td></tr>
+</tbody></table></div>
+<!-- REQUIREMENTS:END -->
 </section>
 
-<!-- ══════════════════════════ 100 IDÉES ══════════════════════════ -->
-<section id="ideas" class="tab">
-  <h2>100 idées pour aller plus loin</h2>
-  <p class="lead">Les 10 premières de la liste ci-dessous sont <b>déjà implémentées</b> et essayables
-    dans le Playground. Source : <code>docs/100-idees.md</code>.</p>
-  <!-- IDEES:START -->
-<div class="ideas">
-<h3>A. Cœur analytique &amp; preuve (1–10)</h3>
-<ol start="1">
-<li class="done">✓ Accessibilité transitive entre deux types avec contre-exemple rejouable pas à pas (TAM-04)</li>
-<li class="done">✓ Certificat de non-interférence : absence de chemin <b>prouvée</b> (parcours exhaustif, compteur de visites publié) (TAM-05/20)</li>
-<li class="done">✓ Minimisation prouvée équivalente sur un corpus de 10 000 décisions (TAM-07)</li>
-<li class="done">✓ Diff sémantique : élargissements/réductions de privilège entre deux politiques (TAM-08)</li>
-<li>Encodeur SMT-LIB2 → Z3 : prouver équivalence/minimalité/inaccessibilité par solveur</li>
-<li>Raffinement : prouver que la politique raffine celle du BSP fournisseur</li>
-<li>Détection de fuites de privilège aux frontières de composition</li>
-<li>Graphe <code>settypeid</code>/<code>gain_priv</code> : cycles, élévations atteignables (trou S8)</li>
-<li>Validation à froid des plages nommées : existence, disjonction, couverture (TAM-13/S13)</li>
-<li>Treillis de privilèges : règles dominées par d&#x27;autres</li>
-</ol>
-<h3>B. Surface QNX-spécifique (11–20)</h3>
-<ol start="11">
-<li>Modéliser les ~70 abilities statiques + les 2 jeux root/non-root</li>
-<li>Abilities dynamiques custom (préfixes <code>fsevmgr/</code>, <code>network/</code>, <code>vfs/</code>)</li>
-<li>Pathtrust : vérifier l&#x27;exécution de code fiable (<code>path_trust</code>, <code>procnto -qt</code>)</li>
-<li>Fonctions fortifiées : couverture des checks de débordement</li>
-<li>Portail sur <code>secpolgenerate</code> : auditer le diff incrémental avant intégration</li>
-<li>Boucle <code>libsecpolev</code> : rejouer les refus runtime dans le modèle statique (prédit/réel)</li>
-<li>Croisement <code>/dev/secpolgenerate/unused</code> + <code>/errors</code> → candidats suppression justifiés (TAM-15)</li>
-<li><code>security_matrix</code> : mapper les propriétés prouvées sur la matrice QNX</li>
-<li><code>mkqnximage</code> mode démo sécurité : politique de référence préconstruite</li>
-<li><code>secpollaunch</code>/<code>secpol-preload</code> : modéliser les transitions de type au spawn</li>
-</ol>
-<h3>C. Visualisation &amp; UX (21–30)</h3>
-<ol start="21">
-<li class="done">✓ Visualiseur HTML du graphe de privilèges, filtrable, contre-exemple en surbrillance (TAM-23)</li>
-<li>Terrain de jeu WASM : coller une politique, rapport en 5 s, zéro installation</li>
-<li class="done">✓ CLI ergonomique : <code>tamis lint|reach|minimize|diff|view</code></li>
-<li>Serveur de langage <code>.secpol</code> (LSP) : complétion, erreurs en direct</li>
-<li>Sortie HTML interactive du rapport d&#x27;audit</li>
-<li class="done">✓ Mode « explique-moi ce refus » : lignes sources, chaîne de règles coupables, correctif minimal</li>
-<li>Diff visuel côte-à-côte de deux politiques</li>
-<li>Vue « budget de privilège » par type (heat map)</li>
-<li>Graphique de l&#x27;évolution des privilèges entre versions</li>
-<li>Accessibilité/thème du visualiseur</li>
-</ol>
-<h3>D. CI/DevOps (31–40)</h3>
-<ol start="31">
-<li><code>tamis-ci</code> : commente les PR avec le diff sémantique (TAM-17)</li>
-<li>Bloque une PR sur tout élargissement de privilège non approuvé</li>
-<li>GitHub Action marketplace (<code>action.yml</code> composite)</li>
-<li>Pre-commit hook : <code>tamis lint</code> avant chaque commit</li>
-<li>Bot de revue exigeant une approbation nommée sur élargissement</li>
-<li>Intégration GitLab CI / Jenkins</li>
-<li>Rapport JUnit XML pour CI génériques</li>
-<li>Gate de non-régression vs la politique de la branche cible</li>
-<li>Badge « policy: audited » pour le README</li>
-<li>Webhook de recertification à chaque push</li>
-</ol>
-<h3>E. Tests &amp; robustesse (41–50)</h3>
-<ol start="41">
-<li class="done">✓ Fuzz du moteur sous ASan/UBSan, entrées déterministes par graine (TAM-11)</li>
-<li class="done">✓ Mutants : ≥10 mutations des moteurs, chacune tuée (validation niv. 6)</li>
-<li>Property-based testing du modèle (graphes valides aléatoires)</li>
-<li>Différentiel C↔Python étendu à tous les moteurs (pas seulement le rendu)</li>
-<li>Banque de 40 politiques fautives avec erreur attendue (TAM-02)</li>
-<li>12 chemins de privilège dirigés + 8 paires avant/après</li>
-<li>6 jeux de plages nommées cassés</li>
-<li>Test de non-régression sur corpus de 400+ règles</li>
-<li>Couverture de code (gcov/lcov) avec seuil exigé</li>
-<li>Test de performance : 10 000 règles sous seuil</li>
-</ol>
-<h3>F. Certification &amp; audit (51–60)</h3>
-<ol start="51">
-<li class="done">✓ Rapport d&#x27;exhaustivité : périmètre de complétude + <b>angles morts bornés</b> (Palier 1)</li>
-<li>Mapping ISO 26262 des propriétés prouvées</li>
-<li>Mapping IEC 62304 (médical)</li>
-<li>Mapping EN 50128 (ferroviaire)</li>
-<li>Mapping UNECE R155 (cybersécurité automobile)</li>
-<li>Artefacts d&#x27;audit signés (empreinte + horodatage)</li>
-<li>Traçabilité exigence→propriété→preuve (matrice)</li>
-<li>Gabarit de dossier de sécurité pré-rempli</li>
-<li>Angles morts déclarés (trou S4) signalés non couverts (TAM-21)</li>
-<li>Export « preuve » régénérable avec somme de contrôle</li>
-</ol>
-<h3>G. Menaces &amp; sécurité (61–70)</h3>
-<ol start="61">
-<li>Catalogue de menaces STRIDE exécutable → requêtes formelles sur le graphe</li>
-<li>Arbres d&#x27;attaque traduits en requêtes + rapport de couverture</li>
-<li>Scénarios d&#x27;attaque rejoués pas à pas</li>
-<li>Détection + animation de chemins d&#x27;attaque réels</li>
-<li>Correctif minimal proposé pour tuer un chemin (moindre privilège)</li>
-<li>MITRE ATT&amp;CK for ICS/automotive : mapping des capacités</li>
-<li class="done">✓ Lint moindre privilège : processus non typés, <code>default_spawn_type</code> manquant, abilities sur-dimensionnées (TAM-06)</li>
-<li>Points d&#x27;attachage trop larges (<code>allow_attach</code> wildcards)</li>
-<li>Règles en contradiction avec un concept de sûreté déclaré</li>
-<li>Score de surface d&#x27;attaque par type</li>
-</ol>
-<h3>H. Écosystème &amp; communauté (71–80)</h3>
-<ol start="71">
-<li>Corpus public de politiques (exemples SDP + projets ouverts)</li>
-<li class="done">✓ Codelab 4 chapitres « auditer une politique QNX » (Best Codelab bonus)</li>
-<li>Codelab « de vulnérable à durci en 20 minutes »</li>
-<li>Contribution amont au dépôt QNX (TAM-24)</li>
-<li>Docs EN/FR complètes</li>
-<li>Packaging : <code>make install</code>, binaire statique</li>
-<li>Publication du jeu de données + résultats reproductibles</li>
-<li>Site de démonstration (GitHub Pages) avec le visualiseur</li>
-<li>Vidéo 3 min (attaque rejouée, correctif, le chemin meurt)</li>
-<li>Exemples par domaine (automotive, médical, industriel)</li>
-</ol>
-<h3>I. Performance &amp; échelle (81–90)</h3>
-<ol start="81">
-<li>Analyse incrémentale : ne recalculer que le sous-graphe modifié</li>
-<li>Cache des verdicts par empreinte de politique</li>
-<li>Parallélisation des requêtes d&#x27;accessibilité</li>
-<li>Index de types pour lookup O(1)</li>
-<li>Compression du graphe (BDD) pour grandes politiques</li>
-<li>Streaming : analyser sans tout charger</li>
-<li>Mémoïsation des chemins</li>
-<li>Profilage + benchmark de référence</li>
-<li>Politiques de 100 000 règles</li>
-<li>Mémoire bornée (aucune allocation non maîtrisée)</li>
-</ol>
-<h3>J. Avancé / horizon 3 mois (91–100)</h3>
-<ol start="91">
-<li>Noyau de preuve Lean 4 : formaliser la sémantique d&#x27;accessibilité</li>
-<li>Flux indirects IPC : <code>MsgSend</code>/<code>ConnectAttach</code>, passation de descripteurs</li>
-<li>Multi-images &amp; hyperviseur : politiques par partition, interférences inter-invités</li>
-<li>QFS et conteneurs typés</li>
-<li>Provenance &amp; recertification : raison/ticket/propriétaire/expiration par règle</li>
-<li>Répétition de déploiement : simuler <code>secpolpush</code> avec plan de retour arrière</li>
-<li>Non-interférence informationnelle (flux explicites + implicites)</li>
-<li>Fusion à trois voies assistée (TAM-18)</li>
-<li>Stabilisateur : aligner N politiques générées par clé sémantique (TAM-19/S6)</li>
-<li>Extension aux objets non-canaux : mémoire partagée, connexions (TAM-22/S15)</li>
-</ol>
-<p class="hint">✓ = implémenté et essayable dans le Playground. Liste complète annotée : <code>docs/100-idees.md</code>.</p>
+<!-- ══════════════════ SOUMISSION ══════════════════ -->
+<section id="submission" class="tab">
+  <!-- SUBMISSION:START -->
+<div data-lang="fr"><div class="subcard"><h2>Tamis</h2><p class="tagline">Analyse statique et preuve des politiques de sécurité QNX 8.0 — avant le déploiement.</p><p><b>Catégorie :</b> Developer Tooling &amp; Host Tools</p><p><b>Bonus visés :</b></p><ul><li>Best use of QNX-specific Technologies (les politiques de sécurité sont nommément citées par le règlement)</li><li>Best Codelab/Tutorial (codelab 20 min, autonome)</li></ul></div></div>
+<div data-lang="en"><div class="subcard"><h2>Tamis</h2><p class="tagline">Static analysis and proof for QNX 8.0 security policies — before deployment.</p><p><b>Category:</b> Developer Tooling &amp; Host Tools</p><p><b>Bonuses targeted:</b></p><ul><li>Best use of QNX-specific Technologies (security policies are explicitly named in the rules)</li><li>Best Codelab/Tutorial (self-contained 20-minute codelab)</li></ul></div></div>
+<div data-lang="fr"><h3>Le pitch, en une phrase</h3><p class="pitch">QNX génère et surveille les politiques de sécurité ; QNX demande à l&#x27;intégrateur de les relire, les fusionner et les justifier à la main. Tamis outille exactement cette partie, et le prouve en se testant contre secpolcompile.</p></div>
+<div data-lang="en"><h3>The pitch, in one sentence</h3><p class="pitch">QNX generates and monitors security policies; QNX asks the integrator to review, merge and justify them by hand. Tamis tools exactly that part — and proves itself by differential testing against secpolcompile.</p></div>
+<div data-lang="fr"><h3>Ce que fait Tamis</h3><p>Tamis est un outil hôte qui lit une politique de sécurité QNX avant déploiement et répond à quatre questions que la chaîne officielle ne pose pas : cette règle est-elle atteignable ? ce type peut-il, par une chaîne d&#x27;intermédiaires, atteindre ce type critique ? quelles règles sont mortes ? cette modification élargit-elle un privilège ?</p><p>La promesse : une politique de sécurité passe d&#x27;un texte que l&#x27;on relit à la main à un artefact analysé, minimisé, diffable et prouvé — avec un certificat de non-interférence exploitable dans un dossier ISO 26262, IEC 62304, EN 50128 ou UNECE R155.</p><p>Tamis ne double jamais la chaîne officielle. QNX génère (secpolgenerate, avec mode diff incrémental), compile (secpolcompile), applique (secpolpush) et surveille (secpolmonitor). La documentation QNX reconnaît elle-même que tout l&#x27;aval est manuel. Tamis occupe cet espace, et seulement cet espace.</p></div>
+<div data-lang="en"><h3>What Tamis does</h3><p>Tamis is a host tool that reads a QNX security policy before deployment and answers four questions the official toolchain never asks: is this rule reachable? can this type reach that critical type through a chain of intermediaries? which rules are dead? does this change widen a privilege?</p><p>The promise: a security policy stops being text you re-read by hand and becomes an artifact that is analyzed, minimized, diffable and proved — with a non-interference certificate usable in an ISO 26262, IEC 62304, EN 50128 or UNECE R155 file.</p><p>Tamis never duplicates the official chain. QNX generates (secpolgenerate, with incremental diff), compiles (secpolcompile), applies (secpolpush) and monitors (secpolmonitor). QNX&#x27;s own documentation states that everything downstream is manual. Tamis fills that space, and only that space.</p></div>
+<div data-lang="fr"><h3>Preuve d'usage de QNX</h3><ul><li>Le langage modélisé est le langage de politique de sécurité QNX : type, attribute, class, range, default_rules, allow, allow_attach, allow_link, default_spawn_type, derive_type, mount_point, les modificateurs nonroot/unlock/noinherit/gain_priv et les wildcards * et ... — chacun relevé avec sa page source (secpol_language.html, using_security_policy_types.html, named_range_file.html).</li><li>politique/abilities.tsv inventorie 75 abilities QNX (statiques procmgr et dynamiques custom : fsevmgr/, iofunc/, io-gpio/, network/, smmu/, vfs/) avec leur portée et leur source (abilities_reference.html).</li><li>Les 13 codes de verdict découlent directement des 15 trous que la documentation QNX reconnaît : revue manuelle des règles inutiles, politique générée non utilisable telle quelle, aucune analyse statique avant déploiement, default_spawn_type jamais généré, élévation de privilèges par essai-erreur, fusion manuelle, vérification de typage manuelle, plages nommées non validables à froid, objets typés limités aux canaux.</li><li>oracle/run_oracle.sh exécute secpolcompile — utilitaire hôte du SDP — et compare son verdict d&#x27;acceptation au nôtre, politique par politique. C&#x27;est le différentiel contre le compilateur officiel QNX (TAM-12).</li><li>État honnête : le SDP 8.0 n&#x27;est pas encore installé (licence gratuite, demande en cours) et la documentation en ligne renvoyait 404 pendant le développement. Le parseur du secpol réel n&#x27;est donc pas écrit : les moteurs tournent sur un modèle construit depuis un format de fixture, et le parseur secpol produira exactement ce même modèle. La grammaire est relevée et sourcée, avec 16 points explicitement marqués À VÉRIFIER — aucune syntaxe inventée.</li></ul></div>
+<div data-lang="en"><h3>Proof of QNX usage</h3><ul><li>The language modelled is QNX&#x27;s security policy language: type, attribute, class, range, default_rules, allow, allow_attach, allow_link, default_spawn_type, derive_type, mount_point, the nonroot/unlock/noinherit/gain_priv modifiers and the * and ... wildcards — each recorded with its source page (secpol_language.html, using_security_policy_types.html, named_range_file.html).</li><li>politique/abilities.tsv inventories 75 QNX abilities (static procmgr ones and dynamic custom ones: fsevmgr/, iofunc/, io-gpio/, network/, smmu/, vfs/) with their scope and source (abilities_reference.html).</li><li>The 13 verdict codes derive directly from the 15 gaps QNX&#x27;s own documentation admits: manual review of unused rules, generated policy not usable as is, no static analysis before deployment, default_spawn_type never generated, privilege elevation by trial and error, manual merging, manual typing verification, named ranges not validatable cold, typed objects limited to channels.</li><li>oracle/run_oracle.sh runs secpolcompile — a host utility of the SDP — and compares its accept/reject verdict with ours, policy by policy. That is the differential against the official QNX compiler (TAM-12).</li><li>Honest status: the QNX 8.0 SDP is not installed yet (free licence, request pending) and the online documentation returned 404 throughout development. The real secpol parser is therefore not written: the engines run on a model built from a fixture format, and the secpol parser will produce exactly that same model. The grammar is recorded and sourced, with 16 points explicitly marked TO VERIFY — no syntax invented.</li></ul></div>
+<div data-lang="fr"><h3>Comment c'est construit</h3><ul><li>core/ en C11 pur : ni horloge, ni fichier, ni socket, ni état global, aucune allocation — l&#x27;appelant fournit une arène. C&#x27;est ce qui rend le noyau testable unitairement et embarquable plus tard en WASM.</li><li>Trois implémentations indépendantes, un seul contrat : le cœur C (autoritaire), un jumeau Python et un jumeau JavaScript (celui qui fait tourner ce site). Les trois rendent le même JSON octet pour octet, vérifié en continu par tests/test_differentiel.sh (C↔Python, 250/300/500 verdicts aléatoires) et tests/test_js.sh (C↔JS, 13 scénarios réels).</li><li>Chaîne figée : texte → lex → ast → model(graphe) → {reach, proof, minimize, diff, lint, explain} → verdicts → rapport. Aucune étape ne remonte ; toute erreur produit TAMIS_PARSE_ERROR avec position et cause, jamais d&#x27;analyse approximative.</li><li>Qualité : 9 876 vérifications vertes, 9 000 entrées de fuzz sous ASan/UBSan sans crash, 12 mutants tous tués, garde de taille (&lt; 500 lignes/fichier, &lt; 50 lignes/fonction), CI complète en 24 s pour un budget de 5 min.</li></ul></div>
+<div data-lang="en"><h3>How it was built</h3><ul><li>core/ is pure C11: no clock, no file, no socket, no global state, no allocation — the caller supplies an arena. That is what makes the kernel unit-testable and embeddable in WASM later.</li><li>Three independent implementations, one contract: the C core (authoritative), a Python twin and a JavaScript twin (the one running this site). All three render byte-identical JSON, continuously checked by tests/test_differentiel.sh (C↔Python, 250/300/500 random verdicts) and tests/test_js.sh (C↔JS, 13 real scenarios).</li><li>Frozen pipeline: text → lex → ast → model(graph) → {reach, proof, minimize, diff, lint, explain} → verdicts → report. No stage feeds back; any error yields TAMIS_PARSE_ERROR with position and cause, never an approximate analysis.</li><li>Quality: 9,876 green checks, 9,000 fuzz inputs under ASan/UBSan with no crash, 12 mutants all killed, a size guard (&lt; 500 lines per file, &lt; 50 per function), and a full CI in 24 s against a 5-minute budget.</li></ul></div>
+<div data-lang="fr"><h3>Instructions pour les juges</h3><ol><li>Ouvrir ce site : aucun compte, aucune installation, aucun téléchargement. Tout tourne dans le navigateur.</li><li>Onglet Playground : la politique « attaque » est chargée par défaut. Cliquer sur lint — deux processus non typés et l&#x27;absence de default_spawn_type apparaissent.</li><li>Cliquer sur reach avec src=app_tiers, dst=pompe_critique — le chemin d&#x27;attaque en 3 sauts s&#x27;affiche, en rouge dans le graphe, avec les règles R112, R87, R9.</li><li>Cliquer sur explain — la chaîne coupable en clair et le correctif minimal (retirer R9) sont donnés.</li><li>Charger l&#x27;exemple « durcie » puis cliquer sur proof — le certificat de non-interférence passe au vert, avec le nombre de nœuds visités : l&#x27;absence est prouvée, pas supposée.</li><li>Cliquer sur minimize puis sur diff — la règle redondante R999 est retirée avec preuve d&#x27;équivalence, et le diff ne montre qu&#x27;une réduction de privilège, aucun élargissement.</li><li>Vérifier l&#x27;indépendance du navigateur : cloner le dépôt, make test (9 876 vérifications), make mutants (12 tués), make sanitize (ASan/UBSan). Le CLI build/tamis reproduit exactement ce que le site affiche.</li></ol></div>
+<div data-lang="en"><h3>Testing instructions for judges</h3><ol><li>Open this site: no account, no install, no download. Everything runs in the browser.</li><li>Playground tab: the «attaque» policy is loaded by default. Click lint — two untyped processes and the missing default_spawn_type show up.</li><li>Click reach with src=app_tiers, dst=pompe_critique — the 3-hop attack path appears, highlighted red in the graph, with rules R112, R87, R9.</li><li>Click explain — the guilty chain in plain words and the minimal fix (remove R9) are given.</li><li>Load the «durcie» (hardened) example then click proof — the non-interference certificate turns green, with the number of nodes visited: absence is proved, not assumed.</li><li>Click minimize then diff — redundant rule R999 is removed with an equivalence proof, and the diff shows only a privilege narrowing, no widening.</li><li>Check that the browser is not smoke and mirrors: clone the repo, make test (9,876 checks), make mutants (12 killed), make sanitize (ASan/UBSan). The build/tamis CLI reproduces exactly what the site displays.</li></ol></div>
+<div data-lang="fr"><h3>Script vidéo (3 minutes)</h3><table>
+<thead><tr>
+<th>Temps</th>
+<th>Plan</th>
+</tr></thead><tbody>
+<tr><td>0:00–0:20</td><td>La doc QNX : « la politique générée n&#x27;est pas utilisable telle quelle », « la revue des règles inutiles est manuelle », « aucune analyse avant déploiement ». Trois citations, trois trous.</td></tr>
+<tr><td>0:20–0:50</td><td>tamis lint policy.secpol sur 400 règles : 88 règles mortes, 3 abilities sur-dimensionnées, 2 processus non typés.</td></tr>
+<tr><td>0:50–1:40</td><td>tamis reach --src app_tiers --dst pompe_critique : chemin en 3 sauts, règles citées, ligne dans le fichier. On coupe la règle fautive, on relance : plus de chemin, certificat de non-interférence vert.</td></tr>
+<tr><td>1:40–2:10</td><td>tamis minimize : 400 → 212 règles, et la preuve d&#x27;équivalence (10 000 décisions identiques, aucune divergence).</td></tr>
+<tr><td>2:10–2:40</td><td>tamis diff v1.secpol v2.secpol dans une PR : un élargissement de privilège signalé, la CI passe au rouge, commentaire automatique.</td></tr>
+<tr><td>2:40–3:00</td><td>Les preuves : nombre de vérifications, mutants tués, fuzz, différentiel C ↔ Python ↔ JS, et (si disponible) accord avec secpolcompile.</td></tr>
+</tbody></table></div>
+<div data-lang="en"><h3>Video script (3 minutes)</h3><table>
+<thead><tr>
+<th>Time</th>
+<th>Shot</th>
+</tr></thead><tbody>
+<tr><td>0:00–0:20</td><td>QNX&#x27;s own docs: «the generated policy is not usable as is», «reviewing unused rules is manual», «no analysis before deployment». Three quotes, three gaps.</td></tr>
+<tr><td>0:20–0:50</td><td>tamis lint policy.secpol on 400 rules: 88 dead rules, 3 over-broad abilities, 2 untyped processes.</td></tr>
+<tr><td>0:50–1:40</td><td>tamis reach --src app_tiers --dst pompe_critique: a 3-hop path, rules cited, line in the file. Cut the guilty rule, re-run: no path, green non-interference certificate.</td></tr>
+<tr><td>1:40–2:10</td><td>tamis minimize: 400 → 212 rules, plus the equivalence proof (10,000 identical decisions, zero divergence).</td></tr>
+<tr><td>2:10–2:40</td><td>tamis diff v1.secpol v2.secpol in a PR: a privilege widening flagged, CI turns red, automatic comment.</td></tr>
+<tr><td>2:40–3:00</td><td>The evidence: check count, mutants killed, fuzz, the C ↔ Python ↔ JS differential, and (when available) agreement with secpolcompile.</td></tr>
+</tbody></table></div>
+<h3><span data-lang="fr">Liens</span><span data-lang="en">Links</span></h3><ul class="links"><li><span data-lang="fr">Dépôt public</span><span data-lang="en">Public repository</span> : <a href="https://github.com/BaptisteFaisy/tamis">https://github.com/BaptisteFaisy/tamis</a></li><li><span data-lang="fr">Ce site</span><span data-lang="en">This site</span> : <a href="https://baptistefaisy.github.io/tamis/">https://baptistefaisy.github.io/tamis/</a></li><li><span data-lang="fr">Contrat gelé</span><span data-lang="en">Frozen contract</span> : <a href="https://github.com/BaptisteFaisy/tamis/blob/main/CONTRACT.md">https://github.com/BaptisteFaisy/tamis/blob/main/CONTRACT.md</a></li><li><span data-lang="fr">Codelab</span><span data-lang="en">Codelab</span> : <a href="https://github.com/BaptisteFaisy/tamis/blob/main/docs/codelab/01-auditer-une-politique.md">https://github.com/BaptisteFaisy/tamis/blob/main/docs/codelab/01-auditer-une-politique.md</a></li><li><span data-lang="fr">Grammaire relevée</span><span data-lang="en">Recorded grammar</span> : <a href="https://github.com/BaptisteFaisy/tamis/blob/main/docs/GRAMMAR.md">https://github.com/BaptisteFaisy/tamis/blob/main/docs/GRAMMAR.md</a></li><li><span data-lang="fr">100 idées</span><span data-lang="en">100 ideas</span> : <a href="https://github.com/BaptisteFaisy/tamis/blob/main/docs/100-idees.md">https://github.com/BaptisteFaisy/tamis/blob/main/docs/100-idees.md</a></li></ul>
+<!-- SUBMISSION:END -->
+</section>
+
+<!-- ══════════════════ CODELAB ══════════════════ -->
+<section id="codelab" class="tab">
+  <!-- CODELAB:START -->
+<div data-lang="fr"><h2>Codelab — Auditer une politique de sécurité QNX en 20 minutes</h2><p class="lead">Objectif : partir d&#x27;une politique trouée, trouver le chemin d&#x27;attaque, le prouver, le corriger, puis prouver la non-interférence — sans QNX, sans QEMU, sans licence.</p></div>
+<div data-lang="en"><h2>Codelab — Audit a QNX security policy in 20 minutes</h2><p class="lead">Goal: start from a holey policy, find the attack path, prove it, fix it, then prove non-interference — with no QNX, no QEMU, no licence.</p></div>
+<div class="steps">
+<div class="step"><div data-lang="fr"><h4>1. Prérequis et construction</h4><p>gcc (C11), python3 (≥ 3.8, bibliothèque standard seule) et make. Aucune dépendance à installer.</p><pre class="cmd">git clone https://github.com/BaptisteFaisy/tamis &amp;&amp; cd tamis
+make cli
+build/tamis version</pre><pre class="out">tamis 0.1.0</pre></div>
+<div data-lang="en"><h4>1. Prerequisites and build</h4><p>gcc (C11), python3 (≥ 3.8, standard library only) and make. Nothing to install.</p><pre class="cmd">git clone https://github.com/BaptisteFaisy/tamis &amp;&amp; cd tamis
+make cli
+build/tamis version</pre><pre class="out">tamis 0.1.0</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>2. La politique vulnérable</h4><p>fixtures/attaque.mpf modélise un système où app_tiers atteint pompe_critique de proche en proche. R999 est un doublon de R112, deux processus ne sont pas typés, et aucun default_spawn_type n&#x27;est déclaré.</p><pre class="cmd">cat fixtures/attaque.mpf</pre><pre class="out">type app_tiers
+type journal
+type diag
+type pompe_critique
+type reseau
+allow app_tiers journal msg @R112
+allow journal diag msg @R87
+allow diag pompe_critique control @R9
+allow reseau journal msg @R10
+allow app_tiers journal msg @R999
+untyped /bin/legacy
+untyped /bin/foo</pre></div>
+<div data-lang="en"><h4>2. The vulnerable policy</h4><p>fixtures/attaque.mpf models a system where app_tiers reaches pompe_critique hop by hop. R999 duplicates R112, two processes are untyped, and no default_spawn_type is declared.</p><pre class="cmd">cat fixtures/attaque.mpf</pre><pre class="out">type app_tiers
+type journal
+type diag
+type pompe_critique
+type reseau
+allow app_tiers journal msg @R112
+allow journal diag msg @R87
+allow diag pompe_critique control @R9
+allow reseau journal msg @R10
+allow app_tiers journal msg @R999
+untyped /bin/legacy
+untyped /bin/foo</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>3. Lint : le moindre privilège d&#x27;abord</h4><p>Deux processus sans type (gap S10) et aucun default_spawn_type (gap S7 : QNX ne le génère jamais).</p><pre class="cmd">build/tamis lint fixtures/attaque.mpf</pre><pre class="out">WARN   TAMIS_UNTYPED_PROCESS  fixtures/attaque.mpf:21  processus non typé : /bin/legacy
+WARN   TAMIS_UNTYPED_PROCESS  fixtures/attaque.mpf:22  processus non typé : /bin/foo
+WARN   TAMIS_MISSING_DEFAULT_SPAWN  fixtures/attaque.mpf  default_spawn_type absent : …
+OK</pre></div>
+<div data-lang="en"><h4>3. Lint: least privilege first</h4><p>Two untyped processes (gap S10) and no default_spawn_type (gap S7: QNX never generates it).</p><pre class="cmd">build/tamis lint fixtures/attaque.mpf</pre><pre class="out">WARN   TAMIS_UNTYPED_PROCESS  fixtures/attaque.mpf:21  processus non typé : /bin/legacy
+WARN   TAMIS_UNTYPED_PROCESS  fixtures/attaque.mpf:22  processus non typé : /bin/foo
+WARN   TAMIS_MISSING_DEFAULT_SPAWN  fixtures/attaque.mpf  default_spawn_type absent : …
+OK</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>4. Reach : trouver le chemin d&#x27;attaque</h4><p>Code de retour 1 — utilisable tel quel comme garde de CI.</p><pre class="cmd">build/tamis reach fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  fixtures/attaque.mpf  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
+FAILED 1 error(s)</pre></div>
+<div data-lang="en"><h4>4. Reach: find the attack path</h4><p>Exit status 1 — usable as a CI gate as is.</p><pre class="cmd">build/tamis reach fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  fixtures/attaque.mpf  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
+FAILED 1 error(s)</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>5. Explain : pourquoi, et le correctif minimal</h4><p>C&#x27;est la fonction qui rend l&#x27;outil utilisable par quelqu&#x27;un d&#x27;autre que son auteur.</p><pre class="cmd">build/tamis explain fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  …  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
+INFO   TAMIS_OK  …  Pourquoi ce refus : app_tiers atteint pompe_critique via la chaîne
+       app_tiers →(R112) journal →(R87) diag →(R9) pompe_critique. Correctif minimal :
+       retirer la règle R9 (dernière arête avant pompe_critique) tue ce chemin …</pre></div>
+<div data-lang="en"><h4>5. Explain: why, and the minimal fix</h4><p>This is the feature that makes the tool usable by someone other than its author.</p><pre class="cmd">build/tamis explain fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  …  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
+INFO   TAMIS_OK  …  Pourquoi ce refus : app_tiers atteint pompe_critique via la chaîne
+       app_tiers →(R112) journal →(R87) diag →(R9) pompe_critique. Correctif minimal :
+       retirer la règle R9 (dernière arête avant pompe_critique) tue ce chemin …</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>6. Corriger et PREUVER la non-interférence</h4><p>La différence avec un linter : l&#x27;absence de chemin est prouvée par un parcours exhaustif dont le compteur de visites est publié.</p><pre class="cmd">build/tamis proof fixtures/durcie.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">INFO   TAMIS_OK  fixtures/durcie.mpf  non-interférence prouvée : app_tiers n&#x27;atteint pas
+       pompe_critique — 3 nœud(s) visité(s), parcours exhaustif
+OK</pre></div>
+<div data-lang="en"><h4>6. Fix it and PROVE non-interference</h4><p>The difference from a linter: absence is proved by an exhaustive traversal whose visit count is published.</p><pre class="cmd">build/tamis proof fixtures/durcie.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">INFO   TAMIS_OK  fixtures/durcie.mpf  non-interférence prouvée : app_tiers n&#x27;atteint pas
+       pompe_critique — 3 nœud(s) visité(s), parcours exhaustif
+OK</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>7. Minimize : retirer les règles mortes, à preuve</h4><p>La preuve d&#x27;équivalence rejoue l&#x27;accessibilité toute-paire avant/après : 25 paires identiques.</p><pre class="cmd">build/tamis minimize fixtures/attaque.mpf</pre><pre class="out">INFO   TAMIS_REDUNDANT_RULE  fixtures/attaque.mpf:18  règle redondante R999 : app_tiers atteint déjà journal sans elle
+INFO   TAMIS_OK  fixtures/attaque.mpf  minimisation équivalente : 1 règle(s) retirée(s), 25 paire(s) d&#x27;accessibilité identiques
+OK</pre></div>
+<div data-lang="en"><h4>7. Minimize: remove dead rules, with proof</h4><p>The equivalence proof replays all-pairs reachability before and after: 25 identical pairs.</p><pre class="cmd">build/tamis minimize fixtures/attaque.mpf</pre><pre class="out">INFO   TAMIS_REDUNDANT_RULE  fixtures/attaque.mpf:18  règle redondante R999 : app_tiers atteint déjà journal sans elle
+INFO   TAMIS_OK  fixtures/attaque.mpf  minimisation équivalente : 1 règle(s) retirée(s), 25 paire(s) d&#x27;accessibilité identiques
+OK</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>8. Diff : la non-régression de privilège</h4><p>Dans une CI, tout TAMIS_PRIVILEGE_WIDENED ferait passer ce diff au rouge.</p><pre class="cmd">build/tamis diff fixtures/attaque.mpf fixtures/durcie.mpf</pre><pre class="out">INFO   TAMIS_PRIVILEGE_NARROWED  fixtures/attaque.mpf  réduction de privilège : diag -&gt; pompe_critique [control]
+OK</pre></div>
+<div data-lang="en"><h4>8. Diff: privilege non-regression</h4><p>In CI, any TAMIS_PRIVILEGE_WIDENED would turn this diff red.</p><pre class="cmd">build/tamis diff fixtures/attaque.mpf fixtures/durcie.mpf</pre><pre class="out">INFO   TAMIS_PRIVILEGE_NARROWED  fixtures/attaque.mpf  réduction de privilège : diag -&gt; pompe_critique [control]
+OK</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>9. View : visualiser le graphe</h4><p>Le JSON alimente le graphe interactif de ce site (onglet Playground).</p><pre class="cmd">build/tamis view fixtures/attaque.mpf --src app_tiers --dst pompe_critique &gt; /tmp/graphe.json</pre><pre class="out">{&quot;nodes&quot;:[&quot;app_tiers&quot;,&quot;journal&quot;,&quot;diag&quot;,&quot;pompe_critique&quot;,&quot;reseau&quot;],&quot;edges&quot;:[…],&quot;focus&quot;:{…}}</pre></div>
+<div data-lang="en"><h4>9. View: visualize the graph</h4><p>The JSON feeds this site&#x27;s interactive graph (Playground tab).</p><pre class="cmd">build/tamis view fixtures/attaque.mpf --src app_tiers --dst pompe_critique &gt; /tmp/graphe.json</pre><pre class="out">{&quot;nodes&quot;:[&quot;app_tiers&quot;,&quot;journal&quot;,&quot;diag&quot;,&quot;pompe_critique&quot;,&quot;reseau&quot;],&quot;edges&quot;:[…],&quot;focus&quot;:{…}}</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>10. Le rapport d&#x27;audit</h4><p>Versable tel quel dans un dossier ISO 26262 / IEC 62304 / EN 50128 / UNECE R155 : empreinte SHA-256 de la politique, horodatage, version.</p><pre class="cmd">build/tamis lint fixtures/attaque.mpf --format md</pre><pre class="out"># Rapport d&#x27;audit Tamis
+
+- Politique : fixtures/attaque.mpf
+- Empreinte SHA-256 : 3f2a…
+## Synthèse
+| Sévérité | Nombre |
+…</pre></div>
+<div data-lang="en"><h4>10. The audit report</h4><p>Ready to drop into an ISO 26262 / IEC 62304 / EN 50128 / UNECE R155 file: SHA-256 fingerprint of the policy, timestamp, version.</p><pre class="cmd">build/tamis lint fixtures/attaque.mpf --format md</pre><pre class="out"># Rapport d&#x27;audit Tamis
+
+- Politique : fixtures/attaque.mpf
+- Empreinte SHA-256 : 3f2a…
+## Synthèse
+| Sévérité | Nombre |
+…</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>11. Vérifier les preuves eux-mêmes</h4><p>Le différentiel C↔Python, le différentiel C↔JS, le fuzz et les mutants sont lançables à la main.</p><pre class="cmd">make test &amp;&amp; make sanitize &amp;&amp; make mutants
+bash tests/test_js.sh
+bash tests/test_differentiel.sh 999 300</pre><pre class="out">OK 9876 checks …
+OK 12 checks (mutants tués)
+OK 13 checks (jumeau navigateur identique au cœur C)
+OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div>
+<div data-lang="en"><h4>11. Verify the evidence itself</h4><p>The C↔Python differential, the C↔JS differential, the fuzzer and the mutants can all be run by hand.</p><pre class="cmd">make test &amp;&amp; make sanitize &amp;&amp; make mutants
+bash tests/test_js.sh
+bash tests/test_differentiel.sh 999 300</pre><pre class="out">OK 9876 checks …
+OK 12 checks (mutants tués)
+OK 13 checks (jumeau navigateur identique au cœur C)
+OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div></div>
 </div>
+<div data-lang="fr"><div class="panel"><h3>Angles morts déclarés</h3><p>Angles morts bornés (honnêteté, TAM-21) : flux IPC indirects (MsgSend/ConnectAttach), permissions de fichiers, transitions root→non-root — la documentation QNX elle-même les dit invisibles à l&#x27;analyse de politique. Tamis les signale comme non couverts, il ne prétend pas les résoudre.</p></div></div>
+<div data-lang="en"><div class="panel"><h3>Declared blind spots</h3><p>Bounded blind spots (honesty, TAM-21): indirect IPC flows (MsgSend/ConnectAttach), file permissions, root→non-root transitions — QNX&#x27;s own documentation calls these invisible to policy analysis. Tamis reports them as not covered; it does not claim to solve them.</p></div></div>
+<!-- CODELAB:END -->
+</section>
+
+<!-- ══════════════════ 100 IDÉES ══════════════════ -->
+<section id="ideas" class="tab">
+  <h2><span data-lang="fr">100 idées pour aller plus loin</span><span data-lang="en">100 ideas to go further</span></h2>
+  <p class="lead">
+    <span data-lang="fr">Les idées marquées ✓ sont <b>déjà implémentées</b> et essayables dans le Playground. Source : <code>docs/100-idees.md</code>.</span>
+    <span data-lang="en">Ideas marked ✓ are <b>already implemented</b> and runnable in the Playground. Source: <code>docs/100-idees.md</code>.</span>
+  </p>
+  <!-- IDEES:START -->
+<div data-lang="fr"><div class="ideas">
+<h3>A. Cœur analytique &amp; preuve (1–10)</h3>
+<ol start="1"><li class="done">✓ Accessibilité transitive entre deux types avec contre-exemple rejouable pas à pas (TAM-04)</li><li class="done">✓ Certificat de non-interférence : absence de chemin <b>prouvée</b> (parcours exhaustif, compteur de visites publié) (TAM-05/20)</li><li class="done">✓ Minimisation prouvée équivalente sur un corpus de 10 000 décisions (TAM-07)</li><li class="done">✓ Diff sémantique : élargissements/réductions de privilège entre deux politiques (TAM-08)</li><li>Encodeur SMT-LIB2 → Z3 : prouver équivalence/minimalité/inaccessibilité par solveur</li><li>Raffinement : prouver que la politique raffine celle du BSP fournisseur</li><li>Détection de fuites de privilège aux frontières de composition</li><li>Graphe <code>settypeid</code>/<code>gain_priv</code> : cycles, élévations atteignables (trou S8)</li><li>Validation à froid des plages nommées : existence, disjonction, couverture (TAM-13/S13)</li><li>Treillis de privilèges : règles dominées par d&#x27;autres</li></ol>
+<h3>B. Surface QNX-spécifique (11–20)</h3>
+<ol start="11"><li>Modéliser les ~70 abilities statiques + les 2 jeux root/non-root</li><li>Abilities dynamiques custom (préfixes <code>fsevmgr/</code>, <code>network/</code>, <code>vfs/</code>)</li><li>Pathtrust : vérifier l&#x27;exécution de code fiable (<code>path_trust</code>, <code>procnto -qt</code>)</li><li>Fonctions fortifiées : couverture des checks de débordement</li><li>Portail sur <code>secpolgenerate</code> : auditer le diff incrémental avant intégration</li><li>Boucle <code>libsecpolev</code> : rejouer les refus runtime dans le modèle statique (prédit/réel)</li><li>Croisement <code>/dev/secpolgenerate/unused</code> + <code>/errors</code> → candidats suppression justifiés (TAM-15)</li><li><code>security_matrix</code> : mapper les propriétés prouvées sur la matrice QNX</li><li><code>mkqnximage</code> mode démo sécurité : politique de référence préconstruite</li><li><code>secpollaunch</code>/<code>secpol-preload</code> : modéliser les transitions de type au spawn</li></ol>
+<h3>C. Visualisation &amp; UX (21–30)</h3>
+<ol start="21"><li class="done">✓ Visualiseur HTML du graphe de privilèges, filtrable, contre-exemple en surbrillance (TAM-23)</li><li>Terrain de jeu WASM : coller une politique, rapport en 5 s, zéro installation</li><li class="done">✓ CLI ergonomique : <code>tamis lint|reach|minimize|diff|view</code></li><li>Serveur de langage <code>.secpol</code> (LSP) : complétion, erreurs en direct</li><li>Sortie HTML interactive du rapport d&#x27;audit</li><li class="done">✓ Mode « explique-moi ce refus » : lignes sources, chaîne de règles coupables, correctif minimal</li><li>Diff visuel côte-à-côte de deux politiques</li><li>Vue « budget de privilège » par type (heat map)</li><li>Graphique de l&#x27;évolution des privilèges entre versions</li><li>Accessibilité/thème du visualiseur</li></ol>
+<h3>D. CI/DevOps (31–40)</h3>
+<ol start="31"><li><code>tamis-ci</code> : commente les PR avec le diff sémantique (TAM-17)</li><li>Bloque une PR sur tout élargissement de privilège non approuvé</li><li>GitHub Action marketplace (<code>action.yml</code> composite)</li><li>Pre-commit hook : <code>tamis lint</code> avant chaque commit</li><li>Bot de revue exigeant une approbation nommée sur élargissement</li><li>Intégration GitLab CI / Jenkins</li><li>Rapport JUnit XML pour CI génériques</li><li>Gate de non-régression vs la politique de la branche cible</li><li>Badge « policy: audited » pour le README</li><li>Webhook de recertification à chaque push</li></ol>
+<h3>E. Tests &amp; robustesse (41–50)</h3>
+<ol start="41"><li class="done">✓ Fuzz du moteur sous ASan/UBSan, entrées déterministes par graine (TAM-11)</li><li class="done">✓ Mutants : ≥10 mutations des moteurs, chacune tuée (validation niv. 6)</li><li>Property-based testing du modèle (graphes valides aléatoires)</li><li>Différentiel C↔Python étendu à tous les moteurs (pas seulement le rendu)</li><li>Banque de 40 politiques fautives avec erreur attendue (TAM-02)</li><li>12 chemins de privilège dirigés + 8 paires avant/après</li><li>6 jeux de plages nommées cassés</li><li>Test de non-régression sur corpus de 400+ règles</li><li>Couverture de code (gcov/lcov) avec seuil exigé</li><li>Test de performance : 10 000 règles sous seuil</li></ol>
+<h3>F. Certification &amp; audit (51–60)</h3>
+<ol start="51"><li class="done">✓ Rapport d&#x27;exhaustivité : périmètre de complétude + <b>angles morts bornés</b> (Palier 1)</li><li>Mapping ISO 26262 des propriétés prouvées</li><li>Mapping IEC 62304 (médical)</li><li>Mapping EN 50128 (ferroviaire)</li><li>Mapping UNECE R155 (cybersécurité automobile)</li><li>Artefacts d&#x27;audit signés (empreinte + horodatage)</li><li>Traçabilité exigence→propriété→preuve (matrice)</li><li>Gabarit de dossier de sécurité pré-rempli</li><li>Angles morts déclarés (trou S4) signalés non couverts (TAM-21)</li><li>Export « preuve » régénérable avec somme de contrôle</li></ol>
+<h3>G. Menaces &amp; sécurité (61–70)</h3>
+<ol start="61"><li>Catalogue de menaces STRIDE exécutable → requêtes formelles sur le graphe</li><li>Arbres d&#x27;attaque traduits en requêtes + rapport de couverture</li><li>Scénarios d&#x27;attaque rejoués pas à pas</li><li>Détection + animation de chemins d&#x27;attaque réels</li><li>Correctif minimal proposé pour tuer un chemin (moindre privilège)</li><li>MITRE ATT&amp;CK for ICS/automotive : mapping des capacités</li><li class="done">✓ Lint moindre privilège : processus non typés, <code>default_spawn_type</code> manquant, abilities sur-dimensionnées (TAM-06)</li><li>Points d&#x27;attachage trop larges (<code>allow_attach</code> wildcards)</li><li>Règles en contradiction avec un concept de sûreté déclaré</li><li>Score de surface d&#x27;attaque par type</li></ol>
+<h3>H. Écosystème &amp; communauté (71–80)</h3>
+<ol start="71"><li>Corpus public de politiques (exemples SDP + projets ouverts)</li><li class="done">✓ Codelab 4 chapitres « auditer une politique QNX » (Best Codelab bonus)</li><li>Codelab « de vulnérable à durci en 20 minutes »</li><li>Contribution amont au dépôt QNX (TAM-24)</li><li>Docs EN/FR complètes</li><li>Packaging : <code>make install</code>, binaire statique</li><li>Publication du jeu de données + résultats reproductibles</li><li>Site de démonstration (GitHub Pages) avec le visualiseur</li><li>Vidéo 3 min (attaque rejouée, correctif, le chemin meurt)</li><li>Exemples par domaine (automotive, médical, industriel)</li></ol>
+<h3>I. Performance &amp; échelle (81–90)</h3>
+<ol start="81"><li>Analyse incrémentale : ne recalculer que le sous-graphe modifié</li><li>Cache des verdicts par empreinte de politique</li><li>Parallélisation des requêtes d&#x27;accessibilité</li><li>Index de types pour lookup O(1)</li><li>Compression du graphe (BDD) pour grandes politiques</li><li>Streaming : analyser sans tout charger</li><li>Mémoïsation des chemins</li><li>Profilage + benchmark de référence</li><li>Politiques de 100 000 règles</li><li>Mémoire bornée (aucune allocation non maîtrisée)</li></ol>
+<h3>J. Avancé / horizon 3 mois (91–100)</h3>
+<ol start="91"><li>Noyau de preuve Lean 4 : formaliser la sémantique d&#x27;accessibilité</li><li>Flux indirects IPC : <code>MsgSend</code>/<code>ConnectAttach</code>, passation de descripteurs</li><li>Multi-images &amp; hyperviseur : politiques par partition, interférences inter-invités</li><li>QFS et conteneurs typés</li><li>Provenance &amp; recertification : raison/ticket/propriétaire/expiration par règle</li><li>Répétition de déploiement : simuler <code>secpolpush</code> avec plan de retour arrière</li><li>Non-interférence informationnelle (flux explicites + implicites)</li><li>Fusion à trois voies assistée (TAM-18)</li><li>Stabilisateur : aligner N politiques générées par clé sémantique (TAM-19/S6)</li><li>Extension aux objets non-canaux : mémoire partagée, connexions (TAM-22/S15)</li></ol>
+<p class="hint">✓ = implémenté et essayable dans le Playground.</p></div></div>
+<div data-lang="en"><div class="ideas">
+<p>The full annotated 100-idea roadmap is maintained in French in <code>docs/100-idees.md</code> (switch the site to FR to read it). It is grouped in ten families:</p>
+<ul>
+<li><b>A.</b> Analytical core &amp; proof</li>
+<li><b>B.</b> QNX-specific surface</li>
+<li><b>C.</b> Visualization &amp; UX</li>
+<li><b>D.</b> CI / DevOps</li>
+<li><b>E.</b> Testing &amp; robustness</li>
+<li><b>F.</b> Certification &amp; audit</li>
+<li><b>G.</b> Threats &amp; security</li>
+<li><b>H.</b> Ecosystem &amp; community</li>
+<li><b>I.</b> Performance &amp; scale</li>
+<li><b>J.</b> Advanced / 3-month horizon</li>
+</ul>
+<h3>The 13 ideas already shipped</h3><ol>
+<li class='done'>✓ Least-privilege lint — <code>lint</code></li>
+<li class='done'>✓ Reachability — <code>reach</code></li>
+<li class='done'>✓ Non-interference certificate — <code>proof</code></li>
+<li class='done'>✓ Plain-language explanation — <code>explain</code></li>
+<li class='done'>✓ Proved minimization — <code>minimize</code></li>
+<li class='done'>✓ Semantic diff — <code>diff</code></li>
+<li class='done'>✓ Privilege graph — <code>view</code></li>
+<li class='done'>✓ Audit report — <code>--format md</code></li>
+<li class='done'>✓ 13 normalized verdicts — <code>—</code></li>
+<li class='done'>✓ CI exit status — <code>exit code</code></li>
+<li class='done'>✓ Python twin + differential — <code>make test</code></li>
+<li class='done'>✓ Browser twin + differential — <code>tests/test_js.sh</code></li>
+<li class='done'>✓ Fuzz + mutants — <code>make mutants</code></li>
+</ol></div></div>
 <!-- IDEES:END -->
 </section>
 
-<!-- ══════════════════════════ GRAMMAIRE & CONTRAT ══════════════════════════ -->
+<!-- ══════════════════ GRAMMAIRE & CONTRAT ══════════════════ -->
 <section id="grammar" class="tab">
-  <h2>Ce qui est gelé, ce qui est honnêtement en attente</h2>
+  <h2><span data-lang="fr">Ce qui est gelé, ce qui est honnêtement en attente</span><span data-lang="en">What is frozen, and what is honestly pending</span></h2>
   <div class="two">
     <div class="panel">
-      <h3>Contrat gelé (<code>CONTRACT.md</code>)</h3>
+      <h3><span data-lang="fr">Contrat gelé (<code>CONTRACT.md</code>)</span><span data-lang="en">Frozen contract (<code>CONTRACT.md</code>)</span></h3>
       <ul>
-        <li>Chaîne figée : <code>texte → lex → ast → model → {reach, proof, minimize, diff, lint} → verdicts → rapport</code></li>
-        <li>13 codes de verdict + sévérités par défaut</li>
-        <li>Formats texte / JSON (une ligne par verdict, clés dans un ordre figé) / Markdown d'audit</li>
-        <li>Échappement JSON précisé au caractère près — c'est ce qui rend le différentiel possible</li>
-        <li>Aucune analyse approximative : toute erreur donne <code>TAMIS_PARSE_ERROR</code> avec position et cause</li>
+        <li><span data-lang="fr">Chaîne figée : <code>texte → lex → ast → model → {reach, proof, minimize, diff, lint} → verdicts → rapport</code></span><span data-lang="en">Frozen pipeline: <code>text → lex → ast → model → {reach, proof, minimize, diff, lint} → verdicts → report</code></span></li>
+        <li><span data-lang="fr">13 codes de verdict + sévérités par défaut</span><span data-lang="en">13 verdict codes plus default severities</span></li>
+        <li><span data-lang="fr">Formats texte / JSON (une ligne par verdict, clés dans un ordre figé) / Markdown d'audit</span><span data-lang="en">Text / JSON (one line per verdict, fixed key order) / audit Markdown formats</span></li>
+        <li><span data-lang="fr">Échappement JSON précisé au caractère près — c'est ce qui rend le différentiel possible</span><span data-lang="en">JSON escaping specified to the character — that is what makes differential testing possible</span></li>
+        <li><span data-lang="fr">Aucune analyse approximative : toute erreur donne <code>TAMIS_PARSE_ERROR</code> avec position et cause</span><span data-lang="en">No approximate analysis: any error yields <code>TAMIS_PARSE_ERROR</code> with position and cause</span></li>
       </ul>
     </div>
     <div class="panel">
-      <h3>Grammaire <code>secpol</code> (<code>docs/GRAMMAR.md</code>)</h3>
+      <h3><span data-lang="fr">Grammaire <code>secpol</code> (<code>docs/GRAMMAR.md</code>)</span><span data-lang="en"><code>secpol</code> grammar (<code>docs/GRAMMAR.md</code>)</span></h3>
       <ul>
-        <li><b>Sourcé</b> : <code>type</code>, <code>attribute</code>, <code>class</code>, <code>range</code>, <code>default_rules</code>, <code>allow</code>, <code>allow_attach</code>, <code>allow_link</code>, <code>default_spawn_type</code>, <code>derive_type</code>, <code>mount_point</code>, modificateurs <code>nonroot</code>/<code>unlock</code>/<code>noinherit</code>/<code>gain_priv</code>, wildcards <code>*</code> et <code>...</code></li>
-        <li><b>À VÉRIFIER page à page</b> (16 points) : terminaux exacts, EBNF non ambiguë</li>
-        <li>Cause : documentation officielle en ligne inaccessible (404) et SDP 8.0 non installé (licence gratuite, action humaine)</li>
-        <li>Conséquence assumée : <b>mode sous-ensemble strict</b> — Tamis refuse ce qu'il ne sait pas parser et le dit. Aucune syntaxe inventée.</li>
+        <li><span data-lang="fr"><b>Sourcé</b> : <code>type</code>, <code>attribute</code>, <code>class</code>, <code>range</code>, <code>default_rules</code>, <code>allow</code>, <code>allow_attach</code>, <code>allow_link</code>, <code>default_spawn_type</code>, <code>derive_type</code>, <code>mount_point</code>, modificateurs <code>nonroot</code>/<code>unlock</code>/<code>noinherit</code>/<code>gain_priv</code>, wildcards <code>*</code> et <code>...</code></span><span data-lang="en"><b>Sourced</b>: <code>type</code>, <code>attribute</code>, <code>class</code>, <code>range</code>, <code>default_rules</code>, <code>allow</code>, <code>allow_attach</code>, <code>allow_link</code>, <code>default_spawn_type</code>, <code>derive_type</code>, <code>mount_point</code>, the <code>nonroot</code>/<code>unlock</code>/<code>noinherit</code>/<code>gain_priv</code> modifiers, and the <code>*</code> and <code>...</code> wildcards</span></li>
+        <li><span data-lang="fr"><b>À VÉRIFIER page à page</b> (16 points) : terminaux exacts, EBNF non ambiguë</span><span data-lang="en"><b>TO VERIFY page by page</b> (16 points): exact terminals, unambiguous EBNF</span></li>
+        <li><span data-lang="fr">Cause : documentation officielle en ligne inaccessible (404) et SDP 8.0 non installé (licence gratuite, action humaine)</span><span data-lang="en">Cause: the official online docs were unreachable (404) and the QNX 8.0 SDP is not installed (free licence, human action)</span></li>
+        <li><span data-lang="fr">Conséquence assumée : <b>mode sous-ensemble strict</b> — Tamis refuse ce qu'il ne sait pas parser et le dit. Aucune syntaxe inventée.</span><span data-lang="en">Accepted consequence: <b>strict-subset mode</b> — Tamis refuses what it cannot parse and says so. No syntax invented.</span></li>
       </ul>
     </div>
   </div>
   <div class="panel">
-    <h3>Pourquoi ce projet tient sans QNX</h3>
-    <p><code>secpolcompile</code> est un utilitaire <b>hôte</b> : Tamis peut donc être testé par
-      différentiel contre le compilateur officiel <b>sans aucune cible</b>. En attendant le SDP,
-      les moteurs tournent sur un modèle construit depuis un format de fixture — le parseur
-      <code>secpol</code> produira exactement le même modèle. Tout ce que tu vois sur cette page
-      fonctionne déjà, sans licence, sans QEMU, sans matériel.</p>
-    <p class="pitch">« QNX génère et surveille les politiques ; QNX demande à l'intégrateur de les
-      relire, les fusionner et les justifier <b>à la main</b>. Tamis outille exactement cette partie,
-      et le prouve en se testant contre <code>secpolcompile</code>. »</p>
+    <h3><span data-lang="fr">Pourquoi ce projet tient sans QNX</span><span data-lang="en">Why this project stands without QNX</span></h3>
+    <p><span data-lang="fr"><code>secpolcompile</code> est un utilitaire <b>hôte</b> : Tamis peut donc être testé par différentiel contre le compilateur officiel <b>sans aucune cible</b>. En attendant le SDP, les moteurs tournent sur un modèle construit depuis un format de fixture — le parseur <code>secpol</code> produira exactement le même modèle. Tout ce que tu vois sur cette page fonctionne déjà, sans licence, sans QEMU, sans matériel.</span><span data-lang="en"><code>secpolcompile</code> is a <b>host</b> utility: Tamis can therefore be differentially tested against the official compiler <b>with no target at all</b>. Until the SDP arrives, the engines run on a model built from a fixture format — the <code>secpol</code> parser will produce exactly that same model. Everything on this page already works: no licence, no QEMU, no hardware.</span></p>
+    <p class="pitch"><span data-lang="fr">« QNX génère et surveille les politiques ; QNX demande à l'intégrateur de les relire, les fusionner et les justifier <b>à la main</b>. Tamis outille exactement cette partie, et le prouve en se testant contre <code>secpolcompile</code>. »</span><span data-lang="en">“QNX generates and monitors the policies; QNX asks the integrator to review, merge and justify them <b>by hand</b>. Tamis tools exactly that part — and proves itself by testing against <code>secpolcompile</code>.”</span></p>
   </div>
 </section>
 </main>

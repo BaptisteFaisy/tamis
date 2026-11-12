@@ -6,6 +6,10 @@
   --warn: #f5a623; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
+
+/* Bascule de langue : tout le contenu est présent dans le DOM, la CSS n'affiche qu'une langue. */
+body.lang-fr [data-lang="en"] { display: none !important; }
+body.lang-en [data-lang="fr"] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--fg);
   font: 15px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -125,3 +129,49 @@ footer {
   border-top: 1px solid var(--line); padding: 18px 24px; color: var(--mut); font-size: 13px;
   display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
 }
+
+/* ——— en-tête : navigation + bascule de langue ——— */
+.head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.lang { display: flex; gap: 0; padding-bottom: 6px; }
+.lang button {
+  border-radius: 0; padding: 6px 11px; font-size: 12px; font-weight: 700;
+  background: transparent; color: var(--mut); border: 1px solid var(--line); border-right-width: 0;
+}
+.lang button:last-child { border-right-width: 1px; border-radius: 0 7px 7px 0; }
+.lang button:first-child { border-radius: 7px 0 0 7px; }
+.lang button.active { background: var(--acc); color: #04121f; border-color: var(--acc); }
+
+/* ——— soumission ——— */
+.subcard {
+  background: linear-gradient(135deg, #172033, #141926); border: 1px solid #2b3a55;
+  border-radius: 12px; padding: 18px 20px; margin-bottom: 18px;
+}
+.subcard h2 { margin: 0 0 6px; font-size: 24px; }
+.subcard .tagline { margin: 0 0 12px; color: var(--fg); font-size: 15px; }
+.subcard p { margin: 6px 0; color: var(--mut); }
+.subcard b { color: var(--fg); }
+.subcard ul { margin: 6px 0 0; color: var(--mut); }
+h3.sub { margin: 26px 0 10px; font-size: 16px; color: var(--acc); }
+#submission h3 { margin: 24px 0 8px; font-size: 16px; }
+#submission p, #submission li { max-width: 100ch; }
+ul.links { word-break: break-all; }
+
+/* ——— codelab ——— */
+.steps { display: flex; flex-direction: column; gap: 14px; }
+.step { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.step h4 { margin: 0 0 6px; font-size: 14.5px; color: var(--acc); }
+.step p { margin: 0 0 10px; color: var(--mut); font-size: 13.5px; }
+pre.cmd, pre.out {
+  margin: 0 0 8px; padding: 11px 12px; border-radius: 8px; overflow-x: auto;
+  font: 12.5px/1.6 var(--mono); white-space: pre-wrap; word-break: break-word;
+}
+pre.cmd { background: #0c1018; border: 1px solid #2b3244; color: #cfe3ff; }
+pre.cmd::before { content: "$ "; color: var(--mut); }
+pre.out { background: var(--bg2); border: 1px solid var(--line); color: var(--mut); }
+
+/* ——— idées ——— */
+.ideas li.done { color: var(--good); }
+.ideas li.done::marker { color: var(--good); }
+.ideas ol { columns: 2; column-gap: 34px; }
+@media (max-width: 860px) { .ideas ol { columns: 1; } }
+.ideas li { break-inside: avoid; }

@@ -23,6 +23,28 @@ const EXAMPLES = {"attaque": "# Politique de démonstration — format PROVISOIR
     };
   });
 
+  /* ——— langue (FR / EN) ——— */
+  function lang() { return document.body.classList.contains("lang-fr") ? "fr" : "en"; }
+  function t(fr, en) { return lang() === "fr" ? fr : en; }
+
+  function setLang(l) {
+    document.body.classList.toggle("lang-fr", l === "fr");
+    document.body.classList.toggle("lang-en", l === "en");
+    document.documentElement.lang = l;
+    document.querySelectorAll("#lang button").forEach((b) =>
+      b.classList.toggle("active", b.dataset.langSet === l));
+    try { localStorage.setItem("tamis-lang", l); } catch (e) { /* navigation privée */ }
+    $("langNote").textContent = t(
+      "Les messages des verdicts viennent du cœur C (rédigés en français) ; les codes, les clés JSON et la structure du rapport sont neutres. L'onglet JSON est la sortie autoritaire, identique en C, Python et JS.",
+      "Verdict messages come from the C core (written in French); codes, JSON keys and report structure are language-neutral. The JSON tab is the authoritative output — identical in C, Python and JS.");
+    show();
+    drawGraph();
+  }
+
+  document.querySelectorAll("#lang button").forEach((b) => {
+    b.onclick = () => setLang(b.dataset.langSet);
+  });
+
   document.querySelectorAll("#fmt button").forEach((b) => {
     b.onclick = () => {
       state.fmt = b.dataset.fmt;
@@ -143,7 +165,9 @@ const EXAMPLES = {"attaque": "# Politique de démonstration — format PROVISOIR
     const warns = vs.filter((v) => v.sev === 1).length;
     badge.hidden = false;
     badge.className = "badge " + (errs ? "ko" : (warns ? "warn" : "ok"));
-    badge.textContent = "exit " + (errs ? 1 : 0) + (errs ? " · " + errs + " error" : (warns ? " · " + warns + " warning" : " · sain"));
+    badge.textContent = "exit " + (errs ? 1 : 0) + (errs
+      ? " · " + errs + " error"
+      : (warns ? " · " + warns + " warning" : " · " + t("sain", "healthy")));
   }
 
   function meta() {
@@ -242,14 +266,20 @@ const EXAMPLES = {"attaque": "# Politique de démonstration — format PROVISOIR
 
     status.textContent = pathInfo
       ? (pathInfo.n >= 0
-        ? "⚠ chemin " + s + " → " + d + " en " + pathInfo.n + " saut(s) : " + pathInfo.rules.join(", ")
-        : "✓ aucun chemin " + s + " → " + d + " (" + pathInfo.visits + " nœuds visités)")
-      : nodes.length + " types, " + edges.length + " règles";
+        ? t("⚠ chemin ", "⚠ path ") + s + " → " + d + t(" en ", " in ") + pathInfo.n +
+          t(" saut(s) : ", " hop(s): ") + pathInfo.rules.join(", ")
+        : t("✓ aucun chemin ", "✓ no path ") + s + " → " + d + " (" + pathInfo.visits +
+          t(" nœuds visités", " nodes visited") + ")")
+      : nodes.length + t(" types, ", " types, ") + edges.length + t(" règles", " rules");
   }
 
   /* ——— démarrage ——— */
   $("policyA").value = EXAMPLES.attaque || "";
   $("policyB").value = EXAMPLES.durcie || "";
   refreshTypes();
+  let saved = null;
+  try { saved = localStorage.getItem("tamis-lang"); } catch (e) { /* navigation privée */ }
+  const nav = (typeof navigator !== "undefined" && navigator.language) || "en";
+  setLang(saved || (nav.slice(0, 2).toLowerCase() === "fr" ? "fr" : "en"));
   run("lint");
 })();

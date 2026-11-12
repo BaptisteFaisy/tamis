@@ -98,16 +98,34 @@ continu par `tests/test_differentiel.sh` (C↔Python, 250/300/500 verdicts aléa
 `tests/test_js.sh` (C↔JS, 13 scénarios d'analyse réels). Une divergence est un bug, pas une
 différence d'opinion.
 
-## Site de démonstration
+## Site de démonstration & dossier de soumission
 
-Publié sur GitHub Pages depuis `site/` (workflow `pages.yml`), régénéré à chaque push depuis
-`fixtures/` et `docs/` par `tools/build_site.py` — aucune dérive possible entre le dépôt et le
-site. Le playground exécute le **jumeau JS** : `lint`, `reach`, `proof`, `explain`,
-`minimize`, `diff` et le graphe de privilèges interactif, avec sortie texte / JSON / Markdown
-d'audit. Le câblage de la page est testé sans navigateur (`tests/site_smoke.js`, mini-DOM).
+**https://baptistefaisy.github.io/tamis/** — publié sur GitHub Pages depuis `site/`
+(workflow `pages.yml`), **bilingue FR/EN** (bascule en haut à droite, anglais par défaut pour
+les juges). Sept onglets :
+
+| Onglet | Contenu |
+|---|---|
+| **Playground** | toutes les commandes exécutées en direct par le jumeau JS : `lint`, `reach`, `proof`, `explain`, `minimize`, `diff`, graphe de privilèges interactif, sortie texte / JSON / Markdown d'audit, badge de code de retour CI |
+| **Features** | 21 fonctionnalités : commande, apport, exigence TAM, état |
+| **Evidence** | les 8 niveaux de vérification + la traçabilité des **24 exigences** du cahier |
+| **Submission** | le dossier de soumission complet : pitch, catégorie, bonus, **preuve d'usage QNX**, comment c'est construit, instructions pour les juges, script vidéo 3 min, liens |
+| **Codelab** | le tutoriel 20 min en 11 étapes, avec les commandes et leurs sorties réelles |
+| **100 ideas** | la feuille de route, ✓ sur ce qui est déjà livré |
+| **Grammar & contract** | ce qui est gelé, ce qui est `À VÉRIFIER`, et pourquoi |
+
+**Une seule source de vérité** : le contenu vit dans `site/content.json` (+ `fixtures/` et
+`docs/`), et `tools/build_site.py` le rend dans les deux langues entre marqueurs. La CI
+vérifie l'absence de dérive — le site ne peut pas contredire le dépôt.
+`tools/build_devpost.py` génère depuis la même source `docs/devpost-form.md`, le formulaire
+Devpost **prêt à coller** (13 champs, en anglais).
+
+Le câblage de la page est testé **sans navigateur** (`tests/site_smoke.js`, mini-DOM :
+46 vérifications — démarrage, 7 commandes, 3 formats, graphe, onglets, bascule de langue,
+erreur de syntaxe).
 
 ```
-make site     # régénère site/ depuis ses sources
+make site     # régénère site/ et docs/devpost-form.md depuis leurs sources
 ```
 
 ## Licence

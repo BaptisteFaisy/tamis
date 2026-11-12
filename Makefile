@@ -46,6 +46,7 @@ mutants:
 
 site:
 	@python3 tools/build_site.py
+	@python3 tools/build_devpost.py
 
 clean:
 	rm -rf build $(TEST_BIN)

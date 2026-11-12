@@ -38,21 +38,31 @@ function makeEl(id, tag) {
 }
 
 const byId = {};
-const TABS = ["playground", "features", "proofs", "ideas", "grammar"];
+const TABS = ["playground", "features", "proofs", "submission", "codelab", "ideas", "grammar"];
 const CMDS = ["lint", "reach", "proof", "explain", "minimize", "diff", "view"];
 const FMTS = ["text", "json", "md"];
+const LANGS = ["fr", "en"];
 
 TABS.forEach((t) => { byId[t] = makeEl(t, "section"); });
 ["policyA", "policyB"].forEach((t) => { byId[t] = makeEl(t, "textarea"); });
 ["src", "dst", "example"].forEach((t) => { byId[t] = makeEl(t, "select"); });
-["output", "graph", "graphStatus", "pairHint", "exitBadge", "panelB", "copy", "loadExample"]
+["output", "graph", "graphStatus", "pairHint", "exitBadge", "panelB", "copy", "loadExample", "langNote"]
   .forEach((t) => { byId[t] = makeEl(t); });
 
 const navBtns = TABS.map((t) => { const b = makeEl("", "button"); b.dataset.tab = t; return b; });
 const toolBtns = CMDS.map((c) => { const b = makeEl("", "button"); b.dataset.cmd = c; return b; });
 const fmtBtns = FMTS.map((f) => { const b = makeEl("", "button"); b.dataset.fmt = f; return b; });
+const langBtns = LANGS.map((l) => { const b = makeEl("", "button"); b.dataset.langSet = l; return b; });
+
+const store = {};
+global.localStorage = {
+  getItem: (k) => (k in store ? store[k] : null),
+  setItem: (k, v) => { store[k] = String(v); },
+};
 
 global.document = {
+  body: makeEl("", "body"),
+  documentElement: makeEl("", "html"),
   getElementById: (id) => byId[id] || (byId[id] = makeEl(id)),
   createElement: (t) => makeEl("", t),
   createElementNS: (ns, t) => makeEl("", t),
@@ -60,6 +70,7 @@ global.document = {
     if (sel === "#nav button") return navBtns;
     if (sel === "#toolbar button") return toolBtns;
     if (sel === "#fmt button") return fmtBtns;
+    if (sel === "#lang button") return langBtns;
     if (sel === ".tab") return TABS.map((t) => byId[t]);
     return [];
   },
@@ -111,7 +122,7 @@ toolBtns.find((b) => b.dataset.cmd === "reach").onclick();
 ck(out.textContent.indexOf("TAMIS_PATH_FOUND") >= 0, "reach trouve le chemin");
 ck(out.textContent.indexOf("app_tiers -> pompe_critique") >= 0, "reach affiche le chemin");
 ck(byId.exitBadge.textContent.indexOf("exit 1") === 0, "badge exit 1 sur error");
-ck(byId.graphStatus.textContent.indexOf("chemin") >= 0, "statut du graphe : chemin signalé");
+ck(/chemin|path/.test(byId.graphStatus.textContent), "statut du graphe : chemin signalé");
 
 /* proof sur la politique durcie doit donner le certificat */
 byId.policyA.value = byId.policyB.value;
@@ -144,6 +155,29 @@ ck(byId.panelB.hidden === true, "lint : le panneau candidat est masqué");
 navBtns.find((b) => b.dataset.tab === "ideas").onclick();
 ck(byId.ideas.classList.contains("active"), "onglet idées activé");
 ck(!byId.playground.classList.contains("active"), "onglet playground désactivé");
+
+/* ——— bascule de langue FR/EN ——— */
+byId.example.value = "attaque";
+byId.loadExample.onclick();
+byId.src.value = "app_tiers";
+byId.dst.value = "pompe_critique";
+toolBtns.find((b) => b.dataset.cmd === "reach").onclick();
+const statusEn = byId.graphStatus.textContent;
+ck(statusEn.indexOf("path") >= 0, "EN : statut du graphe en anglais");
+
+langBtns.find((b) => b.dataset.langSet === "fr").onclick();
+ck(document.body.classList.contains("lang-fr"), "FR : classe lang-fr sur body");
+ck(!document.body.classList.contains("lang-en"), "FR : lang-en retirée");
+ck(document.documentElement.lang === "fr", "FR : attribut lang=fr sur <html>");
+ck(byId.langNote.textContent.indexOf("cœur C") >= 0, "FR : note sur la langue des messages");
+ck(byId.graphStatus.textContent.indexOf("chemin") >= 0, "FR : statut du graphe traduit");
+ck(byId.graphStatus.textContent !== statusEn, "le statut change bien avec la langue");
+ck(store["tamis-lang"] === "fr", "choix de langue persisté");
+
+langBtns.find((b) => b.dataset.langSet === "en").onclick();
+ck(document.body.classList.contains("lang-en"), "EN : retour à lang-en");
+ck(byId.langNote.textContent.indexOf("C core") >= 0, "EN : note sur la langue des messages");
+ck(byId.output.textContent.indexOf("TAMIS_PATH_FOUND") >= 0, "la sortie survit au changement de langue");
 
 /* ——— erreur de syntaxe remontée proprement ——— */
 byId.policyA.value = "ceci nest pas une politique\n";

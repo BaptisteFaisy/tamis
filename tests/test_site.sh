@@ -33,3 +33,11 @@ if ! diff -r site "$TMP/site" >/dev/null 2>&1; then
   exit 1
 fi
 echo "OK site/ conforme à ses sources (aucune dérive)"
+
+python3 tools/build_devpost.py --out "$TMP/devpost-form.md" >/dev/null \
+  || { echo "KO régénération du formulaire Devpost"; exit 1; }
+if ! diff -q docs/devpost-form.md "$TMP/devpost-form.md" >/dev/null 2>&1; then
+  echo "KO docs/devpost-form.md n'est pas à jour — relancer : python3 tools/build_devpost.py"
+  exit 1
+fi
+echo "OK docs/devpost-form.md conforme à content.json (aucune dérive)"
