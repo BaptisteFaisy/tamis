@@ -1,0 +1,6 @@
+# Point-virgule manquant apres la declaration de type.
+type app_tiers
+
+allow app_tiers self:ability {
+    able_create
+};

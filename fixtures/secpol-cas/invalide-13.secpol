@@ -1,0 +1,7 @@
+# Permission inconnue pour la classe 'file'.
+type ptype;
+type ftype;
+
+class file { read write delete execute };
+
+allow ptype ftype : file connect;

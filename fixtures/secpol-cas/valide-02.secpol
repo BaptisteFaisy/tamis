@@ -1,0 +1,8 @@
+# Abilities avec arguments numeriques (mem_phys hexa, setuid liste).
+type server;
+
+allow server self:ability {
+    mem_phys:0x1200000-0x24000000
+    setuid:4,6,23
+    able_create
+};

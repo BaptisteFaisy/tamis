@@ -1,0 +1,6 @@
+# Espaces autour du tiret d'une plage : le tiret doit etre colle.
+type app_tiers;
+
+allow app_tiers self:ability {
+    setuid:4 - 6
+};

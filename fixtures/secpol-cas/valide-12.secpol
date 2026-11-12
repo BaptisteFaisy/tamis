@@ -1,0 +1,7 @@
+# derive_type : forme simple et forme ensembles.
+type type1;
+type type2;
+type type3;
+
+derive_type type1 name type2;
+derive_type { type1 type2 } { run init } type3;

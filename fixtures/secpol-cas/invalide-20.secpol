@@ -1,0 +1,7 @@
+# Modificateur QNX 7.1 ('no-inherit') : refuse en 8.0.
+type app_tiers;
+
+allow app_tiers self:ability {
+    no-inherit
+    able_create
+};

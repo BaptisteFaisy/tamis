@@ -1,0 +1,7 @@
+# Attribute : regroupe plusieurs types.
+attribute secure;
+
+type secure1_t, secure;
+type secure2_t, secure;
+
+allow secure self : channel connect;

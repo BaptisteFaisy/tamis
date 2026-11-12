@@ -1,0 +1,6 @@
+# Type minimal + bloc d'abilities minimal.
+type app_tiers;
+
+allow app_tiers self:ability {
+    able_create
+};

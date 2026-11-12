@@ -1,0 +1,4 @@
+# Regle 'allow' sans classe ni permission.
+type app_tiers;
+
+allow app_tiers;

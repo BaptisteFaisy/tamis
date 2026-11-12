@@ -1,0 +1,6 @@
+# Ability item sans argument : 'settypeid:' suivi de rien.
+type app_tiers;
+
+allow app_tiers self:ability {
+    settypeid:
+};

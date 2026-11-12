@@ -1,0 +1,9 @@
+# Commentaires : '#' jusqu'a la fin de la ligne.
+# commentaire en tete
+type app_tiers;   # commentaire en fin de ligne
+
+# commentaire seul
+
+allow app_tiers self:ability {
+    able_create    # commentaire dans le bloc
+};

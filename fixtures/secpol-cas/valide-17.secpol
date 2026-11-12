@@ -1,0 +1,36 @@
+# Politique complete : types, range, classe, transition, canal.
+type app_tiers;
+type journal;
+type diag;
+type file1_t;
+type mm_client;
+type mm_server;
+
+range gpu_mem;
+
+class file { read write delete execute };
+
+allow app_tiers self:ability {
+    mem_phys:1024-4096,0x1200000-0x24000000
+    setuid:4,6,23
+    able_create
+    settypeid:journal
+};
+
+allow journal self:ability {
+    nonroot
+    settypeid:diag
+    channel_connect:mm_server
+};
+
+allow diag self:ability {
+    gain_priv:pathspace
+    interrupt:gpu_mem
+    settypeid:app_tiers
+};
+
+allow mm_client mm_server:channel connect;
+
+allow app_tiers self:ability {
+    gain_priv: file:read:file1_t
+};

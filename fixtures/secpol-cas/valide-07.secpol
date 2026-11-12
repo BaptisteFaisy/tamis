@@ -1,0 +1,5 @@
+# Type par defaut lors d'un spawn.
+type type1_t;
+type type2_t;
+
+default_spawn_type type1_t type2_t;

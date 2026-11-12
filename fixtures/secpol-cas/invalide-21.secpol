@@ -1,0 +1,4 @@
+# default_spawn_type vers un type inexistant.
+type app_tiers;
+
+default_spawn_type app_tiers nonexistent;

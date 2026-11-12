@@ -1,0 +1,6 @@
+# Argument fourni a une ability qui n'accepte pas de sous-plage.
+type app_tiers;
+
+allow app_tiers self:ability {
+    able_create:4
+};

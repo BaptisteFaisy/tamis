@@ -1,0 +1,6 @@
+# Relabel de canal incoherent avec une regle deja posee sur le meme type.
+type random_t;
+type socket_t;
+
+allow_attach random_t /dev/random;
+allow_attach random_t /dev/socket/* socket_t;

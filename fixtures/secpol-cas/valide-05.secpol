@@ -1,0 +1,7 @@
+# Classe custom : permissions fines sur un objet non-canal.
+type ptype;
+type ftype;
+
+class file { read write delete execute };
+
+allow ptype ftype : file read;

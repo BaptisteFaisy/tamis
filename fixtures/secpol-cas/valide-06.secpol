@@ -1,0 +1,5 @@
+# Connexion a un canal d'un autre type.
+type mm_client;
+type mm_server;
+
+allow mm_client mm_server:channel connect;

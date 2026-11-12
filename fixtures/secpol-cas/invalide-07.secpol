@@ -1,0 +1,7 @@
+# La cible d'une regle d'abilities doit etre 'self'.
+type app_tiers;
+type other;
+
+allow app_tiers other:ability {
+    able_create
+};

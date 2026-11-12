@@ -1,0 +1,6 @@
+# Plage mal formee : deux separateurs '-'.
+type app_tiers;
+
+allow app_tiers self:ability {
+    setuid:4-6-9
+};

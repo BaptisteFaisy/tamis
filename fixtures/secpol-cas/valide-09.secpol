@@ -1,0 +1,9 @@
+# Modificateurs QNX 8.0 : nonroot, unlock, noinherit.
+type app_tiers;
+
+allow app_tiers self:ability {
+    nonroot
+    unlock
+    noinherit
+    able_create
+};

@@ -2,8 +2,8 @@
 # Point d'entrée unique : build, tests (C + Python + différentiel), sanitizeurs, garde.
 SHELL := /bin/bash
 CC ?= gcc
-CFLAGS ?= -std=c11 -O2 -Wall -Wextra -Werror -Icore/include
-SANFLAGS ?= -std=c11 -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -Icore/include
+CFLAGS ?= -std=c11 -O2 -Wall -Wextra -Werror -Icore/include -Icore/src
+SANFLAGS ?= -std=c11 -g -O1 -fsanitize=address,undefined -fno-omit-frame-pointer -Icore/include -Icore/src
 
 CORE_SRC := $(wildcard core/src/*.c)
 CORE_HDR := $(wildcard core/include/tamis/*.h)

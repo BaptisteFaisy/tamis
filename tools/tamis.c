@@ -4,6 +4,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "tamis/analyze.h"
 #include "tamis/report.h"
+#include "tamis/secpol.h"
 #include "tamis/smt.h"
 #include "sha256.h"
 #include <stdio.h>
@@ -18,6 +19,9 @@
 typedef struct {
     const char *cmd, *file, *file2, *src, *dst, *format, *label;
 } args;
+
+/* --secpol : force le parseur du langage QNX 8.0 quelle que soit l'extension. */
+static int g_force_secpol = 0;
 
 /* Politique chargée : texte, arène, modèle construit, empreinte. */
 typedef struct {
@@ -35,9 +39,10 @@ static void usage(void)
         "tamis " TAMIS_VERSION " — analyse statique de politiques de sécurité QNX\n"
         "Usage : tamis <commande> <fichier> [options]\n"
         "Commandes : lint | reach | proof | explain | smt | minimize | diff <fichier2> | view | version\n"
-        "Options : --src <type> --dst <type> --format text|json|md --label <nom>\n"
+        "Options : --src <type> --dst <type> --format text|json|md --label <nom> --secpol\n"
         "  reach/proof/explain : --src et --dst requis. diff : <fichier>=base, <fichier2>=candidat.\n"
         "  smt : émet la preuve SMT-LIB2 (z3 l'exécute s'il est installé).\n"
+        "  --secpol : force le parseur du langage QNX 8.0 (auto-détecté sur les .secpol).\n"
         "  --label : nom rapporté dans les verdicts (défaut : le chemin du fichier).\n"
         "  view : émet le graphe de privilèges en JSON (pour le visualiseur HTML).\n",
         stderr);
@@ -91,6 +96,7 @@ static int parse_args(int argc, char **argv, args *a)
         else if (!strcmp(argv[i], "--dst") && i + 1 < argc) { a->dst = argv[++i]; }
         else if (!strcmp(argv[i], "--format") && i + 1 < argc) { a->format = argv[++i]; }
         else if (!strcmp(argv[i], "--label") && i + 1 < argc) { a->label = argv[++i]; }
+        else if (!strcmp(argv[i], "--secpol")) { g_force_secpol = 1; }
         else if (argv[i][0] != '-') {
             if (!a->file) { a->file = argv[i]; } else { a->file2 = argv[i]; }
         } else { fprintf(stderr, "KO option inconnue : %s\n", argv[i]); return -1; }
@@ -226,6 +232,20 @@ static void view_json(const tamis_model *m, const args *a)
     printf("}\n");
 }
 
+/*
+ * Parse une politique. Le format RÉEL de QNX 8.0 (fichier .secpol) est prioritaire ;
+ * le format de fixture provisoire (.mpf) reste accepté pour les démonstrations en place.
+ * --secpol force le parseur QNX quelle que soit l'extension.
+ */
+static int parse_texte(const char *texte, const char *chemin, tamis_arena *a,
+                       tamis_model *m, tamis_verdict *err)
+{
+    if (g_force_secpol || strstr(chemin, ".secpol") != NULL) {
+        return tamis_model_parse_secpol(texte, a, m, err);
+    }
+    return tamis_model_parse(texte, a, m, err);
+}
+
 /* Charge un fichier et construit le modèle. 0 ok, -1 syntaxe (*err rempli), -2 IO. */
 static int load(const char *path, loaded *L, tamis_verdict *err)
 {
@@ -243,7 +263,7 @@ static int load(const char *path, loaded *L, tamis_verdict *err)
         return -2;
     }
     tamis_arena_init(&L->arena, L->arena_buf, ARENA_SZ);
-    rc = tamis_model_parse(L->text, &L->arena, &L->model, err);
+    rc = parse_texte(L->text, path, &L->arena, &L->model, err);
     if (rc != 0) {
         err->file = path;
     }

@@ -1,0 +1,2 @@
+# Permission declaree deux fois dans la meme classe.
+class file { read write read };

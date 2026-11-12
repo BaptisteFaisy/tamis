@@ -1,0 +1,6 @@
+# Plage inversee : la fin est inferieure au debut.
+type app_tiers;
+
+allow app_tiers self:ability {
+    mem_phys:4096-1024
+};

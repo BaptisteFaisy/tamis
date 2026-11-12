@@ -1,0 +1,7 @@
+# Plages mixtes et borne ouverte (96- = jusqu'au maximum).
+type server;
+
+allow server self:ability {
+    mem_phys:1024-4096,0x1200000-0x24000000
+    setuid:4-6,23,96-
+};

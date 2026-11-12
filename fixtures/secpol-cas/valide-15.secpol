@@ -1,0 +1,7 @@
+# Ensembles de types source et cible.
+type type1;
+type type2;
+type type3;
+type type4;
+
+allow { type1 type2 } { type3 type4 }:channel connect;

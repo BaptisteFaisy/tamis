@@ -1,0 +1,6 @@
+# Plage nommee non declaree.
+type app_tiers;
+
+allow app_tiers self:ability {
+    mem_phys:abc
+};

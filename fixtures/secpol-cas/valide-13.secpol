@@ -1,0 +1,12 @@
+# Chemins : allow_attach et allow_link.
+type random_t;
+type socket_t;
+type unrestricted_t;
+type type1_t;
+
+allow_attach random_t /dev/random;
+allow_attach socket_t /dev/socket/* socket_t;
+allow_attach unrestricted_t /…;
+allow_attach random_t mount:/;
+allow_attach random_t mount+:/system;
+allow_link type1_t /usr/lib/ldqnx-64.so.2;

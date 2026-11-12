@@ -1,0 +1,11 @@
+# Plages nommees : resolues au boot par le fichier de plages.
+type screen_t;
+
+range gpu_mem;
+range gpu_int;
+
+allow screen_t self:ability {
+    mem_phys: gpu_mem
+    interrupt: gpu_int
+    setuid: gpu_mem
+};

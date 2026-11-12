@@ -1,0 +1,5 @@
+# mount_point : proprietaire et permissions d'un point de montage.
+mount_point 1000:1001 rw-rw-r-- {
+    /dev/random
+    /dev/urandom
+} ;

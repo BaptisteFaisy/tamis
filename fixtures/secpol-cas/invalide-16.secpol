@@ -1,0 +1,6 @@
+# Argument de type non declare pour l'ability 'settypeid'.
+type app_tiers;
+
+allow app_tiers self:ability {
+    settypeid:undefined_type
+};

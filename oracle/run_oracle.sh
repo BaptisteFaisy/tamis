@@ -1,85 +1,102 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: MIT
-# Harnais de test différentiel Tamis ↔ secpolcompile (TAM-12). Optionnel sans SDP.
-# Codes : 0 succès, 1 désaccord, 2 usage invalide, 3 prérequis manquant, 4 dry-run.
-set -euo pipefail
+#
+# run_oracle.sh — différentiel oracle : le parseur de Tamis contre le compilateur officiel
+# `secpolcompile` (TAM-12). Pour chaque politique du corpus, on compare l'ACCEPTATION :
+#   secpolcompile : « 0 errors »  -> accepte ; sinon refuse
+#   Tamis         : absence de TAMIS_PARSE_ERROR -> accepte ; sinon refuse
+# Un désaccord est un BUG de Tamis (le compilateur fait autorité).
+#
+# Le compilateur écrit ses erreurs sur stdout et sort 0 même en cas d'échec : c'est le
+# nombre de « N errors » qui fait foi, pas le code de retour.
+#
+# Codes : 0 accord total ; 1 désaccord ; 2 usage ; 3 prérequis manquant (pas de SDP).
+set -uo pipefail
+RACINE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$RACINE"
+SDP="${QNX_SDP:-$HOME/qnx800}"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
 
 usage() {
   cat <<'EOF'
-oracle/run_oracle.sh — différentiel Tamis contre le compilateur officiel QNX.
+usage : oracle/run_oracle.sh [--corpus <dossier>] [--fichier <policy.secpol>] [--aide]
 
-Pour chaque politique de fixtures/, compare le verdict d'acceptation de Tamis
-(parseur) à celui de `secpolcompile` (utilitaire hôte du SDP). Toute politique
-acceptée par l'un doit être acceptée par l'autre, et inversement.
-
-Usage :
-  oracle/run_oracle.sh [--fixtures <dossier>] [--dry-run] [--help]
-
-Options :
-  --fixtures <dossier>  corpus à tester (défaut : fixtures/)
-  --dry-run             n'exécute rien, sort 4 (aucun résultat possible sans SDP)
-  --help                cette aide
-
-Prérequis : un SDP QNX 8.0 installé et `secpolcompile` dans le PATH (ou QNX_SDP posé).
-Sans SDP : sort 3 (prérequis manquant) — ce n'est pas un échec, le différentiel
-C ↔ Python (tests/test_differentiel.sh) reste la preuve principale.
+Compare l'acceptation par Tamis et par secpolcompile, politique par politique.
+Nécessite un SDP QNX installé (QNX_SDP ou ~/qnx800) et le CLI (build/tamis).
 EOF
 }
 
-FIXTURES="fixtures"
-DRYRUN=0
+CORPUS=""
+FICHIER=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --fixtures) FIXTURES="${2:?}"; shift 2 ;;
-    --dry-run)  DRYRUN=1; shift ;;
-    --help|-h)  usage; exit 0 ;;
+    --corpus) CORPUS="${2:?}"; shift 2 ;;
+    --fichier) FICHIER="${2:?}"; shift 2 ;;
+    --aide|-h) usage; exit 0 ;;
     *) echo "KO option inconnue : $1" >&2; usage >&2; exit 2 ;;
   esac
 done
 
-if [ "$DRYRUN" -eq 1 ]; then
-  echo "INFO dry-run : aucun résultat possible sans exécuter secpolcompile"
-  exit 4
-fi
-
-# Localise secpolcompile : PATH d'abord, sinon $QNX_SDP/host/usr/bin.
-SECPOLCOMPILE="$(command -v secpolcompile 2>/dev/null || true)"
-if [ -z "$SECPOLCOMPILE" ] && [ -n "${QNX_SDP:-}" ]; then
-  for cand in "$QNX_SDP"/host/usr/bin/secpolcompile "$QNX_SDP"/host/linux/x86_64/usr/bin/secpolcompile; do
-    [ -x "$cand" ] && { SECPOLCOMPILE="$cand"; break; }
-  done
+# ——— le compilateur officiel ———
+SECPOLCOMPILE=""
+for c in "$SDP/host/linux/x86_64/usr/bin/secpolcompile" "$SDP/host/usr/bin/secpolcompile"; do
+  [ -n "$c" ] && [ -x "$c" ] && { SECPOLCOMPILE="$c"; break; }
+done
+if [ -z "$SECPOLCOMPILE" ] && command -v secpolcompile >/dev/null 2>&1; then
+  SECPOLCOMPILE="$(command -v secpolcompile)"
 fi
 if [ -z "$SECPOLCOMPILE" ]; then
-  echo "ATTENTION secpolcompile introuvable (PATH et QNX_SDP=${QNX_SDP:-<vide>})"
-  echo "INFO prérequis manquant : le SDP QNX 8.0 n'est pas installé sur cet hôte."
-  echo "INFO le différentiel C ↔ Python (niveau 2) reste la preuve principale ; TAM-12 est optionnel."
+  echo "KO secpolcompile introuvable (QNX_SDP ou ~/qnx800 manquant) — prérequis manquant"
   exit 3
 fi
 
-[ -d "$FIXTURES" ] || { echo "KO dossier fixtures introuvable : $FIXTURES" >&2; exit 2; }
+# ——— le CLI de Tamis ———
+if [ ! -x build/tamis ]; then
+  make -s cli >/dev/null 2>&1 || { echo "KO impossible de construire build/tamis"; exit 3; }
+fi
 
-total=0; desaccords=0
-for pol in "$FIXTURES"/*.secpol; do
-  [ -e "$pol" ] || continue
+# ——— corpus ———
+if [ -n "$FICHIER" ]; then
+  LISTE="$FICHIER"
+elif [ -n "$CORPUS" ]; then
+  LISTE=$(find "$CORPUS" -name '*.secpol' -type f | sort)
+else
+  LISTE=$(find fixtures -name '*.secpol' -type f 2>/dev/null | sort)
+fi
+if [ -z "$LISTE" ]; then
+  echo "KO aucune politique .secpol dans le corpus"
+  exit 3
+fi
+
+total=0; accords=0; desaccords=0
+printf '%-44s %-12s %-12s %s\n' "POLITIQUE" "secpolcompile" "tamis" "VERDICT"
+printf '%-44s %-12s %-12s %s\n' "----------" "-------------" "------------" "-------"
+for pol in $LISTE; do
+  [ -f "$pol" ] || continue
   total=$((total+1))
-  # secpolcompile : 0 = accepte, non-nul = refuse. Tamis : à brancher sur le parseur (L1).
-  if "$SECPOLCOMPILE" "$pol" >/dev/null 2>&1; then
-    oracle="accepte"
-  else
-    oracle="refuse"
-  fi
-  # TODO(L1) : remplacer « accepte » par l'appel réel au parseur Tamis quand il existe.
-  tamis="accepte"
+  nom=$(basename "$pol")
+  sortie=$("$SECPOLCOMPILE" -o "$TMP/p.bin" "$pol" 2>&1)
+  if printf '%s' "$sortie" | grep -qE '(^|[^0-9])0 errors'; then oracle="accepte"; else oracle="refuse"; fi
+  sortie_t=$(./build/tamis lint "$pol" --format json 2>&1)
+  if printf '%s' "$sortie_t" | grep -q 'TAMIS_PARSE_ERROR'; then tamis="refuse"; else tamis="accepte"; fi
   if [ "$oracle" = "$tamis" ]; then
-    printf 'OK   %s : oracle=%s tamis=%s\n' "$(basename "$pol")" "$oracle" "$tamis"
+    accords=$((accords+1)); verdict="ACCORD"
   else
-    printf 'KO   %s : DÉSACCORD oracle=%s tamis=%s\n' "$(basename "$pol")" "$oracle" "$tamis"
-    desaccords=$((desaccords+1))
+    desaccords=$((desaccords+1)); verdict="DÉSACCORD"
+  fi
+  printf '%-44s %-12s %-12s %s\n' "$nom" "$oracle" "$tamis" "$verdict"
+  if [ "$verdict" = "DÉSACCORD" ]; then
+    echo "      oracle : $(printf '%s' "$sortie" | grep -E 'error' | head -2 | tr '\n' ' ')"
+    echo "      tamis  : $(printf '%s' "$sortie_t" | head -2 | tr '\n' ' ')"
   fi
 done
 
+echo
+echo "$accords/$total politiques en accord avec le compilateur officiel"
 if [ "$desaccords" -ne 0 ]; then
-  echo "FAILED $desaccords désaccord(s) sur $total politiques"
+  echo "FAILED $desaccords désaccord(s) — le parseur de Tamis s'écarte de secpolcompile"
   exit 1
 fi
-echo "OK $total politiques, accord total Tamis ↔ secpolcompile"
+echo "OK $total checks — Tamis et secpolcompile sont d'accord sur tout le corpus"
+exit 0

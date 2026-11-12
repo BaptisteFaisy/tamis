@@ -1,0 +1,5 @@
+# Classe custom non declaree.
+type ptype;
+type ftype;
+
+allow ptype ftype : file read;

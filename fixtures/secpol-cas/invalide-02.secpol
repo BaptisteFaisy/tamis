@@ -1,0 +1,3 @@
+# Type declare deux fois.
+type app_tiers;
+type app_tiers;

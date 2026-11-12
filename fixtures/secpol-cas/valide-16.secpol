@@ -1,0 +1,14 @@
+# Transition coherent : settypeid + gain_priv de la meme privilege.
+type app_tiers;
+type server1;
+
+allow server1 self:ability {
+    nonroot
+    pathspace
+};
+
+allow app_tiers self:ability {
+    nonroot
+    settypeid:server1
+    gain_priv:pathspace
+};

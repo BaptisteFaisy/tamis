@@ -1,0 +1,3 @@
+# Classe declaree deux fois.
+class file { read write };
+class file { open };

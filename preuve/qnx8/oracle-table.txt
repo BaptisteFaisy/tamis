@@ -1,0 +1,305 @@
+# Preuve — table de verite « oracle SDP » (secpolcompile, QNX 8.0)
+# Tamis / TAM-12 — differentiel oracle
+#
+# CAPTURE LE 12/11/2026 sur le serveur r630 (SDP QNX 8.0 installe dans ~/qnx800).
+# Binaire : /home/baptiste/qnx800/host/linux/x86_64/usr/bin/secpolcompile
+#
+# COMMANDE EXACTE, REJOABLE (une fois par cas) :
+#   ssh r630
+#   . ~/qnx800/qnxsdp-env.sh
+#   cd /tmp/tamis-oracle-cas
+#   secpolcompile -o <cas>.bin <cas>.secpol
+#
+# REGLES DE LECTURE (verifiees sur les 42 cas) :
+#   * tout sort sur stdout (ici stdout+stderr fusionnes) ;
+#   * le code de sortie est 0 si et seulement si il y a 0 erreur ;
+#   * « N errors, M warnings » N'EST JAMAIS AFFICHE quand il n'y a ni erreur
+#     ni warning : sur un fichier parfait, secpolcompile n'affiche RIEN.
+#     La ligne de compte n'apparait que s'il y a au moins un message ;
+#   * format d'erreur :  <fichier>:<ligne>:<colonne>: error: <message>
+#     - ligne en base 1, colonne en base 0 ;
+#     - a la fin de fichier, la ligne est le numero de ligne suivant et la
+#       colonne vaut 0 ;
+#   * les warnings sont multi-lignes : « warning: type X has unneeded
+#     gain_priv abilities: » suivi des abilities indentees ;
+#   * le fichier .bin produit n'est jamais conserve ici (corpus texte seul).
+
+# =====================================================================
+# [A] TRACE BRUTE — verbatim, un bloc par cas, dans l'ordre du corpus
+# =====================================================================
+
+===== invalide-01.secpol =====
+invalide-01.secpol:2:7: error: undefined type 'app_tiers'
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-02.secpol =====
+invalide-02.secpol:3:6: error: type 'app_tiers' has already been declared
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-03.secpol =====
+invalide-03.secpol:5:5: error: undefined ability unknown_ability
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-04.secpol =====
+invalide-04.secpol:6:0: error: syntax error
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-05.secpol =====
+invalide-05.secpol:4:1: error: syntax error
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-06.secpol =====
+invalide-06.secpol:7:0: error: syntax error
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-07.secpol =====
+invalide-07.secpol:7:1: error: type 'app_tiers' cannot target the abilities of another type ('other')
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-08.secpol =====
+invalide-08.secpol:5:5: error: bad range '4-6-9' for ability 'setuid'
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-09.secpol =====
+invalide-09.secpol:5:5: error: end less than start in range '4096-1024' for ability 'mem_phys'
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-10.secpol =====
+invalide-10.secpol:6:1: error: syntax error
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-11.secpol =====
+invalide-11.secpol:5:5: error: ability 'able_create' does not support sub-ranges
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-12.secpol =====
+invalide-12.secpol:5:21: error: undefined class 'file'
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-13.secpol =====
+invalide-13.secpol:7:26: error: undefined permission 'connect' for file class
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-14.secpol =====
+invalide-14.secpol:3:7: error: class 'file' has already been declared
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-15.secpol =====
+invalide-15.secpol:2:25: error: permission 'read' has already been declared for class 'file'
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-16.secpol =====
+invalide-16.secpol:5:5: error: undefined type 'undefined_type' for range for ability 'settypeid'
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-17.secpol =====
+invalide-17.secpol:5:5: error: named range 'abc' has not been declared for ability 'mem_phys'
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-18.secpol =====
+invalide-18.secpol:5:30: error: ability 'network/bind/privport' has already been declared
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-19.secpol =====
+invalide-19.secpol:2:17: error: 'secure' has not been declared as an attribute
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-20.secpol =====
+invalide-20.secpol:5:5: error: undefined ability no-inherit
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-21.secpol =====
+invalide-21.secpol:4:30: error: undefined type 'nonexistent'
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-22.secpol =====
+invalide-22.secpol:2:6: error: invalid token 'app-tiers'
+invalide-22.secpol:2:6: error: syntax error
+2 errors, 0 warnings
+[exit=1]
+
+===== invalide-23.secpol =====
+invalide-23.secpol:4:16: error: syntax error
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-24.secpol =====
+invalide-24.secpol:6:37: error: channel for type 'random_t' cannot be relabeled to 'socket_t' as the rule for the path '/dev/random' did not relabel it
+1 error, 0 warnings
+[exit=1]
+
+===== invalide-25.secpol =====
+invalide-25.secpol:5:14: error: undefined ability 
+invalide-25.secpol:5:16: error: undefined ability 6
+2 errors, 0 warnings
+[exit=1]
+
+===== valide-01.secpol =====
+[exit=0]
+
+===== valide-02.secpol =====
+[exit=0]
+
+===== valide-03.secpol =====
+[exit=0]
+
+===== valide-04.secpol =====
+[exit=0]
+
+===== valide-05.secpol =====
+[exit=0]
+
+===== valide-06.secpol =====
+[exit=0]
+
+===== valide-07.secpol =====
+[exit=0]
+
+===== valide-08.secpol =====
+[exit=0]
+
+===== valide-09.secpol =====
+[exit=0]
+
+===== valide-10.secpol =====
+[exit=0]
+
+===== valide-11.secpol =====
+[exit=0]
+
+===== valide-12.secpol =====
+[exit=0]
+
+===== valide-13.secpol =====
+[exit=0]
+
+===== valide-14.secpol =====
+[exit=0]
+
+===== valide-15.secpol =====
+[exit=0]
+
+===== valide-16.secpol =====
+[exit=0]
+
+===== valide-17.secpol =====
+warning: type app_tiers has unneeded gain_priv abilities:
+    file:read:file1_t
+warning: type diag has unneeded gain_priv abilities:
+    pathspace
+0 errors, 2 warnings
+[exit=0]
+
+# =====================================================================
+# [B] SYNTHESE — une ligne par cas : nom du fichier | verdict | message
+# =====================================================================
+#
+invalide-01.secpol     | 1 erreur           | invalide-01.secpol:2:7: error: undefined type 'app_tiers'
+invalide-02.secpol     | 1 erreur           | invalide-02.secpol:3:6: error: type 'app_tiers' has already been declared
+invalide-03.secpol     | 1 erreur           | invalide-03.secpol:5:5: error: undefined ability unknown_ability
+invalide-04.secpol     | 1 erreur           | invalide-04.secpol:6:0: error: syntax error
+invalide-05.secpol     | 1 erreur           | invalide-05.secpol:4:1: error: syntax error
+invalide-06.secpol     | 1 erreur           | invalide-06.secpol:7:0: error: syntax error
+invalide-07.secpol     | 1 erreur           | invalide-07.secpol:7:1: error: type 'app_tiers' cannot target the abilities of another type ('other')
+invalide-08.secpol     | 1 erreur           | invalide-08.secpol:5:5: error: bad range '4-6-9' for ability 'setuid'
+invalide-09.secpol     | 1 erreur           | invalide-09.secpol:5:5: error: end less than start in range '4096-1024' for ability 'mem_phys'
+invalide-10.secpol     | 1 erreur           | invalide-10.secpol:6:1: error: syntax error
+invalide-11.secpol     | 1 erreur           | invalide-11.secpol:5:5: error: ability 'able_create' does not support sub-ranges
+invalide-12.secpol     | 1 erreur           | invalide-12.secpol:5:21: error: undefined class 'file'
+invalide-13.secpol     | 1 erreur           | invalide-13.secpol:7:26: error: undefined permission 'connect' for file class
+invalide-14.secpol     | 1 erreur           | invalide-14.secpol:3:7: error: class 'file' has already been declared
+invalide-15.secpol     | 1 erreur           | invalide-15.secpol:2:25: error: permission 'read' has already been declared for class 'file'
+invalide-16.secpol     | 1 erreur           | invalide-16.secpol:5:5: error: undefined type 'undefined_type' for range for ability 'settypeid'
+invalide-17.secpol     | 1 erreur           | invalide-17.secpol:5:5: error: named range 'abc' has not been declared for ability 'mem_phys'
+invalide-18.secpol     | 1 erreur           | invalide-18.secpol:5:30: error: ability 'network/bind/privport' has already been declared
+invalide-19.secpol     | 1 erreur           | invalide-19.secpol:2:17: error: 'secure' has not been declared as an attribute
+invalide-20.secpol     | 1 erreur           | invalide-20.secpol:5:5: error: undefined ability no-inherit
+invalide-21.secpol     | 1 erreur           | invalide-21.secpol:4:30: error: undefined type 'nonexistent'
+invalide-22.secpol     | 2 erreurs          | invalide-22.secpol:2:6: error: invalid token 'app-tiers' / invalide-22.secpol:2:6: error: syntax error
+invalide-23.secpol     | 1 erreur           | invalide-23.secpol:4:16: error: syntax error
+invalide-24.secpol     | 1 erreur           | invalide-24.secpol:6:37: error: channel for type 'random_t' cannot be relabeled to 'socket_t' as the rule for the path '/dev/random' did not relabel it
+invalide-25.secpol     | 2 erreurs          | invalide-25.secpol:5:14: error: undefined ability  / invalide-25.secpol:5:16: error: undefined ability 6
+valide-01.secpol       | 0 erreur           | (aucune sortie)
+valide-02.secpol       | 0 erreur           | (aucune sortie)
+valide-03.secpol       | 0 erreur           | (aucune sortie)
+valide-04.secpol       | 0 erreur           | (aucune sortie)
+valide-05.secpol       | 0 erreur           | (aucune sortie)
+valide-06.secpol       | 0 erreur           | (aucune sortie)
+valide-07.secpol       | 0 erreur           | (aucune sortie)
+valide-08.secpol       | 0 erreur           | (aucune sortie)
+valide-09.secpol       | 0 erreur           | (aucune sortie)
+valide-10.secpol       | 0 erreur           | (aucune sortie)
+valide-11.secpol       | 0 erreur           | (aucune sortie)
+valide-12.secpol       | 0 erreur           | (aucune sortie)
+valide-13.secpol       | 0 erreur           | (aucune sortie)
+valide-14.secpol       | 0 erreur           | (aucune sortie)
+valide-15.secpol       | 0 erreur           | (aucune sortie)
+valide-16.secpol       | 0 erreur           | (aucune sortie)
+valide-17.secpol       | 0 erreur, 2 warnings | warning: type app_tiers has unneeded gain_priv abilities: [file:read:file1_t] / warning: type diag has unneeded gain_priv abilities: [pathspace]
+
+# =====================================================================
+# [C] EMPRINTES SHA-256 DU CORPUS (fixtures/secpol-cas/)
+# =====================================================================
+8e31b1d76a4c5efc3ef887e3335243f9b26d0e325f1ee0ba44b7f115ae8d6d91  invalide-01.secpol
+2f8bb83a4acf6c30de9b0ca727e576e471555ea8e8d67ad09c584a454b0a0a7a  invalide-02.secpol
+b99854da7910d38d162ff1a4bd38d84243c66e734396f02cfab640e6a0c9ec40  invalide-03.secpol
+4105875f9467fa16aed4e7ed4da38a34a51e084feba7035343a095e164d9385e  invalide-04.secpol
+7d81aedf601b3b80e23d906a7ac2269fd9c23ec9fc2d2167fdc8d87cf914a948  invalide-05.secpol
+8fc0ee91a76447fe51f612026aba64150f5742a3c8e2d1dddd4b5e634f04d232  invalide-06.secpol
+12f646734a1ec3dc6aeae3807f00299ff68c33266ee2595db5862516678d3452  invalide-07.secpol
+3c7c0a5f43e5fb4fcc660af922daf154fd35fd98b5ac116cae86cd7b7948aada  invalide-08.secpol
+cc728cf8f20c67282249dba7820d198fcec548335c3644f7eb1f4cc23b7cccb5  invalide-09.secpol
+d57ec3696aba71f60fb481ef21e1c368129b8c5f47d133ef8860501bf8b9f0fc  invalide-10.secpol
+9b206a3528f277085b507f428bcf5c38ed82046f346c74f316f98d9c000ff7db  invalide-11.secpol
+b417ff91bb2dcebb998508c9c64783d6dacee10cf2a32422e1015e877dc83fb3  invalide-12.secpol
+c90cb79aa52be457d88c581e9cc40ade55821ae2c1ffb46b5076358cb870d9a2  invalide-13.secpol
+82bec8754799eb23271dc686d359e54983759f1428c9e9fffed76da06c7f332b  invalide-14.secpol
+b192dd8a8b3948b3c82c3ce753ff39c53f0c6b2211a4a27ded1f0ae50a3dd820  invalide-15.secpol
+19c66be7df29f7c459eb071006bf6086c827bea179e16d2a11e3e39981242867  invalide-16.secpol
+888f387c9eeab7c01f3b05c6f895811a5376a95584af093e56e1a901570c1810  invalide-17.secpol
+23ed193bab4b3b1c346dc1c9b9078ea0b99d4399c476b27ded7a5d0899cc1e91  invalide-18.secpol
+3da3b7296f40d011bcd74ee2db7c320d699dd54c771324d4332cd54ab0cd5b33  invalide-19.secpol
+833a2b3e5b5b91289522442812201afc95603fb61a8a29301b53737958993854  invalide-20.secpol
+d883fc325585f409f8d34e434e58b07092b25d9269aebf813cfb207a561fa459  invalide-21.secpol
+9dd9ddda7c1407b786a9a2bbc9f01f9a3e04ce1cd6855fcc449f44973e1a4ece  invalide-22.secpol
+bf8cf2ef1c6e26a951ab3ee14e12538575aebb8e3290b087048b2953dcc170f5  invalide-23.secpol
+326d3e43111ded846a8d384f12b348a7eea3428dd5eb41aef22479807e0a4122  invalide-24.secpol
+ebe81c949f7c870405777da2a96e91e76c58c7af054cf59232802ce8a52c887b  invalide-25.secpol
+f7ac2f73932f3097406fa3bb66a02dcf1b84e58c6538fc5b03183f336995ef31  valide-01.secpol
+cc9739c2992f6f9ac9ce79c0aee8682b4a8917f045747bf083b22fb98c90c27a  valide-02.secpol
+bfddf6c7bca11b7b16748aa95ec3cce20547067427de4ccb8493eeb589bb02f6  valide-03.secpol
+6326fe7c00a64a2efec3edf3a6820c404d2f0f515fb46b506198513afac3953a  valide-04.secpol
+19f606049922c7e299648ca78355eb72120396596551ed89bb2118bf038df6c6  valide-05.secpol
+3880c5ff9c942ddf4dbbd1bcbbe99781471d8377e6c673f77442471e8ab7a791  valide-06.secpol
+5ae539aad76de1043f67cf1929000007fd5b164ab44ba8eeb9114bff3df4bb73  valide-07.secpol
+81058b9679cc28756c9e301f3c05b97dad79578dc865aa6407f12543928bb50c  valide-08.secpol
+686bc9ca52c34e6045b89b9e7b29eebb3a5f65be84de93e27a376966e0e1b4a3  valide-09.secpol
+f726068418f46e3d4bbdfec9c60da54e10da8664d787c3b029504879afa2229b  valide-10.secpol
+dfeeec269f44d670dacbe13f817ababbb2e59e5055d0ebe5d285279e68db7558  valide-11.secpol
+683dbac1c1b5306c320fd7446ab58657aa7093d3a9812757a1a2b323bbb50d59  valide-12.secpol
+59b1eb651d0197c5288ca9ded8d9043cffbb9f446c2736124d8b3a5bd8483faf  valide-13.secpol
+442c353694ed23583564515bc17d6adc86f53e3187c4e424426df0d9f739f2f6  valide-14.secpol
+1817ee7deef2290747770958fa87625a2c07d6405acb3fd2affb390c7b98dddf  valide-15.secpol
+595f167093ba6302f60526eb2d98a4cd3568c527f8b76e49dc0b017e07d45fe3  valide-16.secpol
+4f737d48ad6bc44520e0a9d50c93dbad0b86ffa80d87d86c97eb6b17a02ab9aa  valide-17.secpol
