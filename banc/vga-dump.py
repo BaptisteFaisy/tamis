@@ -12,8 +12,9 @@ import re
 import socket
 import sys
 import time
+from pathlib import Path
 
-SOCK = sys.argv[1] if len(sys.argv) > 1 else "/home/baptiste/qnx71-vm/mon.sock"
+SOCK = sys.argv[1] if len(sys.argv) > 1 else str(Path.home() / "qnx71-vm" / "mon.sock")
 N = sys.argv[2] if len(sys.argv) > 2 else "2000"
 
 # Un jeton = 'x' ou '\xHH' ou '\n' etc., entre apostrophes.
