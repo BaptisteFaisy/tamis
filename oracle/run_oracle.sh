@@ -76,8 +76,15 @@ for pol in $LISTE; do
   [ -f "$pol" ] || continue
   total=$((total+1))
   nom=$(basename "$pol")
-  sortie=$("$SECPOLCOMPILE" -o "$TMP/p.bin" "$pol" 2>&1)
-  if printf '%s' "$sortie" | grep -qE '(^|[^0-9])0 errors'; then oracle="accepte"; else oracle="refuse"; fi
+  # Oracle : le compilateur écrit ses messages sur stdout et sort 0 SI ET SEULEMENT
+  # S'IL N'Y A PAS D'ERREUR (et n'affiche rien quand tout va bien) : c'est le CODE DE
+  # SORTIE qui fait foi, pas le texte « N errors » (qui n'apparaît que s'il y a un message).
+  if "$SECPOLCOMPILE" -o "$TMP/p.bin" "$pol" >"$TMP/msg.txt" 2>&1; then
+    oracle="accepte"
+  else
+    oracle="refuse"
+  fi
+  sortie=$(cat "$TMP/msg.txt")
   sortie_t=$(./build/tamis lint "$pol" --format json 2>&1)
   if printf '%s' "$sortie_t" | grep -q 'TAMIS_PARSE_ERROR'; then tamis="refuse"; else tamis="accepte"; fi
   if [ "$oracle" = "$tamis" ]; then

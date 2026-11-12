@@ -13,7 +13,7 @@
 
 /* ————————————————————— erreurs et aides ————————————————————— */
 
-static int echec(parseur *p, long ligne, long colonne, const char *cause)
+int echec(parseur *p, long ligne, long colonne, const char *cause)
 {
     memset(p->err, 0, sizeof *p->err);
     p->err->code = TAMIS_PARSE_ERROR;
@@ -24,7 +24,7 @@ static int echec(parseur *p, long ligne, long colonne, const char *cause)
     return -1;
 }
 
-static int attendre_pt(parseur *p, char c)
+int attendre_pt(parseur *p, char c)
 {
     jeton j;
     const char *msg = "jeton inattendu";
@@ -37,7 +37,7 @@ static int attendre_pt(parseur *p, char c)
     return 0;
 }
 
-static int attendre_ident(parseur *p, char **sortie, long *ligne, long *colonne)
+int attendre_ident(parseur *p, char **sortie, long *ligne, long *colonne)
 {
     jeton j;
     if (lx_suivant(&p->lx, p->a, &j) != 0) {
@@ -52,7 +52,7 @@ static int attendre_ident(parseur *p, char **sortie, long *ligne, long *colonne)
 
 /* ————————————————————— construction des listes ————————————————————— */
 
-static int ajouter_type(parseur *p, char *nom, long ligne)
+int ajouter_type(parseur *p, char *nom, long ligne)
 {
     type_lien *t;
     for (t = p->types; t; t = t->suivant) {
@@ -68,7 +68,7 @@ static int ajouter_type(parseur *p, char *nom, long ligne)
     return 0;
 }
 
-static int ajouter_regle(parseur *p, char *src, char *dst, char *ability, long ligne, int obligatoire)
+int ajouter_regle(parseur *p, char *src, char *dst, char *ability, long ligne, int obligatoire)
 {
     regle_lien *r = tamis_arena_alloc(p->a, sizeof *r);
     if (!r) { return -2; }
@@ -83,246 +83,67 @@ static int ajouter_regle(parseur *p, char *src, char *dst, char *ability, long l
     return 0;
 }
 
-static int est_transition(const char *mot)
+int est_transition(const char *mot)
 {
     return strcmp(mot, "settypeid") == 0 || strcmp(mot, "gain_priv") == 0;
 }
 
-/* ————————————————————— productions ————————————————————— */
-
-/* Un élément d'ability : « mot » ou « mot:args ». Les transitions (settypeid, gain_priv)
-   portent le graphe de privilège ; les autres ne portent qu'une ability. */
-static int p_ability_item(parseur *p, char *src, long ligne_regle)
+/* Enregistre « <membre> est membre de l'attribut <attr> » (pour type X, attr;). */
+int ajouter_membre_attr(parseur *p, char *attr, char *membre)
 {
-    long lg = 0, cl = 0, al = 0, ac = 0;
-    char *mot = lx_brut(&p->lx, p->a, ": \t\r\n;}", &lg, &cl);
-    if (mot[0] == '\0') {
-        return echec(p, lg, cl, "ability vide");
-    }
-    lx_sauter(&p->lx);
-    if (p->lx.p < p->lx.fin && *p->lx.p == ':') {
-        lx_avance(&p->lx, 1);
-        for (;;) {
-            char *arg = lx_brut(&p->lx, p->a, ", \t\r\n;}", &al, &ac);
-            if (arg[0] == '\0') {
-                return echec(p, al, ac, "argument d'ability manquant");
-            }
-            if (est_transition(mot)) {
-                /* settypeid : la cible DOIT être un type déclaré ; gain_priv : si la cible
-                   n'est pas un type, c'est une ability (le compilateur n'en fait qu'un warning). */
-                int rc = ajouter_regle(p, src, arg, mot, ligne_regle,
-                                        strcmp(mot, "settypeid") == 0);
-                if (rc != 0) { return rc; }
-            }
-            lx_sauter(&p->lx);
-            if (p->lx.p < p->lx.fin && *p->lx.p == ',') {
-                lx_avance(&p->lx, 1);
-                continue;
-            }
-            break;
-        }
-    }
-    /* Un point-virgule peut terminer l'item ; la doc officielle ne le met pas, mais
-       l'accepter évite de rejeter des politiques écrites autrement. */
-    lx_sauter(&p->lx);
-    if (p->lx.p < p->lx.fin && *p->lx.p == ';') {
-        lx_avance(&p->lx, 1);
-    }
+    membre_attr *m = tamis_arena_alloc(p->a, sizeof *m);
+    if (!m) { return -2; }
+    m->attr = attr;
+    m->membre = membre;
+    m->suivant = p->attributs;
+    p->attributs = m;
     return 0;
 }
 
-/* Bloc d'abilities entre accolades (déjà après le '{'). */
-static int p_bloc_abilities(parseur *p, char *src, long ligne_regle)
+/* Enregistre une ability dynamique déclarée (ability network/bind/privport;). */
+int ajouter_ability(parseur *p, char *nom)
 {
-    for (;;) {
-        lx_sauter(&p->lx);
-        if (p->lx.p >= p->lx.fin) {
-            return echec(p, p->lx.ligne, p->lx.colonne, "accolade fermante manquante");
-        }
-        if (*p->lx.p == '}') { lx_avance(&p->lx, 1); return 0; }
-        if (p_ability_item(p, src, ligne_regle) != 0) { return -1; }
-    }
-}
-
-/* Saute un bloc { … } (imbrication comprise) ; le curseur est après l'accolade fermante. */
-static int p_sauter_bloc(parseur *p)
-{
-    jeton j;
-    int prof = 1;
-    while (prof > 0) {
-        if (lx_suivant(&p->lx, p->a, &j) != 0) {
-            return echec(p, p->lx.ligne, p->lx.colonne, "caractère inattendu");
-        }
-        if (j.kind == J_EOF) {
-            return echec(p, j.ligne, j.colonne, "accolade fermante manquante");
-        }
-        if (j.kind == J_PUNCT && j.txt[0] == '{') { prof++; }
-        else if (j.kind == J_PUNCT && j.txt[0] == '}') { prof--; }
-    }
+    ability_lien *n = tamis_arena_alloc(p->a, sizeof *n);
+    if (!n) { return -2; }
+    n->nom = nom;
+    n->suivant = p->abilites;
+    p->abilites = n;
     return 0;
 }
 
-static int p_allow(parseur *p)
+/* type <nom> [ , <attribut> … ] ; */
+static int p_type(parseur *p)
 {
-    jeton j;
-    char *src = NULL, *dst = NULL;
-    long lg = 0, cl = 0;
-    if (attendre_ident(p, &src, &lg, &cl) != 0) { return -1; }
-    if (attendre_ident(p, &dst, &lg, &cl) != 0) { return -1; }
-    lx_suivant(&p->lx, p->a, &j);
-    if (j.kind != J_PUNCT || j.txt[0] != ':') {
-        return echec(p, j.ligne, j.colonne, "« : » attendu après les deux types");
-    }
-    lx_suivant(&p->lx, p->a, &j);
-    if (j.kind != J_IDENT) { return echec(p, j.ligne, j.colonne, "mot-clé attendu après « : »"); }
-    if (strcmp(j.txt, "ability") == 0) {
-        int rc;
-        if (strcmp(dst, "self") != 0) {
-            return echec(p, lg, cl, "une règle d'abilities doit cibler « self »");
-        }
-        lx_suivant(&p->lx, p->a, &j);
-        if (j.kind != J_PUNCT || j.txt[0] != '{') {
-            return echec(p, j.ligne, j.colonne, "« { » attendu");
-        }
-        rc = p_bloc_abilities(p, src, lg);
-        if (rc != 0) { return rc; }
-        return attendre_pt(p, ';');
-    }
-    if (strcmp(j.txt, "channel") == 0) {
-        lx_suivant(&p->lx, p->a, &j);
-        if (j.kind != J_IDENT || strcmp(j.txt, "connect") != 0) {
-            return echec(p, j.ligne, j.colonne, "« connect » attendu après « channel »");
-        }
-        lx_suivant(&p->lx, p->a, &j);
-        if (j.kind != J_PUNCT || j.txt[0] != ';') {
-            return echec(p, j.ligne, j.colonne, "« ; » attendu");
-        }
-        return ajouter_regle(p, src, dst, "channel", lg, 1);
-    }
-    return echec(p, j.ligne, j.colonne, "« ability » ou « channel » attendu");
-}
-
-/* allow_attach <type> <chemin> [<type>] ;  |  allow_attach <type> { bloc } ; */
-static int p_allow_attach(parseur *p)
-{
-    char *type = NULL;
-    long lg = 0, cl = 0;
-    if (attendre_ident(p, &type, &lg, &cl) != 0) { return -1; }
-    lx_sauter(&p->lx);
-    if (p->lx.p < p->lx.fin && *p->lx.p == '{') {
-        lx_avance(&p->lx, 1);
-        if (p_sauter_bloc(p) != 0) { return -1; }
-        return attendre_pt(p, ';');
-    }
-    lx_brut(&p->lx, p->a, " \t\r\n;{}", NULL, NULL);
-    lx_sauter(&p->lx);
-    if (p->lx.p < p->lx.fin && *p->lx.p != ';') {
-        lx_brut(&p->lx, p->a, " \t\r\n;{}", NULL, NULL);
-    }
-    return attendre_pt(p, ';');
-}
-
-/* allow_link <type> <chemin> ;  |  allow_link <type> { bloc } ; */
-static int p_allow_link(parseur *p)
-{
-    char *type = NULL;
-    long lg = 0, cl = 0;
-    if (attendre_ident(p, &type, &lg, &cl) != 0) { return -1; }
-    lx_sauter(&p->lx);
-    if (p->lx.p < p->lx.fin && *p->lx.p == '{') {
-        lx_avance(&p->lx, 1);
-        if (p_sauter_bloc(p) != 0) { return -1; }
-        return attendre_pt(p, ';');
-    }
-    lx_brut(&p->lx, p->a, " \t\r\n;{}", NULL, NULL);
-    return attendre_pt(p, ';');
-}
-
-/* class <nom> { permission… } ; */
-static int p_class(parseur *p)
-{
-    jeton j;
     char *nom = NULL;
     long lg = 0, cl = 0;
+    int rc;
     if (attendre_ident(p, &nom, &lg, &cl) != 0) { return -1; }
-    lx_suivant(&p->lx, p->a, &j);
-    if (j.kind != J_PUNCT || j.txt[0] != '{') {
-        return echec(p, j.ligne, j.colonne, "« { » attendu");
-    }
+    rc = ajouter_type(p, nom, lg);
+    if (rc != 0) { return rc; }
     for (;;) {
         lx_sauter(&p->lx);
-        if (p->lx.p >= p->lx.fin) {
-            return echec(p, p->lx.ligne, p->lx.colonne, "accolade fermante manquante");
-        }
-        if (*p->lx.p == '}') { lx_avance(&p->lx, 1); break; }
-        if (lx_suivant(&p->lx, p->a, &j) != 0 || j.kind != J_IDENT) {
-            return echec(p, p->lx.ligne, p->lx.colonne, "permission attendue");
-        }
+        if (p->lx.p >= p->lx.fin || *p->lx.p != ',') { break; }
+        lx_avance(&p->lx, 1);       /* la virgule */
+        char *attr = NULL;
+        if (attendre_ident(p, &attr, &lg, &cl) != 0) { return -1; }
+        rc = ajouter_membre_attr(p, attr, nom);
+        if (rc != 0) { return rc; }
     }
     return attendre_pt(p, ';');
 }
 
-/* derive_type A name B ;  |  derive_type { types } { abilities } C ; */
-static int p_derive_type(parseur *p)
+/* ability <nom> ;  — déclaration d'ability dynamique (le nom peut contenir « / »). */
+static int p_ability_decl(parseur *p)
 {
-    jeton j;
-    long lg = 0, cl = 0;
-    lx_sauter(&p->lx);
-    if (p->lx.p < p->lx.fin && *p->lx.p == '{') {
-        lx_avance(&p->lx, 1);
-        if (p_sauter_bloc(p) != 0) { return -1; }   /* les types */
-        lx_suivant(&p->lx, p->a, &j);
-        if (j.kind != J_PUNCT || j.txt[0] != '{') {
-            return echec(p, j.ligne, j.colonne, "« { » attendu");
-        }
-        lx_avance(&p->lx, 1);
-        if (p_sauter_bloc(p) != 0) { return -1; }   /* les abilities */
-        if (attendre_ident(p, NULL, NULL, NULL) != 0) { return -1; }
-        return attendre_pt(p, ';');
+    char *nom = lx_brut(&p->lx, p->a, " \t\r\n;", NULL, NULL);
+    if (nom[0] == '\0') {
+        return echec(p, p->lx.ligne, p->lx.colonne, "nom d'ability attendu");
     }
-    if (attendre_ident(p, NULL, &lg, &cl) != 0) { return -1; }
-    if (attendre_ident(p, NULL, &lg, &cl) != 0) { return -1; }
-    if (attendre_ident(p, NULL, &lg, &cl) != 0) { return -1; }
+    if (ajouter_ability(p, nom) != 0) { return -2; }
     return attendre_pt(p, ';');
 }
 
-/* default_spawn_type A B ;  (le nombre de types est libre) */
-static int p_default_spawn(parseur *p)
-{
-    long lg = 0, cl = 0;
-    if (attendre_ident(p, NULL, &lg, &cl) != 0) { return -1; }
-    for (;;) {
-        lx_sauter(&p->lx);
-        if (p->lx.p < p->lx.fin && *p->lx.p == ';') { break; }
-        if (attendre_ident(p, NULL, &lg, &cl) != 0) { return -1; }
-    }
-    p->default_spawn = 1;
-    return attendre_pt(p, ';');
-}
-
-/* mount_point uid:gid { bloc } ; */
-static int p_mount_point(parseur *p)
-{
-    jeton j;
-    lx_suivant(&p->lx, p->a, &j);
-    if (j.kind != J_NUM && j.kind != J_HEX) {
-        return echec(p, j.ligne, j.colonne, "uid attendu");
-    }
-    lx_suivant(&p->lx, p->a, &j);
-    if (j.kind != J_PUNCT || j.txt[0] != ':') {
-        return echec(p, j.ligne, j.colonne, "« : » attendu");
-    }
-    lx_suivant(&p->lx, p->a, &j);
-    if (j.kind != J_NUM && j.kind != J_HEX) {
-        return echec(p, j.ligne, j.colonne, "gid attendu");
-    }
-    lx_suivant(&p->lx, p->a, &j);
-    if (j.kind != J_PUNCT || j.txt[0] != '{') {
-        return echec(p, j.ligne, j.colonne, "« { » attendu");
-    }
-    if (p_sauter_bloc(p) != 0) { return -1; }
-    return attendre_pt(p, ';');
-}
+/* ————————————————————— productions ————————————————————— */
 
 /* ————————————————————— construction du modèle ————————————————————— */
 
@@ -335,13 +156,109 @@ static int index_de(const char **noms, size_t n, const char *nom)
     return -1;
 }
 
+static int est_type_declare(parseur *p, const char *nom)
+{
+    type_lien *t;
+    for (t = p->types; t; t = t->suivant) {
+        if (strcmp(t->nom, nom) == 0) { return 1; }
+    }
+    return 0;
+}
+
+/* Résout un terme (type ou attribut) en liste de noms de types (terminée par NULL). */
+static const char **resoudre(parseur *p, const char *terme, size_t *n)
+{
+    const char **liste;
+    membre_attr *m;
+    size_t k = 0, cnt = 0;
+    if (est_type_declare(p, terme)) {
+        liste = tamis_arena_alloc(p->a, 2 * sizeof(char *));
+        if (!liste) { return NULL; }
+        liste[0] = terme; liste[1] = NULL;
+        *n = 1;
+        return liste;
+    }
+    for (m = p->attributs; m; m = m->suivant) {
+        if (strcmp(m->attr, terme) == 0) { cnt++; }
+    }
+    if (cnt == 0) { return NULL; }
+    liste = tamis_arena_alloc(p->a, (cnt + 1) * sizeof(char *));
+    if (!liste) { return NULL; }
+    for (m = p->attributs; m; m = m->suivant) {
+        if (strcmp(m->attr, terme) == 0) { liste[k++] = m->membre; }
+    }
+    liste[k] = NULL;
+    *n = k;
+    return liste;
+}
+
 /* Remplit le modèle : types et règles dans l'ORDRE SOURCE (contrat du parseur §4). */
+/* Résout les termes (types + attributs) en paires (src, dst, ability, ligne). */
+static int resoudre_regles(parseur *p, paire_regle **paires_out, size_t *npaires_out)
+{
+    size_t npaires = 0;
+    regle_lien *r;
+    paire_regle *paires;
+    paires = tamis_arena_alloc(p->a, (p->n_regles ? (size_t)p->n_regles : 1) * sizeof *paires);
+    if (!paires) { return -2; }
+    for (r = p->regles; r; r = r->suivant) {
+        size_t ns = 0, nd = 0, u, v;
+        const char **srcs = resoudre(p, r->src, &ns);
+        const char **dsts;
+        if (!srcs) {
+            return echec(p, r->ligne, 1, "type source non déclaré");
+        }
+        dsts = resoudre(p, r->dst, &nd);
+        if (!dsts) {
+            if (r->type_obligatoire) {
+                return echec(p, r->ligne, 1, "type cible non déclaré");
+            }
+            continue; /* ability sans type : pas d'arête */
+        }
+        for (u = 0; u < ns; u++) {
+            for (v = 0; v < nd; v++) {
+                paires[npaires].src = srcs[u];
+                paires[npaires].dst = dsts[v];
+                paires[npaires].ability = r->ability;
+                paires[npaires].ligne = r->ligne;
+                npaires++;
+            }
+        }
+    }
+    *paires_out = paires;
+    *npaires_out = npaires;
+    return 0;
+}
+
+/* Remplit le tableau de règles du modèle, dans l'ORDRE SOURCE. */
+static int remplir_regles(parseur *p, const char **noms, size_t n)
+{
+    paire_regle *paires = NULL;
+    size_t npaires = 0, i, k = 0;
+    int rc = resoudre_regles(p, &paires, &npaires);
+    if (rc != 0) { return rc; }
+    for (i = npaires; i > 0; i--) { /* les paires sont dans l'ordre inverse de la source */
+        paire_regle *pr = &paires[i - 1];
+        int si = index_de(noms, n, pr->src);
+        int di = index_de(noms, n, pr->dst);
+        if (si < 0 || di < 0) { continue; }
+        p->m->rules[k].src = si;
+        p->m->rules[k].dst = di;
+        p->m->rules[k].ability = pr->ability;
+        p->m->rules[k].id = NULL;
+        p->m->rules[k].line = pr->ligne;
+        k++;
+    }
+    p->m->n_rules = k;
+    return 0;
+}
+
 static int construire(parseur *p)
 {
     size_t n = (size_t)p->n_types, k;
     const char **noms;
     type_lien *t;
-    regle_lien *r;
+    int rc;
     noms = tamis_arena_alloc(p->a, (n ? n : 1) * sizeof(char *));
     if (!noms) { return -2; }
     k = n;
@@ -350,36 +267,8 @@ static int construire(parseur *p)
     p->m->n_types = n;
     p->m->rules = tamis_arena_alloc(p->a, (p->n_regles ? (size_t)p->n_regles : 1) * sizeof(tamis_rule));
     if (!p->m->rules) { return -2; }
-    /* 1re passe : combien de règles sont conservées (une ability sans type n'en est pas une) */
-    {
-        size_t gardees = 0;
-        for (r = p->regles; r; r = r->suivant) {
-            if (index_de(noms, n, r->src) < 0) {
-                return echec(p, r->ligne, 1, "type source non déclaré");
-            }
-            if (index_de(noms, n, r->dst) < 0 && r->type_obligatoire) {
-                return echec(p, r->ligne, 1, "type cible non déclaré");
-            }
-            if (index_de(noms, n, r->dst) >= 0) {
-                gardees++;
-            }
-        }
-        k = gardees;
-        for (r = p->regles; r; r = r->suivant) {
-            int si = index_de(noms, n, r->src);
-            int di = index_de(noms, n, r->dst);
-            if (di < 0) {
-                continue; /* ability sans type : pas d'arête */
-            }
-            k--;
-            p->m->rules[k].src = si;
-            p->m->rules[k].dst = di;
-            p->m->rules[k].ability = r->ability;
-            p->m->rules[k].id = NULL;
-            p->m->rules[k].line = r->ligne;
-        }
-        p->m->n_rules = gardees;
-    }
+    rc = remplir_regles(p, noms, n);
+    if (rc != 0) { return rc; }
     p->m->has_default_spawn = p->default_spawn;
     return 0;
 }
@@ -399,13 +288,9 @@ static int analyser(parseur *p)
             return echec(p, j.ligne, j.colonne, "mot-clé de production attendu");
         }
         if (strcmp(j.txt, "type") == 0) {
-            char *nom = NULL;
-            long lg = 0, cl = 0;
-            int rc;
-            if (attendre_ident(p, &nom, &lg, &cl) != 0) { return -1; }
-            rc = ajouter_type(p, nom, lg);
-            if (rc != 0) { return rc; }
-            if (attendre_pt(p, ';') != 0) { return -1; }
+            if (p_type(p) != 0) { return -1; }
+        } else if (strcmp(j.txt, "ability") == 0) {
+            if (p_ability_decl(p) != 0) { return -1; }
         } else if (strcmp(j.txt, "range") == 0 || strcmp(j.txt, "attribute") == 0) {
             if (attendre_ident(p, NULL, NULL, NULL) != 0) { return -1; }
             if (attendre_pt(p, ';') != 0) { return -1; }

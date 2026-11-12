@@ -17,9 +17,12 @@
 #     ni warning : sur un fichier parfait, secpolcompile n'affiche RIEN.
 #     La ligne de compte n'apparait que s'il y a au moins un message ;
 #   * format d'erreur :  <fichier>:<ligne>:<colonne>: error: <message>
-#     - ligne en base 1, colonne en base 0 ;
+#     - ligne en base 1, colonne en base 1 (colonne 0 = pas de colonne) ;
 #     - a la fin de fichier, la ligne est le numero de ligne suivant et la
 #       colonne vaut 0 ;
+#   * ATTENTION : contraryment a ce que l'on croyait, secpolcompile sort 1
+#     des qu'il y a au moins une erreur (et 0 sinon). Le code de sortie est
+#     donc un oracle plus sur que la ligne « N errors » ;
 #   * les warnings sont multi-lignes : « warning: type X has unneeded
 #     gain_priv abilities: » suivi des abilities indentees ;
 #   * le fichier .bin produit n'est jamais conserve ici (corpus texte seul).

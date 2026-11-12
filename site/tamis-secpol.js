@@ -1,12 +1,11 @@
 "use strict";
 /* SPDX-License-Identifier: MIT */
 /* Tamis — parseur du langage de politique de sécurité QNX 8.0 (secpol), côté navigateur.
- * Jumeau de core/src/secpol.c : mêmes productions, mêmes causes d'erreur.
+ * Jumeau de core/src/secpol.c : mêmes productions, mêmes causes d'erreur, mêmes positions.
  * Contrat : docs/SECPOL-PARSEUR.md §2-§5 — grammaire gelée : docs/GRAMMAR.md.
  * DOM-free, sans dépendance : window.TamisSecpol dans le navigateur, module.exports sous Node.
  * Sous-ensemble STRICT : à la première erreur, on renvoie { model: null, error: {…} }. */
 
-const MODIFICATEURS = ["nonroot", "unlock", "noinherit", "inherit", "deny", "allow", "root", "subrange"];
 const TRANSITIONS = ["settypeid", "gain_priv"];
 const RE_MOT = /^[A-Za-z_][A-Za-z0-9_]*(\/[A-Za-z_][A-Za-z0-9_]*)*$/;
 const RE_NOM = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -142,11 +141,11 @@ function construireModele(etat) {
   const regles = [];
   etat.regles.forEach((r) => {
     if (!etat.declare.has(r.src)) {
-      throw erreur(r.srcPos.ligne, r.srcPos.colonne, "type non déclaré : « " + r.src + " »");
+      throw erreur(r.srcPos.ligne, r.srcPos.colonne, "type source non déclaré : « " + r.src + " »");
     }
     if (r.dst === null) return;                       /* règle sans arête (bloc d'abilities) */
     if (r.strict && !etat.declare.has(r.dst)) {
-      throw erreur(r.dstPos.ligne, r.dstPos.colonne, "type non déclaré : « " + r.dst + " »");
+      throw erreur(r.dstPos.ligne, r.dstPos.colonne, "type cible non déclaré : « " + r.dst + " »");
     }
     /* gain_priv vers un nom non déclaré : ability seule, aucune arête, aucune erreur (§4). */
     if (r.strict || etat.declare.has(r.dst)) {
@@ -165,7 +164,7 @@ function construireModele(etat) {
 
 function parseType(lx, etat) {
   const nom = lx.lireIdent();
-  if (!nom) throw erreur(lx.ligne, lx.colonne, "nom de type attendu");
+  if (!nom) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
   if (etat.declare.has(nom.texte)) {
     throw erreur(nom.ligne, nom.colonne, "type déjà déclaré : « " + nom.texte + " »");
   }
@@ -176,13 +175,13 @@ function parseType(lx, etat) {
 
 /* range IDENT ;  |  attribute IDENT ; */
 function parseDeclSimple(lx) {
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "nom attendu");
+  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
   lx.attendre(";");
 }
 
 /* class IDENT { IDENT+ } ; */
 function parseClass(lx) {
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "nom de classe attendu");
+  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
   lx.attendre("{");
   for (;;) {
     lx.skipEspaces();
@@ -196,7 +195,7 @@ function parseClass(lx) {
 /* Un élément d'ability : modificateur, ou MOT [':' liste_args]. */
 function parseAbilityItem(lx, etat, src, ligneRegle) {
   const mot = lx.lireBrut(": \t\r\n;}");
-  if (mot.texte === "") throw erreur(lx.ligne, lx.colonne, "élément d'ability vide");
+  if (mot.texte === "") throw erreur(lx.ligne, lx.colonne, "ability vide");
   const modificateur = MODIFICATEURS.indexOf(mot.texte) >= 0;
   if (!modificateur && !RE_MOT.test(mot.texte)) {
     throw erreur(mot.ligne, mot.colonne, "élément d'ability mal formé : « " + mot.texte + " »");
@@ -232,12 +231,12 @@ function parseBloc(lx, etat, src, ligneRegle) {
 /* allow NOM NOM : channel connect ;  |  allow NOM NOM : ability { … } ; */
 function parseAllow(lx, etat, ligneRegle) {
   const src = lx.lireIdent();
-  if (!src) throw erreur(lx.ligne, lx.colonne, "type source attendu");
+  if (!src) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
   const dst = lx.lireIdent();
-  if (!dst) throw erreur(lx.ligne, lx.colonne, "type cible attendu");
+  if (!dst) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
   lx.attendre(":");
   const mot = lx.lireIdent();
-  if (!mot) throw erreur(lx.ligne, lx.colonne, "mot-clé attendu après « : »");
+  if (!mot) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
   if (mot.texte === "channel") {
     const connect = lx.lireIdent();
     if (!connect || connect.texte !== "connect") {
@@ -262,7 +261,7 @@ function parseAllow(lx, etat, ligneRegle) {
 
 /* allow_attach / allow_link : chemin (+ second chemin pour allow_attach) ou bloc. */
 function parseChemin(lx, etat, deuxChemins) {
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "type attendu");
+  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
   lx.skipEspaces();
   if (lx.cur() === "{") {
     lx.avancer(1);
@@ -283,9 +282,9 @@ function parseChemin(lx, etat, deuxChemins) {
 function parseDeriveType(lx, etat) {
   lx.skipEspaces();
   if (lx.cur() !== "{") {
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "nom de type attendu");
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "nom de type attendu");
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "nom de type attendu");
+    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
+    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
+    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
     lx.attendre(";");
     return;
   }
@@ -295,23 +294,23 @@ function parseDeriveType(lx, etat) {
     lx.skipEspaces();
     if (lx.fin()) throw erreur(lx.ligne, lx.colonne, "accolade fermante manquante");
     if (lx.cur() === "}") { lx.avancer(1); break; }
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "nom de type attendu");
+    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
     n++;
   }
   if (n === 0) throw erreur(lx.ligne, lx.colonne, "liste de types vide");
   lx.attendre("{");
   parseBloc(lx, etat, null, lx.ligne);
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "nom de type attendu");
+  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
   lx.attendre(";");
 }
 
 /* default_spawn_type NOM+ ; */
 function parseDefaultSpawn(lx, etat) {
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "nom de type attendu");
+  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
   lx.skipEspaces();
   while (lx.cur() !== ";") {
     if (lx.fin()) throw erreur(lx.ligne, lx.colonne, "« ; » attendu");
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "nom de type attendu");
+    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
     lx.skipEspaces();
   }
   lx.attendre(";");
@@ -339,7 +338,13 @@ function parseProgramme(lx, etat) {
     lx.skipEspaces();
     if (lx.fin()) return;
     const kw = lx.lireIdent();
-    if (!kw) throw erreur(lx.ligne, lx.colonne, "mot-clé de production attendu");
+    if (!kw) {
+      const c = lx.cur();
+      if (c && ";{}:".indexOf(c) < 0 && !estChiffre(c)) {
+        throw erreur(lx.ligne, lx.colonne, "caractère inattendu");
+      }
+      throw erreur(lx.ligne, lx.colonne, "mot-clé de production attendu");
+    }
     switch (kw.texte) {
       case "type": parseType(lx, etat); break;
       case "range": case "attribute": parseDeclSimple(lx); break;
