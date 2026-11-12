@@ -291,7 +291,9 @@ function parseBloc(lx, transitions) {
 }
 
 /* allow <src> <dst> : ability { … } ;  |  : channel connect ;  |  : <classe> <perm> ; */
-function parseAllow(lx, etat, ligneRegle) {
+function parseAllow(lx, etat) {
+  lx.sauter();
+  const ligneRegle = lx.ligne;              /* ligne du terme source (comme le C) */
   const src = parseRepere(lx);
   const dst = parseRepere(lx);
   lx.sauter();
@@ -349,7 +351,7 @@ function parseChemin(lx, deuxChemins) {
   if (lx.cur() === "{") {
     lx.avancer(1);
     lx.sauterBloc();
-    attentePt(lx, ";");
+    attendrePt(lx, ";");
     return;
   }
   lx.brut(" \t\r\n;{}");
@@ -371,7 +373,6 @@ function parseDeriveType(lx) {
   lx.avancer(1);
   lx.sauterBloc();
   attendrePt(lx, "{");
-  lx.avancer(1);
   lx.sauterBloc();
   attendreIdent(lx);
   attendrePt(lx, ";");
@@ -458,7 +459,7 @@ function parseProgramme(lx, etat) {
       case "range": case "attribute": parseDeclSimple(lx); break;
       case "ability": parseAbilityDecl(lx); break;
       case "class": parseClass(lx); break;
-      case "allow": parseAllow(lx, etat, kw.ligne); break;
+      case "allow": parseAllow(lx, etat); break;
       case "allow_attach": parseChemin(lx, true); break;
       case "allow_link": parseChemin(lx, false); break;
       case "derive_type": parseDeriveType(lx); break;
