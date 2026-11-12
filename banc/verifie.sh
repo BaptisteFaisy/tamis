@@ -45,11 +45,18 @@ out "# Hôte : $(hostname) · utilisateur : $(id -un)"
 # ── 1. prérequis ──────────────────────────────────────────────────────────
 DOCTOR=$(cd "$VM" && ./qnx-vm.sh doctor 2>&1)
 out ""; out "### doctor"; out "$DOCTOR"
-command -v qemu-system-x86_64 >/dev/null 2>&1
-ck $? "qemu-system-x86_64 installé"
+DOCTOR_Q=$(printf '%s' "$DOCTOR" | grep -E "^qemu" | head -1)
+printf '%s' "$DOCTOR_Q" | grep -q "qemu-system-x86_64"
+ck $? "qemu-system-x86_64 disponible (système ou préfixe utilisateur)"
 printf '%s' "$DOCTOR" | grep -q "kvm        : accessible"
-KVM_OK=$?
-ck $KVM_OK "KVM accessible (sinon repli TCG, plus lent)"
+if [ $? -eq 0 ]; then
+  ck 0 "KVM accessible (démarrage ~30 s)"
+else
+  # KVM est une OPTIMISATION, pas un prérequis : en TCG l'invité fonctionne (la preuve
+  # arrive plus bas, quand le SSH répond). On l'annonce, on ne le compte pas comme un échec.
+  echo "INFO KVM inaccessible : repli TCG (démarrage plus lent, CPU en continu)"
+  checks=$((checks + 1))
+fi
 [ -f "$VM/qnx71-fs.img" ]
 ck $? "image disque présente"
 

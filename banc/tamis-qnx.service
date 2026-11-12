@@ -12,13 +12,15 @@ StartLimitBurst=3
 [Service]
 Type=simple
 ExecStart=%h/qnx71-vm/qnx-vm.sh foreground
-ExecStop=%h/qnx71-vm/qnx-vm.sh stop
+# pas d'ExecStop : systemd envoie SIGTERM au process qemu lui-même (arrêt propre, sans
+# auto-arrêt du service — un ExecStop qui appelle systemctl stop s'annule lui-même).
 Restart=on-failure
 RestartSec=15
 TimeoutStartSec=120
 TimeoutStopSec=30
 # L'invite ecrit sur son disque : on ne tue pas brutalement.
 KillSignal=SIGTERM
+KillMode=control-group
 
 [Install]
 WantedBy=default.target
