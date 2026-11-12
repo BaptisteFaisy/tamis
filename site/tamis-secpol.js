@@ -4,15 +4,12 @@
  * Jumeau de core/src/secpol.c : mêmes productions, mêmes causes d'erreur, mêmes positions.
  * Contrat : docs/SECPOL-PARSEUR.md §2-§5 — grammaire gelée : docs/GRAMMAR.md.
  * DOM-free, sans dépendance : window.TamisSecpol dans le navigateur, module.exports sous Node.
- * Sous-ensemble STRICT : à la première erreur, on renvoie { model: null, error: {…} }. */
+ * Sous-ensemble STRICT : à la première erreur, { model: null, error: { line, column, message } }. */
 
 const TRANSITIONS = ["settypeid", "gain_priv"];
-const RE_MOT = /^[A-Za-z_][A-Za-z0-9_]*(\/[A-Za-z_][A-Za-z0-9_]*)*$/;
-const RE_NOM = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const RE_NUM = /^(0[xX][0-9a-fA-F]+|[0-9]+)$/;
-const RE_PLAGE = /^(0[xX][0-9a-fA-F]+|[0-9]+)(-(0[xX][0-9a-fA-F]+|[0-9]+)?)?$/;
 
-/* Erreur interne : porte la position (1-based) et la cause. */
+/* ————————————————————— outils de texte ————————————————————— */
+
 function erreur(ligne, colonne, message) {
   const e = new Error(message);
   e.tamisParse = true;
@@ -28,9 +25,43 @@ function estIdent(c) { return estDepartIdent(c) || (c >= "0" && c <= "9"); }
 function estChiffre(c) { return c >= "0" && c <= "9"; }
 function estHexa(c) { return estChiffre(c) || (c >= "a" && c <= "f") || (c >= "A" && c <= "F"); }
 
+/* Un nom : IDENT du contrat §2. */
+function estNom(t) {
+  if (t.length === 0 || !estDepartIdent(t[0])) return false;
+  for (let i = 1; i < t.length; i++) if (!estIdent(t[i])) return false;
+  return true;
+}
+
+/* Un nombre : décimal ou hexadécimal (0x…), avec au moins un chiffre. */
+function estNombre(t) {
+  if (t.length === 0) return false;
+  if (t.length > 2 && t[0] === "0" && (t[1] === "x" || t[1] === "X")) {
+    for (let i = 2; i < t.length; i++) if (!estHexa(t[i])) return false;
+    return true;
+  }
+  for (let i = 0; i < t.length; i++) if (!estChiffre(t[i])) return false;
+  return true;
+}
+
+/* Une plage : « N », « N- » (borne ouverte) ou « N-M ». */
+function estPlage(t) {
+  const i = t.indexOf("-");
+  if (i < 0) return estNombre(t);
+  const gauche = t.slice(0, i), droite = t.slice(i + 1);
+  if (!estNombre(gauche)) return false;
+  return droite === "" || estNombre(droite);
+}
+
+/* Un nom d'ability : IDENT, ou IDENT/IDENT… (network/bind/privport). */
+function estMot(t) {
+  const parts = t.split("/");
+  for (let i = 0; i < parts.length; i++) if (!estNom(parts[i])) return false;
+  return true;
+}
+
 /* ————————————————————— lexer ————————————————————— */
 
-/* Balayage caractère par caractère : pas de regex de découpage (contrat §2). */
+/* Balayage caractère par caractère (contrat §2) : pas de regex de découpage. */
 class Lexer {
   constructor(texte) {
     this.t = typeof texte === "string" ? texte : "";
@@ -46,8 +77,8 @@ class Lexer {
       this.p++;
     }
   }
-  /* Espaces + commentaires '#' jusqu'à la fin de ligne (contrat §2). */
-  skipEspaces() {
+  /* Espaces et commentaires '#' jusqu'à la fin de ligne. */
+  sauter() {
     while (!this.fin()) {
       const c = this.cur();
       if (c === " " || c === "\t" || c === "\r" || c === "\n" || c === "\f" || c === "\v") {
@@ -59,99 +90,343 @@ class Lexer {
       }
     }
   }
-  lireIdent() {
-    this.skipEspaces();
+  /* Jeton suivant : ident, nombre, ponctuation ; ou fin de fichier. */
+  suivant() {
+    this.sauter();
     const ligne = this.ligne, colonne = this.colonne;
-    if (!estDepartIdent(this.cur())) return null;
-    const debut = this.p;
-    while (!this.fin() && estIdent(this.cur())) this.avancer(1);
-    return { texte: this.t.slice(debut, this.p), ligne: ligne, colonne: colonne };
-  }
-  lireNombre() {
-    this.skipEspaces();
-    const ligne = this.ligne, colonne = this.colonne;
-    if (!estChiffre(this.cur())) return null;
-    const debut = this.p;
-    if (this.cur() === "0" && (this.t[this.p + 1] === "x" || this.t[this.p + 1] === "X")) {
-      this.avancer(2);
-      while (!this.fin() && estHexa(this.cur())) this.avancer(1);
-    } else {
-      while (!this.fin() && estChiffre(this.cur())) this.avancer(1);
+    if (this.fin()) return { kind: "fin", txt: "", ligne: ligne, colonne: colonne };
+    const c = this.cur();
+    if (estDepartIdent(c)) {
+      const debut = this.p;
+      while (!this.fin() && estIdent(this.cur())) this.avancer(1);
+      return { kind: "ident", txt: this.t.slice(debut, this.p), ligne: ligne, colonne: colonne };
     }
-    return { texte: this.t.slice(debut, this.p), ligne: ligne, colonne: colonne };
-  }
-  attendre(c) {
-    this.skipEspaces();
-    if (this.cur() !== c) throw erreur(this.ligne, this.colonne, "« " + c + " » attendu");
-    this.avancer(1);
+    if (estChiffre(c)) {
+      const debut = this.p;
+      const hexa = this.t[this.p] === "0" && (this.t[this.p + 1] === "x" || this.t[this.p + 1] === "X");
+      if (hexa) {
+        this.avancer(2);
+        while (!this.fin() && estHexa(this.cur())) this.avancer(1);
+      } else {
+        while (!this.fin() && estChiffre(this.cur())) this.avancer(1);
+      }
+      return { kind: "nombre", txt: this.t.slice(debut, this.p), ligne: ligne, colonne: colonne };
+    }
+    if (c === ";" || c === "{" || c === "}" || c === ":") {
+      this.avancer(1);
+      return { kind: "ponct", txt: c, ligne: ligne, colonne: colonne };
+    }
+    throw erreur(ligne, colonne, "caractère inattendu");
   }
   /* Mot brut : jusqu'à un des arrêtants (chemins, ability_item, arguments). */
-  lireBrut(arretants) {
-    this.skipEspaces();
+  brut(arretants) {
+    this.sauter();
     const ligne = this.ligne, colonne = this.colonne;
     const debut = this.p;
     while (!this.fin() && arretants.indexOf(this.cur()) < 0) this.avancer(1);
-    return { texte: this.t.slice(debut, this.p), ligne: ligne, colonne: colonne };
+    return { txt: this.t.slice(debut, this.p), ligne: ligne, colonne: colonne };
+  }
+  /* Bloc { … } imbriqué : le curseur est après l'accolade fermante. */
+  sauterBloc() {
+    let prof = 1;
+    while (prof > 0) {
+      this.sauter();
+      if (this.fin()) throw erreur(this.ligne, this.colonne, "accolade fermante manquante");
+      const c = this.cur();
+      if (c === "{") { prof++; this.avancer(1); continue; }
+      if (c === "}") { prof--; this.avancer(1); continue; }
+      if (c === "#") { this.sauter(); continue; }
+      this.avancer(1);
+    }
   }
 }
 
-/* ————————————————————— validation ————————————————————— */
+/* ————————————————————— aides du parseur ————————————————————— */
 
-function validerNombre(tok) {
-  if (RE_NUM.test(tok.texte)) return;
-  if (/^0[xX]/.test(tok.texte)) {
-    throw erreur(tok.ligne, tok.colonne, "nombre hexadécimal sans chiffres : « " + tok.texte + " »");
-  }
-  throw erreur(tok.ligne, tok.colonne, "nombre invalide : « " + tok.texte + " »");
+function attendreIdent(lx) {
+  const j = lx.suivant();
+  if (j.kind !== "ident") throw erreur(j.ligne, j.colonne, "identifiant attendu");
+  return j;
 }
 
-/* arg := NOMBRE | NOMBRE '-' NOMBRE | NOMBRE '-' | NOM (permission custom : file:read:file1_t). */
+function attendrePt(lx, c) {
+  const msg = c === ";" ? "« ; » attendu" : (c === "{" ? "« { » attendu" : "« } » attendu");
+  const j = lx.suivant();
+  if (j.kind === "fin") throw erreur(j.ligne, j.colonne, "fin de fichier inattendue");
+  if (j.kind !== "ponct" || j.txt !== c) throw erreur(j.ligne, j.colonne, msg);
+}
+
+/* Un repère de règle : un nom, ou un groupe { n1 n2 }. */
+function parseRepere(lx) {
+  lx.sauter();
+  if (lx.cur() === "{") {
+    lx.avancer(1);
+    const noms = [];
+    for (;;) {
+      lx.sauter();
+      if (lx.fin()) throw erreur(lx.ligne, lx.colonne, "accolade fermante manquante");
+      if (lx.cur() === "}") { lx.avancer(1); break; }
+      const mot = lx.brut(" \t\r\n;{}");
+      if (mot.txt === "") throw erreur(mot.ligne, mot.colonne, "nom attendu dans le groupe");
+      noms.push(mot.txt);
+    }
+    if (noms.length === 0) throw erreur(lx.ligne, lx.colonne, "nom attendu dans le groupe");
+    return noms;
+  }
+  return [attendreIdent(lx).txt];
+}
+
+function repereEstSelf(noms) { return noms.length === 1 && noms[0] === "self"; }
+
+/* Résout un terme (type ou attribut) en liste de noms de types. */
+function resoudre(etat, terme) {
+  if (etat.declare.has(terme)) return [terme];
+  const membres = [];
+  for (let i = 0; i < etat.membres.length; i++) {
+    if (etat.membres[i].attr === terme) membres.push(etat.membres[i].membre);
+  }
+  return membres.length ? membres : null;
+}
+
+/* ————————————————————— productions ————————————————————— */
+
+/* type <nom> [ , <attribut> … ] ; */
+function parseType(lx, etat) {
+  const nom = attendreIdent(lx);
+  if (etat.declare.has(nom.txt)) throw erreur(nom.ligne, 1, "type déjà déclaré");
+  etat.declare.add(nom.txt);
+  etat.types.push(nom.txt);
+  for (;;) {
+    lx.sauter();
+    if (lx.cur() !== ",") break;
+    lx.avancer(1);
+    const attr = attendreIdent(lx);
+    etat.membres.push({ attr: attr.txt, membre: nom.txt });
+  }
+  attendrePt(lx, ";");
+}
+
+/* range IDENT ;  |  attribute IDENT ;  |  ability <nom> ; */
+function parseDeclSimple(lx) {
+  attendreIdent(lx);
+  attendrePt(lx, ";");
+}
+
+/* class IDENT { IDENT+ } ; */
+function parseClass(lx) {
+  attendreIdent(lx);
+  attendrePt(lx, "{");
+  let n = 0;
+  for (;;) {
+    lx.sauter();
+    if (lx.fin()) throw erreur(lx.ligne, lx.colonne, "accolade fermante manquante");
+    if (lx.cur() === "}") { lx.avancer(1); break; }
+    attendreIdent(lx);
+    n++;
+  }
+  if (n === 0) throw erreur(lx.ligne, lx.colonne, "permission attendue");
+  attendrePt(lx, ";");
+}
+
+/* Un élément d'ability : MOT [ ':' liste_args ]. */
+function parseAbilityItem(lx, transitions) {
+  const mot = lx.brut(": \t\r\n;}");
+  if (mot.txt === "") throw erreur(mot.ligne, mot.colonne, "ability vide");
+  if (!estMot(mot.txt)) {
+    throw erreur(mot.ligne, mot.colonne, "mot d'ability mal formé : « " + mot.txt + " »");
+  }
+  lx.sauter();
+  if (lx.cur() === ":") {
+    lx.avancer(1);
+    for (;;) {
+      const arg = lx.brut(", \t\r\n;}");
+      if (arg.txt === "") throw erreur(arg.ligne, arg.colonne, "argument d'ability manquant");
+      validerArg(arg);
+      if (TRANSITIONS.indexOf(mot.txt) >= 0) {
+        transitions.push({ dst: arg.txt, ability: mot.txt, obligatoire: mot.txt === "settypeid" });
+      }
+      lx.sauter();
+      if (lx.cur() === ",") { lx.avancer(1); continue; }
+      break;
+    }
+  }
+  lx.sauter();
+  if (lx.cur() === ";") lx.avancer(1);
+}
+
+/* Une plage d'ability : NOMBRE, NOMBRE-NOMBRE, NOMBRE- ou un nom. */
 function validerArg(arg) {
-  const t = arg.texte;
-  if (RE_NUM.test(t) || RE_PLAGE.test(t)) return;
-  if (RE_NOM.test(t)) return;
+  const t = arg.txt;
   if (t.indexOf(":") >= 0) {
     const parts = t.split(":");
     for (let i = 0; i < parts.length; i++) {
-      if (!RE_NOM.test(parts[i])) {
+      if (parts[i] !== "*" && !estNom(parts[i])) {
         throw erreur(arg.ligne, arg.colonne, "argument d'ability mal formé : « " + t + " »");
       }
     }
     return;
   }
-  if (/^0[xX]/.test(t)) {
+  if (estPlage(t) || estNom(t)) return;
+  if (t.length > 1 && t[0] === "0" && (t[1] === "x" || t[1] === "X")) {
     throw erreur(arg.ligne, arg.colonne, "nombre hexadécimal sans chiffres : « " + t + " »");
   }
   throw erreur(arg.ligne, arg.colonne, "argument d'ability mal formé : « " + t + " »");
 }
 
+/* bloc_ability : suite d'éléments jusqu'à '}'. */
+function parseBloc(lx, transitions) {
+  for (;;) {
+    lx.sauter();
+    if (lx.fin()) throw erreur(lx.ligne, lx.colonne, "accolade fermante manquante");
+    if (lx.cur() === "}") { lx.avancer(1); return; }
+    parseAbilityItem(lx, transitions);
+  }
+}
+
+/* allow <src> <dst> : ability { … } ;  |  : channel connect ;  |  : <classe> <perm> ; */
+function parseAllow(lx, etat, ligneRegle) {
+  const src = parseRepere(lx);
+  const dst = parseRepere(lx);
+  lx.sauter();
+  if (lx.cur() !== ":") throw erreur(lx.ligne, lx.colonne, "« : » attendu après les types");
+  lx.avancer(1);
+  const mot = lx.suivant();
+  if (mot.kind !== "ident") throw erreur(mot.ligne, mot.colonne, "mot-clé attendu après « : »");
+  if (mot.txt === "ability") {
+    if (!repereEstSelf(dst)) {
+      throw erreur(ligneRegle, 1, "une règle d'abilities doit cibler « self »");
+    }
+    const transitions = [];
+    attendrePt(lx, "{");
+    parseBloc(lx, transitions);
+    attendrePt(lx, ";");
+    for (let i = 0; i < src.length; i++) {
+      for (let j = 0; j < transitions.length; j++) {
+        ajouterRegle(etat, src[i], transitions[j].dst, transitions[j].ability,
+                     ligneRegle, transitions[j].obligatoire);
+      }
+    }
+    etat.sources.push({ nom: src[0], ligne: ligneRegle });
+    return;
+  }
+  if (mot.txt === "channel") {
+    const connect = lx.suivant();
+    if (connect.kind !== "ident" || connect.txt !== "connect") {
+      throw erreur(connect.ligne, connect.colonne, "« connect » attendu après « channel »");
+    }
+    attendrePt(lx, ";");
+    for (let i = 0; i < src.length; i++) {
+      for (let j = 0; j < dst.length; j++) {
+        ajouterRegle(etat, src[i], dst[j], "channel", ligneRegle, true);
+      }
+    }
+    return;
+  }
+  /* Permission de classe custom : allow X Y : <classe> <permission> ; */
+  const perm = lx.suivant();
+  if (perm.kind !== "ident") {
+    throw erreur(perm.ligne, perm.colonne, "permission attendue après la classe");
+  }
+  attendrePt(lx, ";");
+  for (let i = 0; i < src.length; i++) {
+    for (let j = 0; j < dst.length; j++) {
+      ajouterRegle(etat, src[i], dst[j], mot.txt, ligneRegle, true);
+    }
+  }
+}
+
+/* allow_attach IDENT CHEMIN [ CHEMIN ] ;  |  allow_attach IDENT { … } ; */
+function parseChemin(lx, deuxChemins) {
+  attendreIdent(lx);
+  lx.sauter();
+  if (lx.cur() === "{") {
+    lx.avancer(1);
+    lx.sauterBloc();
+    attendrePt(lx, ";");
+    return;
+  }
+  lx.brut(" \t\r\n;{}");
+  lx.sauter();
+  if (deuxChemins && lx.cur() !== ";") lx.brut(" \t\r\n;{}");
+  attendrePt(lx, ";");
+}
+
+/* derive_type { NOM+ } { bloc } NOM ;  |  derive_type NOM NOM NOM ; */
+function parseDeriveType(lx) {
+  lx.sauter();
+  if (lx.cur() !== "{") {
+    attendreIdent(lx);
+    attendreIdent(lx);
+    attendreIdent(lx);
+    attendrePt(lx, ";");
+    return;
+  }
+  lx.avancer(1);
+  lx.sauterBloc();
+  attendrePt(lx, "{");
+  lx.avancer(1);
+  lx.sauterBloc();
+  attendreIdent(lx);
+  attendrePt(lx, ";");
+}
+
+/* default_spawn_type NOM NOM ; */
+function parseDefaultSpawn(lx, etat) {
+  attendreIdent(lx);
+  attendreIdent(lx);
+  lx.sauter();
+  if (lx.cur() !== ";") {
+    const j = lx.suivant();
+    throw erreur(j.ligne, j.colonne, "« ; » attendu");
+  }
+  lx.avancer(1);
+  etat.hasDefaultSpawn = true;
+}
+
+/* mount_point NOMBRE : NOMBRE [ perms ] [ { … } ] ; */
+function parseMountPoint(lx) {
+  const uid = lx.suivant();
+  if (uid.kind !== "nombre") throw erreur(uid.ligne, uid.colonne, "uid attendu");
+  attendrePt(lx, ":");
+  const gid = lx.suivant();
+  if (gid.kind !== "nombre") throw erreur(gid.ligne, gid.colonne, "gid attendu");
+  lx.brut(" \t\r\n;{");
+  lx.sauter();
+  if (lx.cur() === "{") {
+    lx.avancer(1);
+    lx.sauterBloc();
+  }
+  attendrePt(lx, ";");
+}
+
 /* ————————————————————— modèle ————————————————————— */
 
-/* Une règle allow : src, dst optionnel, arête ou non (contrat §4). */
-function ajouterRegle(etat, src, dst, ability, ligne, strict) {
-  etat.regles.push({
-    src: src.texte, srcPos: src,
-    dst: dst ? dst.texte : null, dstPos: dst || null,
-    ability: ability, ligne: ligne, strict: strict,
-  });
+function ajouterRegle(etat, src, dst, ability, ligne, obligatoire) {
+  etat.regles.push({ src: src, dst: dst, ability: ability, ligne: ligne, obligatoire: obligatoire });
 }
 
 /* Résolution finale : types déclarés -> arêtes, dans l'ordre source (contrat §4). */
 function construireModele(etat) {
   const regles = [];
-  etat.regles.forEach((r) => {
-    if (!etat.declare.has(r.src)) {
-      throw erreur(r.srcPos.ligne, r.srcPos.colonne, "type source non déclaré : « " + r.src + " »");
+  for (let i = 0; i < etat.regles.length; i++) {
+    const r = etat.regles[i];
+    const srcs = resoudre(etat, r.src);
+    if (!srcs) throw erreur(r.ligne, 1, "type source non déclaré");
+    const dsts = resoudre(etat, r.dst);
+    if (!dsts) {
+      if (r.obligatoire) throw erreur(r.ligne, 1, "type cible non déclaré");
+      continue;                       /* ability sans type : pas d'arête */
     }
-    if (r.dst === null) return;                       /* règle sans arête (bloc d'abilities) */
-    if (r.strict && !etat.declare.has(r.dst)) {
-      throw erreur(r.dstPos.ligne, r.dstPos.colonne, "type cible non déclaré : « " + r.dst + " »");
+    for (let u = 0; u < srcs.length; u++) {
+      for (let v = 0; v < dsts.length; v++) {
+        regles.push({ src: srcs[u], dst: dsts[v], ability: r.ability, id: null, line: r.ligne });
+      }
     }
-    /* gain_priv vers un nom non déclaré : ability seule, aucune arête, aucune erreur (§4). */
-    if (r.strict || etat.declare.has(r.dst)) {
-      regles.push({ src: r.src, dst: r.dst, ability: r.ability, id: null, line: r.ligne });
-    }
-  });
+  }
+  for (let i = 0; i < etat.sources.length; i++) {
+    const s = etat.sources[i];
+    if (!resoudre(etat, s.nom)) throw erreur(s.ligne, 1, "type source non déclaré");
+  }
   return {
     types: etat.types.slice(),
     rules: regles,
@@ -160,203 +435,29 @@ function construireModele(etat) {
   };
 }
 
-/* ————————————————————— productions ————————————————————— */
-
-function parseType(lx, etat) {
-  const nom = lx.lireIdent();
-  if (!nom) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-  if (etat.declare.has(nom.texte)) {
-    throw erreur(nom.ligne, nom.colonne, "type déjà déclaré : « " + nom.texte + " »");
-  }
-  etat.declare.add(nom.texte);
-  etat.types.push(nom.texte);
-  lx.attendre(";");
-}
-
-/* range IDENT ;  |  attribute IDENT ; */
-function parseDeclSimple(lx) {
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-  lx.attendre(";");
-}
-
-/* class IDENT { IDENT+ } ; */
-function parseClass(lx) {
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-  lx.attendre("{");
-  for (;;) {
-    lx.skipEspaces();
-    if (lx.fin()) throw erreur(lx.ligne, lx.colonne, "accolade fermante manquante");
-    if (lx.cur() === "}") { lx.avancer(1); break; }
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "permission attendue");
-  }
-  lx.attendre(";");
-}
-
-/* Un élément d'ability : modificateur, ou MOT [':' liste_args]. */
-function parseAbilityItem(lx, etat, src, ligneRegle) {
-  const mot = lx.lireBrut(": \t\r\n;}");
-  if (mot.texte === "") throw erreur(lx.ligne, lx.colonne, "ability vide");
-  const modificateur = MODIFICATEURS.indexOf(mot.texte) >= 0;
-  if (!modificateur && !RE_MOT.test(mot.texte)) {
-    throw erreur(mot.ligne, mot.colonne, "élément d'ability mal formé : « " + mot.texte + " »");
-  }
-  lx.skipEspaces();
-  if (lx.cur() !== ":") return;                      /* ability sans argument */
-  if (modificateur) {
-    throw erreur(lx.ligne, lx.colonne, "modificateur sans argument : « " + mot.texte + " »");
-  }
-  lx.avancer(1);
-  for (;;) {
-    const arg = lx.lireBrut(", \t\r\n;}");
-    if (arg.texte === "") throw erreur(lx.ligne, lx.colonne, "argument d'ability manquant");
-    validerArg(arg);
-    if (TRANSITIONS.indexOf(mot.texte) >= 0 && src) {
-      ajouterRegle(etat, src, arg, mot.texte, ligneRegle, mot.texte === "settypeid");
-    }
-    if (lx.cur() === ",") { lx.avancer(1); continue; }
-    return;
-  }
-}
-
-/* bloc_ability : suite d'éléments jusqu'à '}' (src = null -> aucune arête). */
-function parseBloc(lx, etat, src, ligneRegle) {
-  for (;;) {
-    lx.skipEspaces();
-    if (lx.fin()) throw erreur(lx.ligne, lx.colonne, "accolade fermante manquante");
-    if (lx.cur() === "}") { lx.avancer(1); return; }
-    parseAbilityItem(lx, etat, src, ligneRegle);
-  }
-}
-
-/* allow NOM NOM : channel connect ;  |  allow NOM NOM : ability { … } ; */
-function parseAllow(lx, etat, ligneRegle) {
-  const src = lx.lireIdent();
-  if (!src) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-  const dst = lx.lireIdent();
-  if (!dst) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-  lx.attendre(":");
-  const mot = lx.lireIdent();
-  if (!mot) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-  if (mot.texte === "channel") {
-    const connect = lx.lireIdent();
-    if (!connect || connect.texte !== "connect") {
-      throw erreur(lx.ligne, lx.colonne, "« connect » attendu après « channel »");
-    }
-    lx.attendre(";");
-    ajouterRegle(etat, src, dst, "channel", ligneRegle, true);
-    return;
-  }
-  if (mot.texte === "ability") {
-    if (dst.texte !== "self") {
-      throw erreur(dst.ligne, dst.colonne, "une règle d'abilities doit cibler « self »");
-    }
-    ajouterRegle(etat, src, null, "ability", ligneRegle, false);
-    lx.attendre("{");
-    parseBloc(lx, etat, src, ligneRegle);
-    lx.attendre(";");
-    return;
-  }
-  throw erreur(mot.ligne, mot.colonne, "« ability » ou « channel » attendu");
-}
-
-/* allow_attach / allow_link : chemin (+ second chemin pour allow_attach) ou bloc. */
-function parseChemin(lx, etat, deuxChemins) {
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-  lx.skipEspaces();
-  if (lx.cur() === "{") {
-    lx.avancer(1);
-    parseBloc(lx, etat, null, lx.ligne);
-    lx.attendre(";");
-    return;
-  }
-  const p1 = lx.lireBrut(" \t\r\n;{}");
-  if (p1.texte === "") throw erreur(lx.ligne, lx.colonne, "chemin attendu");
-  lx.skipEspaces();
-  if (!deuxChemins || lx.cur() === ";") { lx.attendre(";"); return; }
-  const p2 = lx.lireBrut(" \t\r\n;{}");
-  if (p2.texte === "") throw erreur(lx.ligne, lx.colonne, "chemin attendu");
-  lx.attendre(";");
-}
-
-/* derive_type { NOM+ } { bloc } NOM ;  |  derive_type NOM NOM NOM ; */
-function parseDeriveType(lx, etat) {
-  lx.skipEspaces();
-  if (lx.cur() !== "{") {
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-    lx.attendre(";");
-    return;
-  }
-  lx.avancer(1);
-  let n = 0;
-  for (;;) {
-    lx.skipEspaces();
-    if (lx.fin()) throw erreur(lx.ligne, lx.colonne, "accolade fermante manquante");
-    if (lx.cur() === "}") { lx.avancer(1); break; }
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-    n++;
-  }
-  if (n === 0) throw erreur(lx.ligne, lx.colonne, "liste de types vide");
-  lx.attendre("{");
-  parseBloc(lx, etat, null, lx.ligne);
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-  lx.attendre(";");
-}
-
-/* default_spawn_type NOM+ ; */
-function parseDefaultSpawn(lx, etat) {
-  if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-  lx.skipEspaces();
-  while (lx.cur() !== ";") {
-    if (lx.fin()) throw erreur(lx.ligne, lx.colonne, "« ; » attendu");
-    if (!lx.lireIdent()) throw erreur(lx.ligne, lx.colonne, "identifiant attendu");
-    lx.skipEspaces();
-  }
-  lx.attendre(";");
-  etat.hasDefaultSpawn = true;
-}
-
-/* mount_point NOMBRE : NOMBRE { bloc } ; */
-function parseMountPoint(lx, etat) {
-  const uid = lx.lireNombre();
-  if (!uid) throw erreur(lx.ligne, lx.colonne, "uid attendu");
-  validerNombre(uid);
-  lx.attendre(":");
-  const gid = lx.lireNombre();
-  if (!gid) throw erreur(lx.ligne, lx.colonne, "gid attendu");
-  validerNombre(gid);
-  lx.attendre("{");
-  parseBloc(lx, etat, null, lx.ligne);
-  lx.attendre(";");
-}
-
 /* ————————————————————— pilote ————————————————————— */
 
 function parseProgramme(lx, etat) {
   for (;;) {
-    lx.skipEspaces();
+    lx.sauter();
     if (lx.fin()) return;
-    const kw = lx.lireIdent();
-    if (!kw) {
-      const c = lx.cur();
-      if (c && ";{}:".indexOf(c) < 0 && !estChiffre(c)) {
-        throw erreur(lx.ligne, lx.colonne, "caractère inattendu");
-      }
-      throw erreur(lx.ligne, lx.colonne, "mot-clé de production attendu");
+    const kw = lx.suivant();
+    if (kw.kind === "fin") return;
+    if (kw.kind !== "ident") {
+      throw erreur(kw.ligne, kw.colonne, "mot-clé de production attendu");
     }
-    switch (kw.texte) {
+    switch (kw.txt) {
       case "type": parseType(lx, etat); break;
-      case "range": case "attribute": parseDeclSimple(lx); break;
+      case "range": case "attribute": case "ability": parseDeclSimple(lx); break;
       case "class": parseClass(lx); break;
       case "allow": parseAllow(lx, etat, kw.ligne); break;
-      case "allow_attach": parseChemin(lx, etat, true); break;
-      case "allow_link": parseChemin(lx, etat, false); break;
-      case "derive_type": parseDeriveType(lx, etat); break;
+      case "allow_attach": parseChemin(lx, true); break;
+      case "allow_link": parseChemin(lx, false); break;
+      case "derive_type": parseDeriveType(lx); break;
       case "default_spawn_type": parseDefaultSpawn(lx, etat); break;
-      case "mount_point": parseMountPoint(lx, etat); break;
+      case "mount_point": parseMountPoint(lx); break;
       default:
-        throw erreur(kw.ligne, kw.colonne, "mot-clé de production inconnu : « " + kw.texte + " »");
+        throw erreur(kw.ligne, kw.colonne, "mot-clé de production inconnu");
     }
   }
 }
@@ -366,7 +467,8 @@ function parseSecpol(texte) {
   try {
     const lx = new Lexer(texte);
     const etat = {
-      types: [], declare: new Set(), regles: [], hasDefaultSpawn: false,
+      types: [], declare: new Set(), membres: [], regles: [], sources: [],
+      hasDefaultSpawn: false,
     };
     parseProgramme(lx, etat);
     return { model: construireModele(etat), error: null };

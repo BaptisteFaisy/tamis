@@ -57,20 +57,19 @@ int p_bloc_abilities(parseur *p, char *src, long ligne_regle)
     }
 }
 
-/* Saute un bloc { … } (imbrication comprise) ; le curseur est après l'accolade fermante. */
+/* Saute un bloc { … } (imbrication comprise) ; le curseur est après l'accolade fermante.
+   Le contenu est lu en mode BRUT : un bloc peut contenir des chemins (/dev/random) que le
+   découpage mot-à-mot ne sait pas lire. */
 int p_sauter_bloc(parseur *p)
 {
-    jeton j;
     int prof = 1;
     while (prof > 0) {
-        if (lx_suivant(&p->lx, p->a, &j) != 0) {
-            return echec(p, p->lx.ligne, p->lx.colonne, "caractère inattendu");
+        if (p->lx.p >= p->lx.fin) {
+            return echec(p, p->lx.ligne, p->lx.colonne, "accolade fermante manquante");
         }
-        if (j.kind == J_EOF) {
-            return echec(p, j.ligne, j.colonne, "accolade fermante manquante");
-        }
-        if (j.kind == J_PUNCT && j.txt[0] == '{') { prof++; }
-        else if (j.kind == J_PUNCT && j.txt[0] == '}') { prof--; }
+        if (*p->lx.p == '{') { prof++; }
+        else if (*p->lx.p == '}') { prof--; }
+        lx_avance(&p->lx, 1);
     }
     return 0;
 }
@@ -180,7 +179,11 @@ int p_allow(parseur *p)
         }
         for (s = src; s; s = s->suivant) {
             for (d = dst; d; d = d->suivant) {
-                int rc = ajouter_regle(p, s->nom, d->nom, "channel", lg, 1);
+                int rc;
+                if (strcmp(d->nom, "self") == 0) {
+                    continue; /* « self » n'est pas un type : aucune arête nouvelle */
+                }
+                rc = ajouter_regle(p, s->nom, d->nom, "channel", lg, 1);
                 if (rc != 0) { return rc; }
             }
         }
@@ -199,7 +202,11 @@ int p_allow(parseur *p)
         }
         for (s = src; s; s = s->suivant) {
             for (d = dst; d; d = d->suivant) {
-                int rc = ajouter_regle(p, s->nom, d->nom, classe, lg, 1);
+                int rc;
+                if (strcmp(d->nom, "self") == 0) {
+                    continue; /* « self » n'est pas un type : aucune arête nouvelle */
+                }
+                rc = ajouter_regle(p, s->nom, d->nom, classe, lg, 1);
                 if (rc != 0) { return rc; }
             }
         }
