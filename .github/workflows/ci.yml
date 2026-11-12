@@ -22,10 +22,12 @@ jobs:
           python-version: '3.12'
       - name: Garde de taille (< 500 lignes/fichier, < 50 lignes/fonction)
         run: make garde
-      - name: Tests (C + jumeau Python + différentiel)
+      - name: Tests (C + jumeau Python + différentiel + CLI + fuzz)
         run: make test
       - name: Sanitizeurs (ASan/UBSan)
         run: make sanitize
+      - name: Mutants (chaque mutation doit être tuée par les tests)
+        run: make mutants
       - name: Aucun chemin absolu codé en dur hors fixtures/tests
         run: |
           if grep -rn --include='*.sh' --include='*.py' --include='*.c' --include='*.h' \

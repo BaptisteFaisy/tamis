@@ -10,9 +10,11 @@ CORE_HDR := $(wildcard core/include/tamis/*.h)
 TEST_SRC := $(wildcard core/tests/test_*.c)
 TEST_BIN := $(TEST_SRC:.c=)
 SAN_BIN  := $(addprefix build/san/,$(notdir $(TEST_BIN)))
+CLI      := build/tamis
+CLI_SRC  := tools/tamis.c tools/sha256.c $(CORE_SRC)
 
-.PHONY: all test sanitize garde clean aide
-all: $(TEST_BIN)
+.PHONY: all test sanitize garde clean cli mutants aide
+all: $(TEST_BIN) cli
 
 # Un binaire de test = son .c + tout le core (petit projet, link simple).
 core/tests/test_%: core/tests/test_%.c $(CORE_SRC) $(CORE_HDR)
@@ -23,7 +25,13 @@ build/san/test_%: core/tests/test_%.c $(CORE_SRC) $(CORE_HDR)
 	@mkdir -p $(dir $@)
 	$(CC) $(SANFLAGS) -o $@ $< $(CORE_SRC)
 
-test: $(TEST_BIN)
+cli: $(CLI)
+
+$(CLI): $(CLI_SRC) $(CORE_HDR) tools/sha256.h
+	@mkdir -p build
+	$(CC) $(CFLAGS) -Itools -o $@ $(CLI_SRC)
+
+test: $(TEST_BIN) cli
 	@tests/lance.sh
 	@tests/lance_host.sh
 
@@ -33,11 +41,15 @@ sanitize: $(SAN_BIN)
 garde:
 	@python3 tests/garde.py
 
+mutants:
+	@python3 tests/mutants.py
+
 clean:
 	rm -rf build $(TEST_BIN)
 
 aide:
-	@echo "make test     — construit et lance tous les tests (C + Python + différentiel)"
+	@echo "make test     — construit CLI + tests et lance tout (C + Python + différentiel + CLI)"
+	@echo "make cli      — construit build/tamis"
 	@echo "make sanitize — relance les tests C sous ASan/UBSan"
 	@echo "make garde    — < 500 lignes/fichier, < 50 lignes/fonction"
 	@echo "make clean    — supprime les artefacts"

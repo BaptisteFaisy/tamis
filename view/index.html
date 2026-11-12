@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: MIT -->
+<!-- Tamis — visualiseur du graphe de privilèges (TAM-23). Vanilla JS, zéro dépendance, -->
+<!-- hors-ligne. Consomme le JSON émis par `tamis view <politique> [--src S --dst D]`. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tamis — graphe de privilèges</title>
+<style>
+  :root { --bg:#0f1117; --fg:#e6e6e6; --mut:#8b93a7; --acc:#4da3ff; --bad:#ff5d5d; --edge:#3a4152; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:16px 20px; border-bottom:1px solid #232838; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  h1 .crab { color:var(--acc); }
+  .sub { color:var(--mut); font-size:13px; }
+  .wrap { display:flex; gap:16px; padding:16px 20px; align-items:flex-start; flex-wrap:wrap; }
+  .panel { flex:0 0 360px; max-width:100%; }
+  textarea { width:100%; height:180px; background:#161a24; color:var(--fg); border:1px solid #2b3244;
+             border-radius:8px; padding:10px; font:12px/1.4 ui-monospace,Menlo,Consolas,monospace; resize:vertical; }
+  .row { display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap; }
+  button, label.btn { background:var(--acc); color:#04121f; border:0; border-radius:8px; padding:8px 14px;
+             font-weight:600; cursor:pointer; font-size:13px; }
+  label.btn { background:#2b3244; color:var(--fg); }
+  input[type=file] { display:none; }
+  .graph { flex:1 1 480px; min-width:320px; background:#12151f; border:1px solid #232838; border-radius:10px; overflow:auto; }
+  svg { display:block; }
+  .legend { color:var(--mut); font-size:12px; margin-top:10px; }
+  .legend b { color:var(--fg); }
+  .dot { display:inline-block; width:10px; height:10px; border-radius:50%; vertical-align:middle; margin:0 4px 0 10px; }
+  .node circle { fill:#1d2333; stroke:var(--acc); stroke-width:2; }
+  .node text { fill:var(--fg); font-size:12px; font-weight:600; }
+  .node.focus circle { fill:#3a1620; stroke:var(--bad); stroke-width:3; }
+  .node.focus text { fill:#ffd9d9; }
+  .edge { stroke:var(--edge); stroke-width:2; fill:none; }
+  .edge.hot { stroke:var(--bad); stroke-width:3.5; }
+  .elabel { fill:var(--mut); font-size:10px; }
+  .elabel.hot { fill:var(--bad); }
+  #status { color:var(--mut); font-size:12px; margin-top:8px; min-height:18px; }
+  #status.bad { color:var(--bad); }
+  #status.ok { color:#5ad19a; }
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="crab">🦀</span> Tamis — graphe de privilèges</h1>
+  <div class="sub">Colle la sortie de <code>tamis view &lt;politique&gt; --src S --dst D</code> pour voir le chemin d'attaque en rouge.</div>
+</header>
+<div class="wrap">
+  <div class="panel">
+    <textarea id="input" spellcheck="false"></textarea>
+    <div class="row">
+      <button id="render">Afficher</button>
+      <label class="btn" for="file">Charger un fichier…</label>
+      <input type="file" id="file" accept=".json,application/json">
+    </div>
+    <div id="status"></div>
+    <div class="legend">
+      <span class="dot" style="background:var(--acc)"></span><b>nœud</b> = type de sécurité
+      <span class="dot" style="background:var(--bad)"></span><b>rouge</b> = chemin d'attaque (focus)
+    </div>
+  </div>
+  <div class="graph"><svg id="svg" width="640" height="420"></svg></div>
+</div>
+<script>
+"use strict";
+const SAMPLE = {"nodes":["app_tiers","journal","diag","pompe_critique","reseau"],"edges":[{"src":"app_tiers","dst":"journal","rule":"R112"},{"src":"journal","dst":"diag","rule":"R87"},{"src":"diag","dst":"pompe_critique","rule":"R9"},{"src":"reseau","dst":"journal","rule":"R10"},{"src":"app_tiers","dst":"journal","rule":"R999"}],"focus":{"src":"app_tiers","dst":"pompe_critique"}};
+
+const $ = (id) => document.getElementById(id);
+const SVGNS = "http://www.w3.org/2000/svg";
+
+function setStatus(msg, cls) { const s = $("status"); s.textContent = msg || ""; s.className = cls || ""; }
+
+function el(name, attrs, parent) {
+  const e = document.createElementNS(SVGNS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+/* Couche = plus long chemin depuis une racine (relaxation |V| fois, sûr avec cycles). */
+function layers(nodes, edges, idx) {
+  const L = nodes.map(() => 0);
+  for (let it = 0; it < nodes.length; it++)
+    for (const e of edges) {
+      const u = idx[e.src], v = idx[e.dst];
+      if (u === undefined || v === undefined) continue;
+      if (L[v] < L[u] + 1 && L[u] + 1 <= nodes.length) L[v] = L[u] + 1;
+    }
+  return L;
+}
+
+/* BFS focus : renvoie la liste des indices de nœuds du chemin src->dst, ou null. */
+function focusPath(nodes, edges, idx, src, dst) {
+  if (src === undefined || dst === undefined) return null;
+  const s = idx[src], d = idx[dst];
+  if (s === undefined || d === undefined) return null;
+  const par = nodes.map(() => -1), seen = nodes.map(() => false), q = [s];
+  seen[s] = true;
+  while (q.length) {
+    const u = q.shift();
+    if (u === d) break;
+    edges.forEach((e, ei) => {
+      const uu = idx[e.src], v = idx[e.dst];
+      if (uu === u && !seen[v]) { seen[v] = true; par[v] = u; q.push(v); e._par = ei; }
+    });
+  }
+  if (!seen[d]) return null;
+  const path = []; let c = d;
+  while (c !== -1) { path.unshift(c); c = par[c]; }
+  return path;
+}
+
+function render(data) {
+  const svg = $("svg"); svg.innerHTML = "";
+  const nodes = data.nodes || [], edges = data.edges || [];
+  const idx = {}; nodes.forEach((n, i) => idx[n] = i);
+  const L = layers(nodes, edges, idx);
+  const byLayer = {};
+  nodes.forEach((n, i) => { (byLayer[L[i]] = byLayer[L[i]] || []).push(i); });
+  const maxLayer = Math.max(0, ...Object.keys(byLayer).map(Number));
+  const xGap = 170, yGap = 78, mx = 70, my = 50;
+  const pos = nodes.map(() => ({ x: 0, y: 0 }));
+  let maxRows = 1;
+  for (const k in byLayer) maxRows = Math.max(maxRows, byLayer[k].length);
+  Object.keys(byLayer).forEach((k) => {
+    const col = byLayer[k];
+    col.forEach((ni, r) => { pos[ni] = { x: mx + (+k) * xGap, y: my + r * yGap }; });
+  });
+  svg.setAttribute("width", mx * 2 + maxLayer * xGap + 60);
+  svg.setAttribute("height", my * 2 + (maxRows - 1) * yGap + 30);
+
+  const defs = el("defs", {}, svg);
+  [["arrow", "var(--edge)"], ["arrowHot", "var(--bad)"]].forEach(([id, color]) => {
+    const m = el("marker", { id, markerWidth: 10, markerHeight: 10, refX: 8, refY: 3, orient: "auto" }, defs);
+    el("path", { d: "M0,0 L8,3 L0,6 Z", fill: color }, m);
+  });
+
+  const path = data.focus ? focusPath(nodes, edges, idx, data.focus.src, data.focus.dst) : null;
+  const hotNodes = new Set(path || []);
+  const hotEdges = new Set();
+  if (path) for (let i = 0; i < path.length - 1; i++)
+    edges.forEach((e, ei) => { if (idx[e.src] === path[i] && idx[e.dst] === path[i + 1]) hotEdges.add(ei); });
+
+  edges.forEach((e, ei) => {
+    const a = pos[idx[e.src]], b = pos[idx[e.dst]];
+    if (!a || !b) return;
+    const hot = hotEdges.has(ei);
+    const mx2 = (a.x + b.x) / 2;
+    el("path", { class: "edge" + (hot ? " hot" : ""), d: `M${a.x},${a.y} C${mx2},${a.y} ${mx2},${b.y} ${b.x},${b.y}`,
+                 "marker-end": hot ? "url(#arrowHot)" : "url(#arrow)" }, svg);
+    const t = el("text", { class: "elabel" + (hot ? " hot" : ""), x: mx2, y: (a.y + b.y) / 2 - 4, "text-anchor": "middle" }, svg);
+    t.textContent = e.rule || "";
+  });
+
+  nodes.forEach((n, i) => {
+    const g = el("g", { class: "node" + (hotNodes.has(i) ? " focus" : ""), transform: `translate(${pos[i].x},${pos[i].y})` }, svg);
+    el("circle", { r: 22, cx: 0, cy: 0 }, g);
+    const t = el("text", { x: 0, y: 34, "text-anchor": "middle" }, g);
+    t.textContent = n;
+  });
+
+  if (data.focus) {
+    setStatus(path ? `Chemin trouvé : ${data.focus.src} → ${data.focus.dst} (${path.length - 1} sauts)` :
+      `Aucun chemin ${data.focus.src} → ${data.focus.dst} (non-interférence).`, path ? "bad" : "ok");
+  } else setStatus(`${nodes.length} types, ${edges.length} règles.`);
+}
+
+function load(text) {
+  try { render(JSON.parse(text)); }
+  catch (e) { setStatus("JSON invalide : " + e.message, "bad"); }
+}
+
+$("render").onclick = () => load($("input").value);
+$("file").onchange = (ev) => {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader(); r.onload = () => { $("input").value = r.result; load(r.result); }; r.readAsText(f);
+};
+$("input").value = JSON.stringify(SAMPLE, null, 0);
+render(SAMPLE);
+</script>
+</body>
+</html>

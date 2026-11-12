@@ -23,16 +23,41 @@ manuel : revue des règles inutiles, fusion, stabilisation, vérification du typ
 d'élévation de privilèges par essai-erreur. **Aucune analyse statique avant déploiement.**
 Tamis occupe cet espace — sans jamais doubler `secpolgenerate`/`secpolcompile`/`secpolpush`.
 
+## Démarrage rapide
+
+```
+make cli                                              # construit build/tamis
+build/tamis lint     fixtures/attaque.mpf             # moindre privilège
+build/tamis reach    fixtures/attaque.mpf --src app_tiers --dst pompe_critique
+build/tamis explain  fixtures/attaque.mpf --src app_tiers --dst pompe_critique
+build/tamis proof    fixtures/durcie.mpf  --src app_tiers --dst pompe_critique
+build/tamis minimize fixtures/attaque.mpf
+build/tamis diff     fixtures/attaque.mpf fixtures/durcie.mpf
+build/tamis view     fixtures/attaque.mpf --src app_tiers --dst pompe_critique > /tmp/g.json
+```
+Ouvre ensuite `view/index.html` et colle `/tmp/g.json` : le chemin d'attaque s'affiche en rouge.
+Tutoriel pas à pas : [`docs/codelab/01-auditer-une-politique.md`](docs/codelab/01-auditer-une-politique.md).
+
+> Les politiques d'exemple sont au **format provisoire** (`type`/`allow`/`untyped`). Le parseur
+> du vrai langage `secpol` se branchera sur le même modèle dès la grammaire gelée.
+
 ## État
 
 | Élément | État |
 |---|---|
 | Contrat gelé (`CONTRACT.md`) | ✅ 13 verdicts, formats texte/JSON/Markdown, API C |
-| Socle verdicts + rapports (`core/`) | 🚧 en cours |
-| Jumeau Python (`host/`) | 🚧 en cours |
-| Grammaire `secpol` (`docs/GRAMMAR.md`) | 🚧 relevée depuis la doc, à vérifier page à page (SDP) |
-| Parseur / modèle / accessibilité | ⏳ attend la grammaire gelée |
-| Différentiel contre `secpolcompile` (`oracle/`) | ⏳ attend le SDP hôte |
+| Socle verdicts + rapports (`core/`) | ✅ 287 vérifications, ASan/UBSan clean |
+| Jumeau Python (`host/`) + différentiel C↔Python | ✅ 0 divergence (250/300/500 verdicts) |
+| Couche modèle + parseur (format provisoire) | ✅ `core/model.c` |
+| Moteurs : reach, proof, lint, minimize, diff, explain | ✅ TAM-04/05/06/07/08 |
+| CLI `tamis` + visualiseur HTML du graphe | ✅ TAM-23 |
+| Fuzz (ASan/UBSan) + mutants | ✅ 9 000 entrées, 12 mutants tués |
+| Codelab + rapport d'audit + angles morts | ✅ |
+| Grammaire `secpol` exacte (`docs/GRAMMAR.md`) | 🚧 relevée, À VÉRIFIER page à page (doc 404, SDP absent) |
+| Parseur `secpol` réel (lot L1) | ⏳ attend la grammaire gelée |
+| Différentiel contre `secpolcompile` (`oracle/`) | ⏳ harnais prêt, attend le SDP hôte |
+
+**810 vérifications** vertes (`make test`), garde de taille OK, sanitizeurs clean.
 
 ## Build et test
 

@@ -1,0 +1,24 @@
+# Politique de démonstration — format PROVISOIRE (model text format, voir core/src/model.c).
+# À remplacer par du vrai secpol dès que la grammaire est gelée (lot L1, docs/GRAMMAR.md).
+#
+# Scénario : un tiers applicatif peut atteindre la pompe critique en 3 sauts
+# (app_tiers -> journal -> diag -> pompe_critique). C'est le chemin d'attaque de la démo.
+type app_tiers
+type journal
+type diag
+type pompe_critique
+type reseau
+
+allow app_tiers journal msg @R112
+allow journal diag msg @R87
+allow diag pompe_critique control @R9
+allow reseau journal msg @R10
+
+# Doublon : même arête app_tiers -> journal déjà accordée par R112 (redondante, vu par minimize).
+allow app_tiers journal msg @R999
+
+# Processus sans type (lint TAM-06) :
+untyped /bin/legacy
+untyped /bin/foo
+
+# Pas de default_spawn_type déclaré -> le lint le signale (trou S7).

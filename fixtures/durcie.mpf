@@ -1,0 +1,17 @@
+# Politique DURCIE — format PROVISOIRE. Version corrigée de attaque.mpf.
+# Le chemin d'attaque vers pompe_critique est coupé (R9 supprimée), le doublon R999 retiré,
+# et default_spawn_type déclaré. Sert de cible au diff sémantique (TAM-08).
+type app_tiers
+type journal
+type diag
+type pompe_critique
+type reseau
+
+allow app_tiers journal msg @R112
+allow journal diag msg @R87
+allow reseau journal msg @R10
+
+# R9 (diag -> pompe_critique) SUPPRIMÉE : plus aucun chemin app_tiers -> pompe_critique.
+# R999 (doublon de R112) SUPPRIMÉE.
+
+default_spawn
