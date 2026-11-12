@@ -1,5 +1,9 @@
 # Tamis 🦀
 
+> **Site de démonstration : https://baptistefaisy.github.io/tamis/** —
+> toutes les fonctionnalités sont **essayables en direct dans le navigateur**
+> (playground), zéro installation.
+
 > *QNX génère et surveille les politiques de sécurité ; QNX demande à l'intégrateur de les
 > relire, les fusionner et les justifier **à la main**. Tamis outille exactement cette partie,
 > et le prouve en se testant par différentiel contre `secpolcompile`.*
@@ -75,16 +79,36 @@ make clean
 ## Architecture
 
 ```
-core/      C11 pur (ni horloge, ni fichier, ni socket, ni état global) — le noyau d'analyse
-host/      Python 3 standard — jumeau de vérification indépendant + CLI
-fixtures/  corpus de politiques (minimales, réalistes, fautives)
+core/      C11 pur (ni horloge, ni fichier, ni socket, ni état global, aucune allocation :
+           l'appelant fournit une arène) — le noyau d'analyse : model, reach, proof, lint,
+           minimize, diff, explain, verdict, rapport
+host/      Python 3 standard — jumeau de vérification indépendant du rendu
+site/      jumeau navigateur (JS sans dépendance) — playground publié sur GitHub Pages
+tools/     CLI `tamis`, sha256, fuzzer, générateur du site
+fixtures/  corpus de politiques (format provisoire ; le vrai secpol viendra s'y substituer)
 oracle/    harnais de test différentiel contre secpolcompile (hôte, optionnel sans SDP)
-tests/     différentiel C↔Python, fuzz, banque de cas fautifs, mutants, gardes
-docs/      GRAMMAR.md, DECISIONS.md, VALIDATION.md, AUDIT-TEMPLATE.md
+tests/     différentiels C↔Python et C↔JS, fuzz, mutants, CLI, site, gardes
+docs/      GRAMMAR.md, DECISIONS.md, VALIDATION.md, AUDIT-TEMPLATE.md, 100-idees.md, codelab/
+politique/ abilities.tsv (75 abilities relevées dans la doc QNX)
 ```
 
-La double implémentation (C dans `core/`, Python dans `host/`) n'est pas une duplication :
-c'est un **jumeau de vérification** indépendant, comparé octet par octet sur ≥ 200 cas.
+**Trois implémentations indépendantes, un seul contrat** : le cœur C (autoritaire), le jumeau
+Python et le jumeau navigateur JS rendent le même JSON **octet pour octet**. C'est vérifié en
+continu par `tests/test_differentiel.sh` (C↔Python, 250/300/500 verdicts aléatoires) et
+`tests/test_js.sh` (C↔JS, 13 scénarios d'analyse réels). Une divergence est un bug, pas une
+différence d'opinion.
+
+## Site de démonstration
+
+Publié sur GitHub Pages depuis `site/` (workflow `pages.yml`), régénéré à chaque push depuis
+`fixtures/` et `docs/` par `tools/build_site.py` — aucune dérive possible entre le dépôt et le
+site. Le playground exécute le **jumeau JS** : `lint`, `reach`, `proof`, `explain`,
+`minimize`, `diff` et le graphe de privilèges interactif, avec sortie texte / JSON / Markdown
+d'audit. Le câblage de la page est testé sans navigateur (`tests/site_smoke.js`, mini-DOM).
+
+```
+make site     # régénère site/ depuis ses sources
+```
 
 ## Licence
 

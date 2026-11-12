@@ -1,0 +1,11 @@
+{
+  "name": "tamis-site",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jumeau navigateur du cœur C de Tamis — aucune dépendance, aucun build. Le type de module est déclaré ici pour que Node traite les .js du dépôt en CommonJS, quel que soit l'environnement hôte.",
+  "type": "commonjs",
+  "license": "MIT",
+  "scripts": {
+    "test:js": "bash tests/test_js.sh"
+  }
+}

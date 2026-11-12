@@ -13,7 +13,7 @@ SAN_BIN  := $(addprefix build/san/,$(notdir $(TEST_BIN)))
 CLI      := build/tamis
 CLI_SRC  := tools/tamis.c tools/sha256.c $(CORE_SRC)
 
-.PHONY: all test sanitize garde clean cli mutants aide
+.PHONY: all test sanitize garde clean cli mutants site aide
 all: $(TEST_BIN) cli
 
 # Un binaire de test = son .c + tout le core (petit projet, link simple).
@@ -44,12 +44,17 @@ garde:
 mutants:
 	@python3 tests/mutants.py
 
+site:
+	@python3 tools/build_site.py
+
 clean:
 	rm -rf build $(TEST_BIN)
 
 aide:
-	@echo "make test     — construit CLI + tests et lance tout (C + Python + différentiel + CLI)"
+	@echo "make test     — construit CLI + tests et lance tout (C + Python + différentiel + CLI + fuzz + JS + site)"
 	@echo "make cli      — construit build/tamis"
+	@echo "make site     — régénère site/ depuis fixtures/ et docs/"
 	@echo "make sanitize — relance les tests C sous ASan/UBSan"
+	@echo "make mutants  — 12 mutations du core, chacune doit être tuée par les tests"
 	@echo "make garde    — < 500 lignes/fichier, < 50 lignes/fonction"
 	@echo "make clean    — supprime les artefacts"
