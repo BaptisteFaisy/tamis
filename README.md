@@ -151,6 +151,27 @@ depuis l'interface réseau »). Détails : [`docs/BANC-REEL.md`](docs/BANC-REEL.
 
 Sans pont, le Playground reste entièrement fonctionnel via le jumeau JS.
 
+## Le dernier maillon — la licence QNX SDP 8.0 (10 min)
+
+Tout le projet fonctionne **sans** la licence, mais elle est le seul maillon qui manque pour
+deux choses : **figer la grammaire** du langage `secpol` et **prouver l'accord** avec le
+compilateur officiel `secpolcompile` (TAM-12) — donc pour la boucle *prédit ↔ observé*, où
+Tamis annonce un refus et QNX le confirme en s'exécutant.
+
+Une fois le SDP installé (compte myQNX, licence gratuite) :
+
+```sh
+export QNX_SDP=~/qnx800
+bash banc/sdp.sh
+```
+
+Le script vérifie les outils hôtes, **extrait automatiquement la grammaire** de la doc
+installée (`tools/extract_grammar.py` → `docs/GRAMMAR-auto.md`, à relire puis fusionner) et
+relance le différentiel oracle. L'extracteur est **déjà testé sans SDP**
+(`tests/test_sdp.sh`, 15 vérifications sur une page HTML synthétique).
+
+Détail et plan B : [`docs/SDP.md`](docs/SDP.md).
+
 ## Licence
 
 MIT — voir [`LICENSE`](LICENSE).
