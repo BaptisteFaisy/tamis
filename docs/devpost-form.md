@@ -80,7 +80,7 @@ Quality: 9,876 green checks, 9,000 fuzz inputs under ASan/UBSan with no crash, 1
 - Public repository (MIT): https://github.com/Tradoooo/tamis
 - Codelab (20 minutes, runnable): https://github.com/Tradoooo/tamis/blob/main/docs/codelab/01-auditer-une-politique.md
 - Frozen contract: https://github.com/Tradoooo/tamis/blob/main/CONTRACT.md
-- Recorded QNX grammar (sourced, with TO VERIFY markers): https://github.com/Tradoooo/tamis/blob/main/docs/GRAMMAR.md
+- QNX grammar, frozen from the 8.0 SDP and cross-checked with secpolcompile: https://github.com/Tradoooo/tamis/blob/main/docs/GRAMMAR.md
 - 100-idea roadmap: https://github.com/Tradoooo/tamis/blob/main/docs/100-idees.md
 
 ## 13. Checklist

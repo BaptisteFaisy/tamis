@@ -65,7 +65,7 @@ def tail_sections(c: dict) -> list:
         f"Public repository (MIT): {REPO_URL}",
         f"Codelab (20 minutes, runnable): {REPO_URL}/blob/main/docs/codelab/01-auditer-une-politique.md",
         f"Frozen contract: {REPO_URL}/blob/main/CONTRACT.md",
-        f"Recorded QNX grammar (sourced, with TO VERIFY markers): {REPO_URL}/blob/main/docs/GRAMMAR.md",
+        f"QNX grammar, frozen from the 8.0 SDP and cross-checked with secpolcompile: {REPO_URL}/blob/main/docs/GRAMMAR.md",
         f"100-idea roadmap: {REPO_URL}/blob/main/docs/100-idees.md",
     ]))
     return L + section("13. Checklist", [
