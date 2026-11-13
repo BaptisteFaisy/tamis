@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const C = require(path.join(__dirname, "..", "site", "tamis-core.js"));
 const R = require(path.join(__dirname, "..", "site", "tamis-render.js"));
+const S = require(path.join(__dirname, "..", "site", "tamis-secpol.js"));
 
 const [cmd, file, file2, src, dst] = process.argv.slice(2);
 
@@ -14,9 +15,22 @@ function emit(verdicts) {
   process.stdout.write(R.renderJson(verdicts, C.verdictName, C.sevName));
 }
 
+/* Le CLI C choisit le parseur sur l'extension .secpol : le driver fait de même. */
+function estSecpol(f) { return /\.secpol$/.test(f); }
+
 function parseOrErr(f) {
+  const texte = fs.readFileSync(f, "utf8");
+  if (estSecpol(f)) {
+    const r = S.parseSecpol(texte);
+    if (r.error) {
+      return { err: [{ code: 1, sev: 2, file: f, line: r.error.line || 0,
+        column: r.error.column || 0, message: r.error.message || "erreur de syntaxe",
+        src: null, dst: null, path: null, rules: null }] };
+    }
+    return { m: r.model };
+  }
   try {
-    return { m: C.parseModel(fs.readFileSync(f, "utf8")) };
+    return { m: C.parseModel(texte) };
   } catch (e) {
     return { err: [{ code: 1, sev: 2, file: f, line: e.line || 0, column: 0,
       message: e.message || "erreur de syntaxe", src: null, dst: null, path: null, rules: null }] };

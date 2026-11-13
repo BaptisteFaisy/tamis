@@ -62,8 +62,9 @@ Un `sat` prouve au contraire l'absence de chemin. L'encodage a été **validé p
 hors ligne par un tiers (`z3 -smt2 fichier.smt2`) — c'est le critère « implémentation non
 triviale » du règlement.
 
-> Les politiques d'exemple sont au **format provisoire** (`type`/`allow`/`untyped`). Le parseur
-> du vrai langage `secpol` se branchera sur le même modèle dès la grammaire gelée.
+> Le **vrai langage `secpol`** est accepté : `build/tamis` choisit le parseur sur l'extension
+> (`.secpol`), et le site le détecte sur le contenu. Les fixtures `.mpf` restent au format
+> provisoire pour les démonstrations en place.
 
 ## État
 
@@ -77,17 +78,21 @@ triviale » du règlement.
 | CLI `tamis` + visualiseur HTML du graphe | ✅ TAM-23 |
 | Fuzz (ASan/UBSan) + mutants | ✅ 9 000 entrées, 12 mutants tués |
 | Codelab + rapport d'audit + angles morts | ✅ |
-| Grammaire `secpol` exacte (`docs/GRAMMAR.md`) | 🚧 relevée, À VÉRIFIER page à page (doc 404, SDP absent) |
-| Parseur `secpol` réel (lot L1) | ⏳ attend la grammaire gelée |
-| Différentiel contre `secpolcompile` (`oracle/`) | ⏳ harnais prêt, attend le SDP hôte |
+| Grammaire `secpol` exacte (`docs/GRAMMAR.md`) | ✅ **gelée** — 76 productions extraites du SDP 8.0, croisées avec `secpolcompile` |
+| Parseur `secpol` réel | ✅ C (`core/src/secpol*.c`) + jumeau navigateur (`site/tamis-secpol*.js`) : mêmes verdicts, mêmes refus, mêmes positions |
+| Différentiel contre `secpolcompile` (`oracle/`) | ✅ exécuté sur le SDP 8.0 : accord sur les 43 politiques (42 du corpus + la politique QNX 8.0) |
+| Invité QNX 8.0 en direct | ✅ le cœur C recompilé par `qcc` analyse une vraie politique dans l'invité (QEMU) |
 
-**810 vérifications** vertes (`make test`), garde de taille OK, sanitizeurs clean.
+**10 235 vérifications** vertes (`make test` : 537 C + 9 698 hôtes, dont 61 du
+différentiel C↔JS qui couvre les 42 cas secpol), garde de taille OK, sanitizeurs clean.
+Ce nombre sort de `make test` — il n'est jamais recopié à la main (règle 6 du rétroplanning).
 
 ## Build et test
 
-Aucune dépendance à installer : `gcc` (C11) et `python3` (standard) suffisent.
-**Tout tourne sans QNX, sans QEMU, sans licence** — le différentiel contre `secpolcompile`
-est un plus, pas un prérequis.
+Aucune dépendance obligatoire : `gcc` (C11) et `python3` (standard) suffisent pour tout le
+noyau. `node` (facultatif) active le différentiel C↔JS et le test du site ; sans lui deux
+suites s'annoncent « ignorées », le reste passe. **Tout tourne sans QNX, sans QEMU, sans
+licence** — le différentiel contre `secpolcompile` est un plus, pas un prérequis.
 
 ```
 make test       # construit et lance tous les tests (C + Python + différentiel)

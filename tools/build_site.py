@@ -263,6 +263,11 @@ def gen_codelab(c: dict) -> str:
 def gen_fixtures() -> str:
     ex = {n: (RACINE / "fixtures" / f"{n}.mpf").read_text(encoding="utf-8")
           for n in ("attaque", "durcie")}
+    # La politique QNX 8.0 réelle est l'exemple « vrai secpol » : elle est injectée
+    # avec les fixtures pour que le playground la charge sans le disque.
+    qnx8 = RACINE / "fixtures" / "politique-qnx8.secpol"
+    if qnx8.exists():
+        ex["qnx8"] = qnx8.read_text(encoding="utf-8")
     return "const EXAMPLES = " + json.dumps(ex, ensure_ascii=False) + ";"
 
 

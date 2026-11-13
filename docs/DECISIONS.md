@@ -5,6 +5,31 @@ Format court : une décision = contexte → décision → conséquence. Les plus
 
 ---
 
+## D-006 — Parseur `secpol` écrit sur le MÊME modèle que le format provisoire (2026-11-13)
+
+**Contexte.** La grammaire est gelée (`docs/GRAMMAR.md`, SDP 8.0 installé) et le compilateur
+officiel `secpolcompile` accepte `fixtures/politique-qnx8.secpol`. Il fallait brancher un
+vrai parseur sans réécrire les moteurs (reach, proof, lint, minimize, diff, explain), ni
+casser les fixtures `.mpf` déjà utilisées par la démo.
+
+**Décision.** Le parseur du langage réel produit **exactement le même `tamis_model`** que le
+parseur du format provisoire : `type_names` dans l'ordre source, `rules[].src/dst` en
+**indices** dans ce tableau, `has_default_spawn`. Conséquences directes :
+- les six moteurs n'ont pas changé d'une ligne ;
+- le CLI choisit le parseur sur l'extension (`.secpol`) et accepte, à titre de repli, les
+  `.mpf` de démonstration ;
+- le jumeau navigateur (`site/tamis-secpol*.js`) est découpé comme le C
+  (`abil`/`decl`/`lex`/`prod`) et rend le même modèle, refus compris.
+
+Le sous-ensemble reste **strict** : seule la grammaire attestée est lue, tout le reste est
+refusé avec ligne, colonne et cause.
+
+**Conséquence.** Le différentiel C↔JS `tests/test_js.sh` couvre désormais les 42 politiques
+du corpus secpol *et* la politique QNX 8.0, en plus des scénarios du format provisoire. Le
+rythme du projet ne dépend plus d'un parseur « à venir » : il dépend de la non-régression.
+
+---
+
 ## D-005 — Différentiel C↔Python par sérialisation base64 (2026-11-11)
 
 **Contexte.** Le jumeau Python (`host/tamis_report.py`) et le cœur C (`core/src/rapport.c`)
@@ -32,9 +57,10 @@ Risque : inventer une syntaxe et produire une analyse faussement rassurante.
 ne sait pas parser et le dit (`TAMIS_PARSE_ERROR` avec position et cause). **Jamais**
 d'analyse approximative d'une politique partiellement comprise (CONTRACT §1).
 
-**Conséquence.** Le parseur (`core/src/lex.c`, `ast.c`) **n'est pas écrit** tant que
-`docs/GRAMMAR.md` n'est pas gelé. Le socle (verdicts + rapports) est indépendant de la
-grammaire et reste livrable et testable dès maintenant.
+**Conséquence.** Tant que `docs/GRAMMAR.md` n'était pas gelé, le parseur n'était pas écrit.
+C'est fait depuis (voir D-006) : le parseur existe et applique toujours la même règle —
+un refus explicite, jamais une lecture au rabais. Le critère n'a pas changé, seule la
+condition de départ (grammaire gelée) est remplie.
 
 ## D-003 — Socle C↔Python indépendant de la grammaire (2026-11-11)
 
@@ -78,9 +104,10 @@ vocation à être replié dans ce dépôt.
 
 | Blocage | Qui | Effort |
 |---|---|---|
-| Licence QNX SDP 8.0 non demandée | **Baptiste** — compte myQNX, formulaire QNX Everywhere | 10 min + ~1 h d'attente |
-| Doc officielle en ligne inaccessible (404) | — | contourner via le SDP installé, ou accès hors-ligne |
+| **Vidéo 3 min** (tournage + montage + sous-titres) | **Baptiste** — caméra | 1 j + montage |
+| **Soumission Devpost** (compte d'équipe + 13 champs) | **Baptiste** | 1 h, avant le 12/12 |
 
-Tant que ces deux points ne sont pas levés : `docs/GRAMMAR.md` reste `À VÉRIFIER`, le parseur
-n'est pas écrit, et le différentiel contre `secpolcompile` (`oracle/`, TAM-12) sort 3
-(prérequis manquant) — sans bloquer le reste.
+Les deux blocages techniques d'hier sont **levés** : le SDP QNX 8.0 est installé (donc la
+grammaire est gelée et le parseur `secpol` écrit), et `oracle/run_oracle.sh` compare
+l'acceptation de Tamis à celle de `secpolcompile` sur les 43 politiques (42 du corpus
++ la politique QNX 8.0, accord total). Ce qui reste relève de l'action humaine : la vidéo et le dépôt.

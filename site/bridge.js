@@ -57,11 +57,22 @@
   }
 
   /* ——— rendu du jumeau JS, pour comparaison ——— */
+  /* Détection du format, identique à app.js : « ; » hors commentaire ⇒ vrai secpol. */
+  function parsePolicy(texte) {
+    const sans = String(texte || "").replace(/#[^\n]*/g, "");
+    if (sans.indexOf(";") >= 0 && window.TamisSecpol) {
+      const r = window.TamisSecpol.parseSecpol(texte);
+      if (r.error) throw r.error;
+      return r.model;
+    }
+    return C.parseModel(texte);
+  }
+
   function jsonJS(rq) {
     let m;
-    try { m = C.parseModel(rq.policy); }
+    try { m = parsePolicy(rq.policy); }
     catch (e) {
-      return R.renderJson([{ code: 1, sev: 2, file: rq.label, line: e.line || 0, column: 0,
+      return R.renderJson([{ code: 1, sev: 2, file: rq.label, line: e.line || 0, column: e.column || 0,
         message: e.message || "erreur", src: null, dst: null, path: null, rules: null }],
         C.verdictName, C.sevName);
     }
@@ -73,7 +84,7 @@
     else if (rq.cmd === "explain") res = C.explain(m, rq.src, rq.dst, rq.label);
     else if (rq.cmd === "diff") {
       let m2;
-      try { m2 = C.parseModel(rq.policy2 || ""); }
+      try { m2 = parsePolicy(rq.policy2 || ""); }
       catch (e) { return "(politique candidate invalide)"; }
       res = C.diff(m, m2, rq.label);
     } else return "(commande non comparable)";

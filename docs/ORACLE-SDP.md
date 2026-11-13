@@ -262,7 +262,7 @@ explicitement.
    (`error: undefined ability <token>`), alors que `docs/GRAMMAR.md` §4 les
    liste parmi les modificateurs officiels 8.0. Seuls **`nonroot`, `unlock`,
    `noinherit`** sont des modificateurs dans le compilateur 8.0 testé.
-   → `docs/GRAMMAR.md` §4 est à corriger sur ce point.
+   → `docs/GRAMMAR.md` §4 a été corrigé sur ce point (seuls `nonroot`, `unlock`, `noinherit` sont des modificateurs en 8.0).
 
 7. **`allow` comme modificateur** dans un bloc d'abilities donne
    `error: syntax error` (et non `undefined ability allow`), contrairement aux

@@ -8,6 +8,12 @@ run_one() {
   ran=$((ran+1))
   case "$t" in
     *.py) if sortie=$(timeout 180 python3 "$t" 2>&1); then code=0; else code=$?; fi ;;
+    *.js)
+      if command -v node >/dev/null 2>&1; then
+        if sortie=$(timeout 180 node "$t" 2>&1); then code=0; else code=$?; fi
+      else
+        printf 'IGNORE %s (node absent)\n' "$t"; return 0
+      fi ;;
     *)    if sortie=$(timeout 180 bash "$t" 2>&1); then code=0; else code=$?; fi ;;
   esac
   if [ "$code" -eq 0 ]; then
@@ -22,8 +28,8 @@ run_one() {
   fi
 }
 shopt -s nullglob
-for t in host/test_*.py tests/test_*.sh; do run_one "$t"; done
-[ "$ran" -eq 0 ] && echo "ATTENTION aucun test hôte (host/test_*.py, tests/test_*.sh)"
+for t in host/test_*.py tests/test_*.sh tests/test_*.js; do run_one "$t"; done
+[ "$ran" -eq 0 ] && echo "ATTENTION aucun test hôte (host/test_*.py, tests/test_*.sh, tests/test_*.js)"
 if [ "$echecs" -ne 0 ]; then
   echo "FAILED $echecs test(s) hôte en échec"
   exit 1

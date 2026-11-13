@@ -38,6 +38,16 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# ——— environnement du SDP ———
+# `secpolcompile` ne s'exécute pas sans QNX_HOST/QNX_TARGET/QNX_CONFIGURATION (sort 127 sinon).
+# On source l'env fourni par le SDP quand il existe, sans écraser celui de l'appelant.
+if [ -z "${QNX_HOST:-}" ] && [ -f "$SDP/qnxsdp-env.sh" ]; then
+  set +u
+  # shellcheck disable=SC1090
+  . "$SDP/qnxsdp-env.sh" >/dev/null 2>&1 || true
+  set -u
+fi
+
 # ——— le compilateur officiel ———
 SECPOLCOMPILE=""
 for c in "$SDP/host/linux/x86_64/usr/bin/secpolcompile" "$SDP/host/usr/bin/secpolcompile"; do
@@ -79,7 +89,14 @@ for pol in $LISTE; do
   # Oracle : le compilateur écrit ses messages sur stdout et sort 0 SI ET SEULEMENT
   # S'IL N'Y A PAS D'ERREUR (et n'affiche rien quand tout va bien) : c'est le CODE DE
   # SORTIE qui fait foi, pas le texte « N errors » (qui n'apparaît que s'il y a un message).
-  if "$SECPOLCOMPILE" -o "$TMP/p.bin" "$pol" >"$TMP/msg.txt" 2>&1; then
+  "$SECPOLCOMPILE" -o "$TMP/p.bin" "$pol" >"$TMP/msg.txt" 2>&1
+  rc_o=$?
+  if [ "$rc_o" -eq 126 ] || [ "$rc_o" -eq 127 ]; then
+    echo "KO secpolcompile ne peut pas s'exécuter (rc=$rc_o) — prérequis d'environnement manquant"
+    echo "   essayez : source \"$SDP/qnxsdp-env.sh\" puis relancez"
+    exit 3
+  fi
+  if [ "$rc_o" -eq 0 ]; then
     oracle="accepte"
   else
     oracle="refuse"

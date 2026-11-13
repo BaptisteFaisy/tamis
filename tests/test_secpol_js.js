@@ -26,22 +26,26 @@ function ok(texte, msg) {
   return r.model;
 }
 
-/* Analyse et vérifie le refus ; renvoie l'erreur (ligne et colonne non nulles). */
+/* Analyse et vérifie le refus ; renvoie l'erreur (ligne non nulle, colonne ≥ 0).
+ * La colonne peut être 0 quand le C lui-même n'en donne pas (ex. « cible non-self »). */
 function ko(texte, msg) {
   const r = parseSecpol(texte);
   ck(r.error !== null, msg + " : erreur attendue");
   ck(r.model === null, msg + " : modèle nul en cas d'erreur (pas d'analyse partielle)");
   const e = r.error || { line: 0, column: 0, message: "" };
   ck(typeof e.line === "number" && e.line > 0, msg + " : ligne non nulle (" + e.line + ")");
-  ck(typeof e.column === "number" && e.column > 0, msg + " : colonne non nulle (" + e.column + ")");
+  ck(typeof e.column === "number" && e.column >= 0, msg + " : colonne numérique (" + e.column + ")");
   ck(typeof e.message === "string" && e.message.length > 0, msg + " : cause non vide");
   return e;
 }
 
+/* Le modèle suit le contrat du parseur C : `types` (noms), `idx` (nom -> indice),
+ * et `rules[].src/dst` sont des INDICES dans `types` (comme tamis_model). */
 function types(model) { return model.types; }
 function regles(model) { return model.rules; }
 function arete(model, src, dst) {
-  return model.rules.filter((r) => r.src === src && r.dst === dst);
+  const s = model.idx[src], d = model.idx[dst];
+  return model.rules.filter((r) => r.src === s && r.dst === d);
 }
 
 /* ————————————————————— 1. politique minimale ————————————————————— */
@@ -52,8 +56,8 @@ function arete(model, src, dst) {
   ck(types(m).length === 2, "2 types déclarés");
   ck(types(m)[0] === "app_tiers" && types(m)[1] === "journal", "noms de types dans l'ordre source");
   ck(regles(m).length === 1, "1 arête");
-  ck(regles(m)[0].src === "app_tiers", "arête : source app_tiers");
-  ck(regles(m)[0].dst === "journal", "arête : cible journal");
+  ck(regles(m)[0].src === m.idx["app_tiers"], "arête : source app_tiers (indice)");
+  ck(regles(m)[0].dst === m.idx["journal"], "arête : cible journal (indice)");
   ck(regles(m)[0].ability === "settypeid", "arête : libellé settypeid");
   ck(regles(m)[0].line === 3, "arête : ligne de la règle allow");
   ck(regles(m)[0].id === null, "arête : identifiant de règle nul");
@@ -68,7 +72,7 @@ function arete(model, src, dst) {
   const m = ok("type a;\ntype b;\nallow a b:channel connect;\n", "forme (a) canal");
   ck(regles(m).length === 1, "(a) : 1 arête");
   ck(regles(m)[0].ability === "channel", "(a) : libellé channel");
-  ck(regles(m)[0].src === "a" && regles(m)[0].dst === "b", "(a) : a -> b");
+  ck(regles(m)[0].src === m.idx["a"] && regles(m)[0].dst === m.idx["b"], "(a) : a -> b");
 }
 /* (b) allow NOM NOM : ability { bloc } ; */
 {
@@ -213,15 +217,15 @@ function arete(model, src, dst) {
   const e = ko("type a;\nallow a self:ability { setuid: };\n", "ability_item sans argument");
   ck(e.message.indexOf("argument") >= 0, "ability_item sans argument : cause");
 }
-/* ability_item mal formé : plage « - » seule */
+/* ability_item mal formé : plage « - » seule — le C la traite comme un nom de plage */
 {
   const e = ko("type a;\nallow a self:ability { setuid:- };\n", "ability_item plage « - » seule");
-  ck(e.message.indexOf("mal formé") >= 0, "ability_item mal formé : cause");
+  ck(e.message.indexOf("plage nommée non déclarée") >= 0, "ability_item plage « - » seule : cause");
 }
 /* ability_item mal formé : « 0x » sans chiffres */
 {
   const e = ko("type a;\nallow a self:ability { mem_phys:0x };\n", "ability_item « 0x » sans chiffres");
-  ck(e.message.indexOf("hexadécimal") >= 0, "ability_item « 0x » : cause");
+  ck(e.message.indexOf("plage mal formée") >= 0, "ability_item « 0x » : cause");
 }
 /* cible d'abilities non-self */
 {

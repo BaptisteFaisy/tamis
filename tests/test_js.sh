@@ -53,8 +53,26 @@ run_pair "explain chemin + correctif"  explain  "$ATT" - app_tiers pompe_critiqu
 run_pair "explain sain + angles morts" explain  "$DUR" - app_tiers pompe_critique
 run_pair "diff attaque → durcie"       diff     "$ATT" "$DUR" - -
 
+# ——— vrai langage secpol (QNX 8.0) : le jumeau JS doit rendre comme le cœur C ———
+QNX8=fixtures/politique-qnx8.secpol
+if [ -f "$QNX8" ]; then
+  run_pair "secpol lint politique QNX 8.0"      lint    "$QNX8" - - -
+  run_pair "secpol reach app_tiers→pompe"       reach   "$QNX8" - app_tiers pompe_critique
+  run_pair "secpol proof certificat"            proof   "$QNX8" - app_tiers pompe_critique
+  run_pair "secpol explain"                     explain "$QNX8" - app_tiers pompe_critique
+  run_pair "secpol reach mm_client→mm_server"   reach   "$QNX8" - mm_client mm_server
+  run_pair "secpol minimize"                    minimize "$QNX8" - - -
+fi
+# Corpus oracle : 42 politiques (25 invalides, 17 valides) — refus et positions identiques.
+SECPOL_N=0
+for f in fixtures/secpol-cas/*.secpol; do
+  [ -f "$f" ] || continue
+  run_pair "secpol corpus $(basename "$f")" lint "$f" - - -
+  SECPOL_N=$((SECPOL_N + 1))
+done
+
 if [ "$fail" -ne 0 ]; then
   echo "FAILED différentiel JS↔C"
   exit 1
 fi
-echo "OK $checks checks (jumeau navigateur identique au cœur C)"
+echo "OK $checks checks (jumeau navigateur identique au cœur C, dont $SECPOL_N cas secpol)"

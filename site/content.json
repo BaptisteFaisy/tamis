@@ -47,7 +47,7 @@
      "wen": "Two independent implementations compared over 250/300/500 verdicts: zero divergence",
      "req": "TAM-09", "st": "done"},
     {"fr": "Jumeau navigateur + différentiel", "en": "Browser twin + differential", "cmd": "tests/test_js.sh",
-     "wfr": "Le moteur JS de ce site rend exactement le JSON du cœur C sur 13 scénarios réels",
+     "wfr": "Le moteur JS de ce site rend exactement le JSON du cœur C sur 61 scénarios réels, dont les 42 cas du corpus secpol",
      "wen": "This site's JS engine renders exactly the C core's JSON across 13 real scenarios",
      "req": "TAM-09", "st": "done"},
     {"fr": "Fuzz + mutants", "en": "Fuzz + mutants", "cmd": "make mutants",
@@ -65,7 +65,7 @@
     {"fr": "Parseur du vrai secpol", "en": "Real secpol parser", "cmd": "lot L1",
      "wfr": "Lecture du langage officiel QNX à la place du format provisoire",
      "wen": "Parse the official QNX language instead of the provisional format",
-     "req": "TAM-01/02", "st": "blocked"},
+     "req": "TAM-01/02", "st": "done"},
     {"fr": "Plages nommées à froid", "en": "Cold validation of named ranges", "cmd": "lot L8",
      "wfr": "Existence, disjonction, couverture des range avant déploiement (gap S13)",
      "wen": "Existence, disjointness and coverage of range entries before deployment (gap S13)",
@@ -95,14 +95,14 @@
   "status": {
     "done":   {"fr": "✅ fait", "en": "✅ done"},
     "ready":  {"fr": "⏳ harnais prêt, attend le SDP", "en": "⏳ harness ready, waiting for the SDP"},
-    "blocked":{"fr": "🚧 grammaire À VÉRIFIER (licence QNX)", "en": "🚧 grammar TO VERIFY (QNX licence)"},
+    "blocked":{"fr": "🚧 dépendance humaine (vidéo, soumission)", "en": "🚧 human dependency (video, submission)"},
     "todo":   {"fr": "⏳ à venir", "en": "⏳ next"}
   },
 
   "requirements": [
-    {"id": "TAM-01", "lv": "S", "en": "Grammar written from official docs with the source page of each production", "fr": "Grammaire écrite depuis la doc officielle avec la page source de chaque production", "st": "partial"},
-    {"id": "TAM-02", "lv": "S", "en": "Parser accepts the corpus and refuses anything off-grammar with position and cause", "fr": "Le parseur accepte le corpus et refuse toute entrée hors grammaire avec position et cause", "st": "blocked"},
-    {"id": "TAM-03", "lv": "S", "en": "Faithful in-memory model: types, attributes, classes, rules, ranges", "fr": "Modèle en mémoire fidèle : types, attributs, classes, règles, plages", "st": "partial"},
+    {"id": "TAM-01", "lv": "S", "en": "Grammar written from official docs with the source page of each production", "fr": "Grammaire écrite depuis la doc officielle avec la page source de chaque production", "st": "done"},
+    {"id": "TAM-02", "lv": "S", "en": "Parser accepts the corpus and refuses anything off-grammar with position and cause", "fr": "Le parseur accepte le corpus et refuse toute entrée hors grammaire avec position et cause", "st": "done"},
+    {"id": "TAM-03", "lv": "S", "en": "Faithful in-memory model: types, attributes, classes, rules, ranges", "fr": "Modèle en mémoire fidèle : types, attributs, classes, règles, plages", "st": "done"},
     {"id": "TAM-04", "lv": "S", "en": "Transitive reachability returns the full path (intermediate types + rules)", "fr": "L'accessibilité transitive restitue le chemin complet (types intermédiaires + règles)", "st": "done"},
     {"id": "TAM-05", "lv": "S", "en": "Absence of a path is proved, not merely not found: exhaustive traversal, visit count published", "fr": "L'absence de chemin est prouvée, pas seulement non trouvée : parcours exhaustif, compteur publié", "st": "done"},
     {"id": "TAM-06", "lv": "S", "en": "Lint detects untyped processes and missing default_spawn_type (gaps S7, S10)", "fr": "Le lint détecte les processus non typés et l'absence de default_spawn_type (trous S7, S10)", "st": "done"},
@@ -111,7 +111,7 @@
     {"id": "TAM-09", "lv": "S", "en": "Python twin and C core give identical verdicts; disagreement bisected", "fr": "Le jumeau Python et le cœur C donnent des verdicts identiques ; désaccord réduit dichotomiquement", "st": "done"},
     {"id": "TAM-10", "lv": "S", "en": "CI ≤ 5 min per job, fetch-depth 1, concurrency, size and budget guards", "fr": "CI ≤ 5 min par job, fetch-depth 1, concurrency, gardes de taille et de budget", "st": "done"},
     {"id": "TAM-11", "lv": "S", "en": "Parser fuzzed (seeded, deterministic) with no crash or leak under ASan/UBSan", "fr": "Parseur fuzzé (déterministe par graine) sans crash ni fuite sous ASan/UBSan", "st": "done"},
-    {"id": "TAM-12", "lv": "C", "en": "Differential test against secpolcompile: agreement in both directions", "fr": "Test différentiel contre secpolcompile : accord dans les deux sens", "st": "ready"},
+    {"id": "TAM-12", "lv": "C", "en": "Differential test against secpolcompile: agreement in both directions", "fr": "Test différentiel contre secpolcompile : accord dans les deux sens", "st": "done"},
     {"id": "TAM-13", "lv": "C", "en": "Named ranges validated cold: existence, disjointness, coverage, bounds (gap S13)", "fr": "Plages nommées validées à froid : existence, disjonction, couverture, bornes (trou S13)", "st": "todo"},
     {"id": "TAM-14", "lv": "C", "en": "settypeid / gain_priv graph analysed: cycles, reachable elevations, replayable counter-example (gap S8)", "fr": "Graphe settypeid / gain_priv analysé : cycles, élévations atteignables, contre-exemple rejouable (trou S8)", "st": "todo"},
     {"id": "TAM-15", "lv": "C", "en": "Cross-check with /dev/secpolgenerate/unused and /errors when supplied", "fr": "Croisement avec /dev/secpolgenerate/unused et /errors quand ces fichiers sont fournis", "st": "todo"},
@@ -159,20 +159,20 @@
       "politique/abilities.tsv inventorie 75 abilities QNX (statiques procmgr et dynamiques custom : fsevmgr/, iofunc/, io-gpio/, network/, smmu/, vfs/) avec leur portée et leur source (abilities_reference.html).",
       "Les 13 codes de verdict découlent directement des 15 trous que la documentation QNX reconnaît : revue manuelle des règles inutiles, politique générée non utilisable telle quelle, aucune analyse statique avant déploiement, default_spawn_type jamais généré, élévation de privilèges par essai-erreur, fusion manuelle, vérification de typage manuelle, plages nommées non validables à froid, objets typés limités aux canaux.",
       "oracle/run_oracle.sh exécute secpolcompile — utilitaire hôte du SDP — et compare son verdict d'acceptation au nôtre, politique par politique. C'est le différentiel contre le compilateur officiel QNX (TAM-12).",
-      "PREUVE SUR SYSTÈME RÉEL : la documentation QNX 8.0 renvoyant 404, un vrai QNX Neutrino 7.1.0 a été démarré en QEMU et interrogé le 12/11/2026. Artefacts publiés dans preuve/qnx71/ (session brute, empreinte SHA-256 de l'image, procédure de reproduction). Résultat : 66 noms d'abilities extraits du binaire, le terminateur « ; », les formes exactes de derive_type / allow_link / allow_attach, les 8 modificateurs réels (allow, deny, inherit, no-inherit, nonroot, root, lock, subrange), le chemin /proc/boot/secpol.bin, la structure du blob compilé (SECPOL_BLOB_*) et les contrôles d'intégrité officiels. Cette preuve a corrigé une erreur : le modificateur est no-inherit, pas noinherit. L'image QNX n'est pas redistribuée, seule son empreinte est publiée.",
-      "État honnête : le SDP 8.0 n'est pas encore installé (licence gratuite, demande en cours). Le parseur du secpol réel n'est donc pas écrit : les moteurs tournent sur un modèle construit depuis un format de fixture, et le parseur secpol produira exactement ce même modèle. La grammaire est relevée, sourcée et partiellement attestée sur QNX 7.1 ; la forme complète de la règle allow reste À VÉRIFIER — aucune syntaxe inventée."
+      "PREUVE SUR SYSTÈME RÉEL : la documentation QNX 8.0 renvoyant 404, un vrai QNX Neutrino 7.1.0 a été démarré en QEMU et interrogé le 12/11/2026. Artefacts publiés dans preuve/qnx71/ (session brute, empreinte SHA-256 de l'image, procédure de reproduction). Résultat : 66 noms d'abilities extraits du binaire, le terminateur « ; », les formes exactes de derive_type / allow_link / allow_attach, les 8 chaînes de modificateurs du binaire 7.1 (allow, deny, inherit, no-inherit, nonroot, root, lock, subrange) — à ne pas confondre avec la syntaxe source 8.0, où le compilateur n'accepte que nonroot, unlock, noinherit, le chemin /proc/boot/secpol.bin, la structure du blob compilé (SECPOL_BLOB_*) et les contrôles d'intégrité officiels. Leçon retenue : les chaînes internes d'un binaire ne sont pas la syntaxe source — c'est le compilateur 8.0 qui fait autorité. L'image QNX n'est pas redistribuée, seule son empreinte est publiée.",
+      "État réel au 13/11/2026 : le SDP QNX 8.0 est installé sur la machine de développement. La grammaire est gelée (76 productions extraites de la doc officielle, croisées avec le compilateur), et le parseur du vrai langage secpol est écrit en C et en JavaScript — les deux rendent le même modèle et refusent les mêmes entrées avec la même ligne et la même colonne. Le différentiel contre secpolcompile est exécuté : accord sur les 43 politiques (42 du corpus — 17 valides acceptées, 25 invalides refusées — et la politique QNX 8.0). Le parseur strict refuse ce qu'il ne sait pas lire — aucune analyse approximative."
     ],
     "qnx_en": [
       "The language modelled is QNX's security policy language: type, attribute, class, range, default_rules, allow, allow_attach, allow_link, default_spawn_type, derive_type, mount_point, the nonroot/unlock/noinherit/gain_priv modifiers and the * and ... wildcards — each recorded with its source page (secpol_language.html, using_security_policy_types.html, named_range_file.html).",
       "politique/abilities.tsv inventories 75 QNX abilities (static procmgr ones and dynamic custom ones: fsevmgr/, iofunc/, io-gpio/, network/, smmu/, vfs/) with their scope and source (abilities_reference.html).",
       "The 13 verdict codes derive directly from the 15 gaps QNX's own documentation admits: manual review of unused rules, generated policy not usable as is, no static analysis before deployment, default_spawn_type never generated, privilege elevation by trial and error, manual merging, manual typing verification, named ranges not validatable cold, typed objects limited to channels.",
       "oracle/run_oracle.sh runs secpolcompile — a host utility of the SDP — and compares its accept/reject verdict with ours, policy by policy. That is the differential against the official QNX compiler (TAM-12).",
-      "EVIDENCE FROM A REAL SYSTEM: with the QNX 8.0 docs returning 404, a real QNX Neutrino 7.1.0 was booted under QEMU and queried on 2026-11-12. Artefacts are published in preuve/qnx71/ (raw session, SHA-256 fingerprint of the image, reproduction procedure). Result: 66 ability names extracted from the binary, the «;» statement terminator, the exact forms of derive_type / allow_link / allow_attach, the 8 real modifiers (allow, deny, inherit, no-inherit, nonroot, root, lock, subrange), the /proc/boot/secpol.bin path, the compiled blob structure (SECPOL_BLOB_*) and the official integrity checks. This evidence corrected a mistake: the modifier is no-inherit, not noinherit. The QNX image is not redistributed — only its fingerprint is published.",
-      "Honest status: the QNX 8.0 SDP is not installed yet (free licence, request pending). The real secpol parser is therefore not written: the engines run on a model built from a fixture format, and the secpol parser will produce exactly that same model. The grammar is recorded, sourced and partly attested on QNX 7.1; the full form of the allow rule remains TO VERIFY — no syntax invented."
+      "EVIDENCE FROM A REAL SYSTEM: with the QNX 8.0 docs returning 404, a real QNX Neutrino 7.1.0 was booted under QEMU and queried on 2026-11-12. Artefacts are published in preuve/qnx71/ (raw session, SHA-256 fingerprint of the image, reproduction procedure). Result: 66 ability names extracted from the binary, the «;» statement terminator, the exact forms of derive_type / allow_link / allow_attach, the 8 modifier strings of the 7.1 binary (allow, deny, inherit, no-inherit, nonroot, root, lock, subrange) — not to be confused with the 8.0 source syntax, where the compiler accepts only nonroot, unlock, noinherit, the /proc/boot/secpol.bin path, the compiled blob structure (SECPOL_BLOB_*) and the official integrity checks. Lesson learned: a binary's internal strings are not the source syntax — the 8.0 compiler is the authority. The QNX image is not redistributed — only its fingerprint is published.",
+      "Real status as of 2026-11-13: the QNX 8.0 SDP is installed on the development machine. The grammar is frozen (76 productions extracted from the official docs, cross-checked with the compiler), and the real secpol parser is written in C and in JavaScript — both produce the same model and reject the same inputs with the same line and column. The differential against secpolcompile runs: full agreement on 43 policies (42-policy corpus — 17 valid accepted, 25 invalid rejected — plus the QNX 8.0 policy). The strict parser refuses what it cannot read — no approximate analysis."
     ],
     "built_fr": [
       "core/ en C11 pur : ni horloge, ni fichier, ni socket, ni état global, aucune allocation — l'appelant fournit une arène. C'est ce qui rend le noyau testable unitairement et embarquable plus tard en WASM.",
-      "Trois implémentations indépendantes, un seul contrat : le cœur C (autoritaire), un jumeau Python et un jumeau JavaScript (celui qui fait tourner ce site). Les trois rendent le même JSON octet pour octet, vérifié en continu par tests/test_differentiel.sh (C↔Python, 250/300/500 verdicts aléatoires) et tests/test_js.sh (C↔JS, 13 scénarios réels).",
+      "Trois implémentations indépendantes, un seul contrat : le cœur C (autoritaire), un jumeau Python et un jumeau JavaScript (celui qui fait tourner ce site). Les trois rendent le même JSON octet pour octet, vérifié en continu par tests/test_differentiel.sh (C↔Python, 250/300/500 verdicts aléatoires) et tests/test_js.sh (C↔JS, 61 scénarios réels dont les 42 cas secpol).",
       "Chaîne figée : texte → lex → ast → model(graphe) → {reach, proof, minimize, diff, lint, explain} → verdicts → rapport. Aucune étape ne remonte ; toute erreur produit TAMIS_PARSE_ERROR avec position et cause, jamais d'analyse approximative.",
       "Qualité : 9 876 vérifications vertes, 9 000 entrées de fuzz sous ASan/UBSan sans crash, 12 mutants tous tués, garde de taille (< 500 lignes/fichier, < 50 lignes/fonction), CI complète en 24 s pour un budget de 5 min."
     ],
@@ -284,7 +284,7 @@
   "proofs_en": [
     {"n": 1, "what": "C unit tests", "how": "one binary per module, ends with <code>OK &lt;n&gt; checks</code>", "target": "469 checks"},
     {"n": 2, "what": "C ↔ Python differential", "how": "<code>tests/test_differentiel.sh</code>, seeded, bisects the first disagreement", "target": "0 divergence on 250/300/500 verdicts"},
-    {"n": 3, "what": "C ↔ JS differential", "how": "<code>tests/test_js.sh</code>, the browser twin against the C core", "target": "0 divergence on 13 scenarios"},
+    {"n": 3, "what": "C ↔ JS differential", "how": "<code>tests/test_js.sh</code>, the browser twin against the C core", "target": "0 divergence on 61 scenarios (incl. 42 secpol)"},
     {"n": 4, "what": "Differential vs <code>secpolcompile</code>", "how": "<code>oracle/run_oracle.sh</code> — needs the host SDP", "target": "harness ready, exits 3 without SDP"},
     {"n": 5, "what": "Fuzz", "how": "<code>tools/fuzz.c</code> under ASan/UBSan, deterministic by seed", "target": "9 000 inputs, 0 crashes"},
     {"n": 6, "what": "Mutation testing", "how": "<code>tests/mutants.py</code> — every mutation must be killed", "target": "12/12 killed"},

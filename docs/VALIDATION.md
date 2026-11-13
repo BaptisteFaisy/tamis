@@ -39,18 +39,20 @@ oracle/run_oracle.sh --help   # niveau 3 (sort 3 sans SDP, 4 en dry-run)
 ## Critère de gel
 
 Le socle (verdicts + rapports) est **gelé** quand : niveaux 1 (≥ 300 checks sur le socle),
-2 et 8 sont verts, et le CONTRACT.md ne bouge plus. Le parseur (niveaux 4, 5, 6, 7) attend
-la grammaire gelée (`docs/GRAMMAR.md`, lot L0) — ne pas l'anticiper.
+2 et 8 sont verts, et le CONTRACT.md ne bouge plus. La grammaire est gelée et le parseur
+(niveaux 4, 5, 6, 7) est écrit : ces niveaux sont désormais **exerçables**. Le gel
+fonctionnel du 05/12 (`docs/RETROPLANNING.md`) interdit toute nouvelle fonctionnalité ;
+à partir de là, ces niveaux servent de non-régression.
 
 ## Statut
 
 | Niveau | État |
 |---|---|
-| 1 — Unitaires C (socle verdict/rapport) | 🚧 en cours (sous-agent A) |
-| 2 — Différentiel C ↔ Python | 🚧 en cours (sous-agent B) |
-| 3 — Oracle `secpolcompile` | ⏳ harnais écrit, attend le SDP (optionnel) |
-| 4 — Banque de cas fautifs | ⏳ attend le parseur |
-| 5 — Fuzz | ⏳ attend le parseur |
-| 6 — Mutants | ⏳ attend les moteurs |
-| 7 — Équivalence minimisation | ⏳ attend `minimize` |
-| 8 — Gardes maison | ✅ vert |
+| 1 — Unitaires C | ✅ **537 checks** sur 11 binaires (`make test`), ASan/UBSan clean |
+| 2 — Différentiel C ↔ Python | ✅ 0 divergence sur 3 graines (250/300/500 verdicts) |
+| 3 — Oracle `secpolcompile` | ✅ **exécuté sur le SDP 8.0** : accord sur les 43 politiques (42 du corpus : 17 valides, 25 invalides ; + la politique QNX 8.0) |
+| 4 — Banque de cas fautifs | ✅ parseur écrit (C + jumeau JS) ; `fixtures/secpol-cas/` = 42 politiques, **25 refus** avec cause et position ; le différentiel C↔JS rejoue les 42 cas |
+| 5 — Fuzz | ✅ 3 graines × 3 000 itérations sous ASan/UBSan, **0 crash**, couvre désormais le parseur `secpol` (vocabulaire, plages, bruit d'octets) |
+| 6 — Mutants | ✅ **12/12 tués** (`make mutants`) |
+| 7 — Équivalence minimisation | ✅ minimisation + preuve d'équivalence toute-paire vérifiée (`test_minimize`, 18 checks). *Écart assumé :* le corpus aléatoire de 10 000 requêtes de la cible n'est pas généré — la preuve d'équivalence est faite sur les cas construits, pas sur un tirage massif |
+| 8 — Gardes maison | ✅ vert (73 fichiers < 500 lignes, fonctions < 50 lignes, SPDX) |

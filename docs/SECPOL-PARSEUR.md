@@ -83,9 +83,24 @@ transition (`settypeid`, `gain_priv`) ou `channel` — utile pour `diff`.
 - type référencé (`settypeid:Y`, `gain_priv:Y`, `allow X Y:…`) non déclaré ;
 - `ability_item` mal formé (`setuid:` sans argument, plage `-` seule, `0x` sans chiffres).
 
-## 6. Mode de repli du site
+## 6. Le site et le jumeau navigateur
 
-Si le parseur JS refuse, le playground affiche le `TAMIS_PARSE_ERROR` avec **ligne:colonne**
-et la **cause** — jamais une analyse partielle. L'ancien format de fixture `.mpf` reste
-accepté par l'option « format fixture provisoire » du playground, pour ne pas casser les
-démos déjà en place.
+Le jumeau JS est découpé **comme le C**, pour la même raison (lisibilité et règle
+< 500 lignes/fichier) :
+
+| Fichier JS | Jumeau C |
+|---|---|
+| `site/tamis-secpol-abil.js` | `core/src/secpol_abil.c` — vocabulaire fermé (62 statiques, 30 à sous-plage, 3 modificateurs) |
+| `site/tamis-secpol-decl.js` | `core/src/secpol_decl.c` — classes, permissions, attributs, plages, relabels |
+| `site/tamis-secpol-lex.js` | `core/src/secpol_lex.c` — lexique et positions |
+| `site/tamis-secpol-prod.js` | `core/src/secpol_parse.c` + pilote de `secpol.c` |
+| `site/tamis-secpol.js` | `tamis_model_parse_secpol()` — API `{ model, error }` |
+
+**Détection de format.** Le CLI choisit sur l'extension (`.secpol`), le site sur le
+contenu : toute politique qui contient un `;` hors commentaire est du vrai `secpol`, sinon
+c'est le format provisoire `.mpf`. Dans les deux cas, un refus affiche
+`TAMIS_PARSE_ERROR` avec **ligne:colonne** et la **cause** — jamais une analyse partielle.
+
+**Preuve d'équivalence.** `tests/test_js.sh` rejoue les 42 politiques du corpus secpol
+(`fixtures/secpol-cas/`) et la politique QNX 8.0 à travers les deux implémentations : même
+acceptation, même message, même position. Une divergence est un bug, pas une nuance.

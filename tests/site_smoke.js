@@ -122,8 +122,15 @@ try {
 /* ——— chargement des modules du site ——— */
 require(path.join(__dirname, "..", "site", "tamis-core.js"));
 require(path.join(__dirname, "..", "site", "tamis-render.js"));
+require(path.join(__dirname, "..", "site", "tamis-secpol-abil.js"));
+require(path.join(__dirname, "..", "site", "tamis-secpol-decl.js"));
+require(path.join(__dirname, "..", "site", "tamis-secpol-lex.js"));
+require(path.join(__dirname, "..", "site", "tamis-secpol-prod.js"));
+require(path.join(__dirname, "..", "site", "tamis-secpol.js"));
 ck(typeof global.TamisCore === "object", "TamisCore exposé sur window");
 ck(typeof global.TamisRender === "object", "TamisRender exposé sur window");
+ck(typeof global.TamisSecpol === "object", "TamisSecpol exposé sur window");
+ck(typeof global.TamisSecpol.parseSecpol === "function", "TamisSecpol.parseSecpol exposé");
 
 require(path.join(__dirname, "..", "site", "app.js"));
 
@@ -223,6 +230,27 @@ byId.policyA.fire("change");
 toolBtns.find((b) => b.dataset.cmd === "lint").onclick();
 ck(out.textContent.indexOf("TAMIS_PARSE_ERROR") >= 0, "politique invalide : TAMIS_PARSE_ERROR affiché");
 ck(byId.exitBadge.textContent.indexOf("exit 1") === 0, "politique invalide : exit 1");
+
+/* ——— vrai secpol QNX 8.0 dans le playground (parseur JS, format détecté) ——— */
+byId.example.value = "qnx8";
+byId.loadExample.onclick();
+ck(byId.policyA.value.indexOf("type app_tiers;") >= 0, "exemple qnx8 chargé (vrai secpol)");
+byId.src.value = "app_tiers";
+byId.dst.value = "pompe_critique";
+toolBtns.find((b) => b.dataset.cmd === "reach").onclick();
+ck(out.textContent.indexOf("TAMIS_PATH_FOUND") >= 0, "secpol reach : chemin d'attaque trouvé");
+ck(out.textContent.indexOf("app_tiers -> pompe_critique") >= 0, "secpol reach : app_tiers vers pompe_critique");
+ck(out.textContent.indexOf("(3 sauts)") >= 0, "secpol reach : 3 sauts");
+toolBtns.find((b) => b.dataset.cmd === "lint").onclick();
+ck(out.textContent.indexOf("TAMIS_MISSING_DEFAULT_SPAWN") >= 0, "secpol lint : default_spawn_type absent");
+
+/* ——— secpol invalide : refus avec position ——— */
+byId.policyA.value = "type a;\nallow a self:ability { unknown_ability };\n";
+byId.policyA.fire("change");
+toolBtns.find((b) => b.dataset.cmd === "lint").onclick();
+ck(out.textContent.indexOf("TAMIS_PARSE_ERROR") >= 0, "secpol invalide : TAMIS_PARSE_ERROR");
+ck(out.textContent.indexOf("ability inconnue") >= 0, "secpol invalide : cause « ability inconnue »");
+ck(byId.exitBadge.textContent.indexOf("exit 1") === 0, "secpol invalide : exit 1");
 
 /* ——— onglet « Banc réel » : pont local (vrai cœur C + vraie VM QNX) ——— */
 const fs = require("fs");

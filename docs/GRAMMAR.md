@@ -78,9 +78,12 @@ able_create                                 # ability sans argument
 
 ## 4. Modificateurs (dans le bloc `{ … }`)
 
-**La liste officielle 8.0**, relevée dans `secpol_language.html` et confirmée par
-`doc_recherche.py` : `nonroot`, `unlock`, `noinherit`, `inherit`, `deny`, `allow`,
-`subrange` (et `root`).
+**Ce que le compilateur 8.0 accepte réellement** (vérifié sur le corpus) : `nonroot`,
+`unlock`, `noinherit` — et eux seuls. Les autres jetons que `secpol_language.html` cite
+comme modificateurs (`inherit`, `deny`, `allow`, `subrange`, `root`) sont **refusés** par
+`secpolcompile` 8.0 avec `undefined ability <token>`. C'est le compilateur qui fait foi ;
+le vocabulaire de Tamis (`core/src/secpol_abil.c`, `site/tamis-secpol-abil.js`) est aligné
+sur ces trois-là.
 
 > ⚠️ **Correction importante — j'avais tort précédemment.** Le binaire **QNX 7.1** utilisait
 > les chaînes internes `no-inherit` (avec tiret) et `lock`. La documentation officielle
@@ -116,6 +119,7 @@ d'événements** dont parlait le cahier (simulation d'usages rares).
 | E2 | `secpolcompile` s'exécute sur l'hôte ? | **OUI** — il a compilé `politique-qnx8.secpol` (0 erreur) |
 | E3 | Politique d'exemple publique ? | **OUI** — `fixtures/politique-qnx8.secpol` (acceptée par l'outil officiel) |
 
-**Reste à faire (TAM-12)** : le parseur de Tamis en C et en JS doit maintenant lire **ce
-langage** (plus le format de fixture provisoire), pour que le différentiel oracle compare
-l'acceptation de Tamis à celle de `secpolcompile` sur le même corpus.
+**Fait.** Le parseur lit **ce langage** en C (`core/src/secpol*.c`) et en JavaScript
+(`site/tamis-secpol*.js`), et le différentiel oracle compare l'acceptation de Tamis à celle
+de `secpolcompile` sur les 42 politiques du corpus — accord total. Le format de fixture
+provisoire (`.mpf`) reste accepté pour les démonstrations.
