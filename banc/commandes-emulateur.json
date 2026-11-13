@@ -1,0 +1,170 @@
+{
+  "_comment": "SPDX-License-Identifier: MIT — Source unique des étapes exécutées DANS l'invité QNX 8.0 (émulateur QEMU). Sert au harnais de preuve (banc/preuve-emulateur.py) et au service public (banc/service.py). Liste fermée : aucune commande libre n'est exposée.",
+  "politique_invite": "/proc/boot/politique.secpol",
+  "politique_hote": "fixtures/politique-qnx8.secpol",
+  "etiquette": "politique.secpol",
+  "preuves": [
+    {
+      "id": "version",
+      "titre_fr": "Version du binaire analysateur",
+      "titre_en": "Version of the analyser binary",
+      "invite": [
+        "tamis",
+        "version"
+      ],
+      "hote": [
+        "build/tamis",
+        "version"
+      ]
+    },
+    {
+      "id": "lint",
+      "titre_fr": "Moindre privilège (lint)",
+      "titre_en": "Least privilege (lint)",
+      "invite": [
+        "tamis",
+        "lint",
+        "/proc/boot/politique.secpol",
+        "--label",
+        "politique.secpol"
+      ],
+      "hote": [
+        "build/tamis",
+        "lint",
+        "fixtures/politique-qnx8.secpol",
+        "--label",
+        "politique.secpol"
+      ]
+    },
+    {
+      "id": "reach",
+      "titre_fr": "Chemin de privilège (reach)",
+      "titre_en": "Privilege path (reach)",
+      "invite": [
+        "tamis",
+        "reach",
+        "/proc/boot/politique.secpol",
+        "--src",
+        "app_tiers",
+        "--dst",
+        "pompe_critique",
+        "--label",
+        "politique.secpol"
+      ],
+      "hote": [
+        "build/tamis",
+        "reach",
+        "fixtures/politique-qnx8.secpol",
+        "--src",
+        "app_tiers",
+        "--dst",
+        "pompe_critique",
+        "--label",
+        "politique.secpol"
+      ]
+    },
+    {
+      "id": "explain",
+      "titre_fr": "Explication et correctif minimal (explain)",
+      "titre_en": "Explanation and minimal fix (explain)",
+      "invite": [
+        "tamis",
+        "explain",
+        "/proc/boot/politique.secpol",
+        "--src",
+        "app_tiers",
+        "--dst",
+        "pompe_critique",
+        "--label",
+        "politique.secpol"
+      ],
+      "hote": [
+        "build/tamis",
+        "explain",
+        "fixtures/politique-qnx8.secpol",
+        "--src",
+        "app_tiers",
+        "--dst",
+        "pompe_critique",
+        "--label",
+        "politique.secpol"
+      ]
+    },
+    {
+      "id": "proof",
+      "titre_fr": "Certificat de non-interférence (proof)",
+      "titre_en": "Non-interference certificate (proof)",
+      "invite": [
+        "tamis",
+        "proof",
+        "/proc/boot/politique.secpol",
+        "--src",
+        "app_tiers",
+        "--dst",
+        "pompe_critique",
+        "--label",
+        "politique.secpol"
+      ],
+      "hote": [
+        "build/tamis",
+        "proof",
+        "fixtures/politique-qnx8.secpol",
+        "--src",
+        "app_tiers",
+        "--dst",
+        "pompe_critique",
+        "--label",
+        "politique.secpol"
+      ]
+    },
+    {
+      "id": "smt",
+      "titre_fr": "Preuve SMT-LIB2 (smt)",
+      "titre_en": "SMT-LIB2 proof (smt)",
+      "invite": [
+        "tamis",
+        "smt",
+        "/proc/boot/politique.secpol",
+        "--src",
+        "app_tiers",
+        "--dst",
+        "pompe_critique",
+        "--label",
+        "politique.secpol"
+      ],
+      "hote": [
+        "build/tamis",
+        "smt",
+        "fixtures/politique-qnx8.secpol",
+        "--src",
+        "app_tiers",
+        "--dst",
+        "pompe_critique",
+        "--label",
+        "politique.secpol"
+      ],
+      "comparaison_octets": false,
+      "note_fr": "La sortie diffère par construction : le solveur z3 est présent sur l'hôte et absent dans l'invité. L'encodage SMT lui-même est identique.",
+      "note_en": "The outputs differ by construction: the z3 solver is present on the host and absent in the guest. The SMT encoding itself is identical."
+    }
+  ],
+  "identite": [
+    {
+      "id": "systeme",
+      "invite": [
+        "pidin",
+        "info"
+      ],
+      "titre_fr": "Système de l'invité",
+      "titre_en": "Guest system"
+    },
+    {
+      "id": "processus",
+      "invite": [
+        "pidin"
+      ],
+      "titre_fr": "Processus de l'invité",
+      "titre_en": "Guest processes"
+    }
+  ]
+}

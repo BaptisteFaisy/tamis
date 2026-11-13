@@ -82,8 +82,9 @@ triviale » du règlement.
 | Parseur `secpol` réel | ✅ C (`core/src/secpol*.c`) + jumeau navigateur (`site/tamis-secpol*.js`) : mêmes verdicts, mêmes refus, mêmes positions |
 | Différentiel contre `secpolcompile` (`oracle/`) | ✅ exécuté sur le SDP 8.0 : accord sur les 43 politiques (42 du corpus + la politique QNX 8.0) |
 | Invité QNX 8.0 en direct | ✅ le cœur C recompilé par `qcc` analyse une vraie politique dans l'invité (QEMU) |
+| Preuves rejouées dans la vraie cible | ✅ service public : liste fermée d'étapes exécutées **dans l'invité QNX 8.0**, sortie comparée octet pour octet à celle du poste |
 
-**10 235 vérifications** vertes (`make test` : 537 C + 9 698 hôtes, dont 61 du
+**10 247 vérifications** vertes (`make test` : 537 C + 9 710 hôtes, dont 61 du
 différentiel C↔JS qui couvre les 42 cas secpol), garde de taille OK, sanitizeurs clean.
 Ce nombre sort de `make test` — il n'est jamais recopié à la main (règle 6 du rétroplanning).
 
@@ -186,6 +187,23 @@ touches), vue sur le site (onglet **Invité QNX en direct**) et sur la page du
 dossier QNX.
 
 Construction et pièges : [`image/README.md`](image/README.md).
+
+## Preuves rejouées dans la vraie cible — à la demande d'un juge
+
+Le service `banc/service.py` exécute une **liste fermée** d'étapes **dans l'invité
+QNX 8.0** (le vrai binaire QNX) et renvoie sa sortie, comparée **octet pour octet** à
+celle du poste. Le site l'appelle depuis l'onglet **Invité QNX en direct** : un juge
+clique, la preuve est produite dans la cible QNX, pas dans le navigateur.
+
+```sh
+curl -s http://127.0.0.1:8790/etat          # état de l'invité + étapes disponibles
+curl -s http://127.0.0.1:8790/preuve/reach  # la preuve, dans l'invité
+```
+
+Exposé en HTTPS par `tailscale funnel` (port 8094). L'invité QNX 8.0 ne tourne que
+quand quelqu'un le regarde : la vitrine en est le seul propriétaire (arrêt après 5 min
+d'inactivité), le service le réveille à la demande. Détails :
+[`banc/LISEZMOI.md`](banc/LISEZMOI.md).
 
 ## 1 000 idées de consolidation
 

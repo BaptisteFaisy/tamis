@@ -1,5 +1,101 @@
 <!-- SPDX-License-Identifier: MIT -->
-# Banc QNX — faire tourner l'émulateur sur le serveur
+# Banc QNX 8.0 — exécuter une preuve dans une vraie cible
+
+Ce dossier décrit le banc **QNX 8.0** : un invité QEMU réel dans lequel le cœur C de Tamis
+(compilé par `qcc` pour QNX 8.0) rend ses verdicts, et un service HTTP qui rejoue une
+liste **fermée** d'étapes dans cet invité, en comparant la sortie à celle du poste
+**octet pour octet**.
+
+> Le banc **QNX 7.1** (image de community, `qnx-vm.sh`, SSH) est décrit plus bas.
+> Les deux bancs sont distincts : 7.1 sert à relever la grammaire, 8.0 sert à **prouver**.
+
+## 1. Ce que le banc produit
+
+`python3 banc/preuve-emulateur.py` écrit `preuve/emulateur/evidences.json` : pour chaque
+étape de `banc/commandes-emulateur.json`, la sortie **dans l'invité**, la sortie **sur
+l'hôte**, le verdict `identique_octet_pour_octet` et les deux SHA-256.
+
+Les étapes sont les commandes réelles du cœur C (`tamis version`, `lint`, `reach`, `explain`,
+`proof`, `smt`) lancées dans l'invité sur `/proc/boot/politique.secpol` — la politique QNX 8.0
+embarquée dans l'IFS — et sur le poste sur `fixtures/politique-qnx8.secpol`.
+
+## 2. Piloter l'invité
+
+`banc/emulateur.py` entre par le **clavier de la console VGA** (moniteur QEMU : `sendkey`) et
+ressort la sortie par la **console série** : la commande est exécutée avec
+`> /dev/ser1 2>&1`, donc le journal série contient exactement les octets produits — accents
+intacts, contrairement au tampon VGA (qui est en charset VGA et abime les accents).
+
+```sh
+python3 banc/emulateur.py "tamis version"      # exécute et affiche la sortie
+python3 banc/emulateur.py --identite            # identité de l'invité
+```
+
+La frappe est **lente** (le VGA est le canal d'entrée) : compter ~0,5 s/caractère sur une
+console série redirigée. C'est pourquoi le service de preuve attend au lieu de taper dans le
+vide.
+
+## 3. Le service de preuves
+
+`banc/service.py` expose deux routes sur `127.0.0.1` (jamais `0.0.0.0`) :
+
+| Route | Effet |
+|---|---|
+| `GET /etat` | état de l'invité + liste des étapes disponibles |
+| `GET /preuve/<id>` | exécute l'étape dans l'invité, la même sur l'hôte, compare |
+
+**Sécurité** : la surface est une **liste fermée** (`banc/commandes-emulateur.json`). Le client
+ne peut demander qu'un identifiant d'étape, jamais une commande libre. Le service n'écoute que
+sur `127.0.0.1` ; l'exposition publique se fait par `tailscale funnel`.
+
+```sh
+systemctl --user enable --now tamis-emulateur.service   # unité : banc/tamis-emulateur.service
+curl -s http://127.0.0.1:8790/etat
+curl -s http://127.0.0.1:8790/preuve/reach
+```
+
+Exposition publique (le site est statique, il ne peut pas joindre `127.0.0.1`) :
+
+```sh
+tailscale funnel --bg --https=8094 http://127.0.0.1:8790
+# → https://r630-debian.tail3a8bdf.ts.net:8094/
+```
+
+Le CORS autorise explicitement l'origine du site (`https://tradoooo.github.io`,
+`https://baptistefaisy.github.io`) — variable `TAMIS_EMUL_ORIGIN`.
+
+## 4. Cycle de vie : l'invité ne tourne que si on le regarde
+
+L'invité QNX 8.0 coûte ~1,5 Go de RAM et du CPU. **La vitrine** (`tamis-web.service`, port
+8092) en est le seul propriétaire : elle l'arrête après 5 minutes sans visite
+(`QNX_EMS_IDLE_MIN=5`) et le relance à la demande.
+
+Conséquence : le service de preuves ne peut pas supposer que l'invité est là.
+`banc/invite_cycle.py` encadre ce contrat :
+
+1. `reveiller()` — demande un réveil à la vitrine (une visite vaut un réveil) ; systemd n'est
+   qu'un filet si la vitrine ne répond pas ;
+2. `attendre()` — attend la fin du scénario de démarrage (marqueur `RESUME` dans le journal
+   série) puis sonde l'invité (une seule ligne tapée) avant de rendre la main ;
+3. `pret()` / `etat()` — état lisible, sans toucher à la console.
+
+> **Piège** : taper dans la console VGA *pendant* le boot mettrait les commandes en file
+> d'attente dans l'invité. D'où l'attente du marqueur de fin de démarrage avant toute sonde.
+
+## 5. Ce que le banc permet — et ce qu'il ne permet pas
+
+**Permet** : exécuter le **vrai binaire QNX 8.0** dans une **vraie cible** et montrer que ses
+verdicts sont identiques à ceux du poste, octet pour octet ; rejouer cette preuve **depuis le
+site public**, à la demande d'un juge.
+
+**Ne permet pas encore** : la boucle *prédit ↔ observé* au sens strict — QNX qui **applique**
+une politique et **refuse** une opération. Il faut un `secpol.bin` compilé (`secpolcompile`,
+SDP 8.0 installé sur le serveur) injecté dans l'IFS, puis `secpolmonitor` qui constate les
+refus. Le harnais `oracle/run_oracle.sh` est prêt.
+
+---
+
+# Banc QNX 7.1 — faire tourner l'émulateur sur le serveur
 
 Le banc QNX (invité **QNX Neutrino 7.1.0** sous QEMU) tourne sur le serveur **r630**, en
 service systemd *utilisateur* (sans sudo), disponible en permanence, piloté à distance par
@@ -121,7 +217,7 @@ D'où le `-machine "$MACHINE"` explicite (`QNX_MACHINE`, défaut `pc-i440fx-8.2`
 `python3 vga-dump.py` lit le tampon texte VGA de l'invité via le moniteur QEMU — c'est le seul
 canal texte (l'image n'a pas de console série).
 
-## 6. Ce que le banc permet — et ce qu'il ne permet pas
+## 6. Ce que le banc 7.1 permet — et ce qu'il ne permet pas
 
 **Permet** : vérifier sur un vrai QNX les noms d'abilities, le comportement réel de `secpol`
 et `secpolmonitor`, la présence de `libsecpol`, l'absence des outils hôtes, le chemin

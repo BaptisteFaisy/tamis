@@ -46,7 +46,7 @@ Real status as of 2026-11-13: the QNX 8.0 SDP is installed on the development ma
 core/ is pure C11: no clock, no file, no socket, no global state, no allocation — the caller supplies an arena. That is what makes the kernel unit-testable and embeddable in WASM later.
 Three independent implementations, one contract: the C core (authoritative), a Python twin and a JavaScript twin (the one running this site). All three render byte-identical JSON, continuously checked by tests/test_differentiel.sh (C↔Python, 250/300/500 random verdicts) and tests/test_js.sh (C↔JS, 13 real scenarios).
 Frozen pipeline: text → lex → ast → model(graph) → {reach, proof, minimize, diff, lint, explain} → verdicts → report. No stage feeds back; any error yields TAMIS_PARSE_ERROR with position and cause, never an approximate analysis.
-Quality: 9,876 green checks, 9,000 fuzz inputs under ASan/UBSan with no crash, 12 mutants all killed, a size guard (< 500 lines per file, < 50 per function), and a full CI in 24 s against a 5-minute budget.
+Quality: the `make test` command produces the current count (537 C checks + 9,710 host checks on 2026-11-13), 9,000 fuzz inputs under ASan/UBSan with no crash, 12 mutants all killed, a size guard (< 500 lines per file, < 50 per function), and a full CI in under 5 minutes.
 
 ## 9. Testing instructions for judges
 
@@ -56,7 +56,7 @@ Quality: 9,876 green checks, 9,000 fuzz inputs under ASan/UBSan with no crash, 1
 4. Click explain — the guilty chain in plain words and the minimal fix (remove R9) are given.
 5. Load the «durcie» (hardened) example then click proof — the non-interference certificate turns green, with the number of nodes visited: absence is proved, not assumed.
 6. Click minimize then diff — redundant rule R999 is removed with an equivalence proof, and the diff shows only a privilege narrowing, no widening.
-7. Check that the browser is not smoke and mirrors: clone the repo, make test (9,876 checks), make mutants (12 killed), make sanitize (ASan/UBSan). The build/tamis CLI reproduces exactly what the site displays.
+7. Check that the browser is not smoke and mirrors: clone the repo, make test (10,247 checks), make mutants (12 killed), make sanitize (ASan/UBSan). The build/tamis CLI reproduces exactly what the site displays.
 
 ## 10. Video script (3 minutes)
 

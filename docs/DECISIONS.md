@@ -5,6 +5,33 @@ Format court : une décision = contexte → décision → conséquence. Les plus
 
 ---
 
+## D-007 — Les preuves sont rejouées dans la vraie cible, via une liste fermée (2026-11-13)
+
+**Contexte.** Le site est statique (GitHub Pages) : il ne peut ni exécuter le binaire C, ni
+faire tourner QEMU, ni joindre `127.0.0.1` du serveur. Le pont local (`tools/tamis-bridge.py`)
+comble l'écart, mais il demande au juge d'installer et lancer quelque chose sur sa machine —
+alors qu'une **vraie cible QNX 8.0** tourne déjà sur `r630`, avec le cœur C recompilé par
+`qcc`. En outre, l'invité coûte ~1,5 Go de RAM : il ne peut pas tourner en permanence.
+
+**Décision.** Un service HTTP dédié (`banc/service.py`) rejoue une **liste fermée** d'étapes
+dans l'invité QNX 8.0 et renvoie la sortie, comparée octet pour octet à celle du poste.
+- **Liste fermée** : le client ne demande qu'un identifiant d'étape (`banc/commandes-emulateur.json`),
+  jamais une commande libre. Aucune surface d'exécution arbitraire n'est exposée.
+- **Exposition** : `127.0.0.1` uniquement côté serveur ; le public passe par `tailscale funnel`
+  (HTTPS), avec CORS restreint à l'origine du site.
+- **Cycle de vie** : la vitrine reste le **seul propriétaire** de la politique d'inactivité
+  (arrêt après 5 min sans visite) ; le service lui **demande** un réveil et attend la fin du
+  démarrage avant de taper quoi que ce soit dans la console (`banc/invite_cycle.py`).
+- La sortie passe par la **console série** (octets exacts, accents intacts), pas par le tampon
+  VGA (charset VGA) — et le CRLF de la console est normalisé, seule transformation faite.
+
+**Conséquence.** Le juge rejoue une preuve depuis le site public : elle est produite par le
+vrai binaire QNX 8.0 dans une vraie cible, et le badge « identique (octet pour octet) » est
+un fait mesuré, pas une promesse. En contrepartie, l'invité peut redémarrer pendant une
+preuve : le service le réveille et attend (jusqu'à ~75 s), et le dit au client.
+
+---
+
 ## D-006 — Parseur `secpol` écrit sur le MÊME modèle que le format provisoire (2026-11-13)
 
 **Contexte.** La grammaire est gelée (`docs/GRAMMAR.md`, SDP 8.0 installé) et le compilateur

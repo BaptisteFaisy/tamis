@@ -174,13 +174,13 @@
       "core/ en C11 pur : ni horloge, ni fichier, ni socket, ni état global, aucune allocation — l'appelant fournit une arène. C'est ce qui rend le noyau testable unitairement et embarquable plus tard en WASM.",
       "Trois implémentations indépendantes, un seul contrat : le cœur C (autoritaire), un jumeau Python et un jumeau JavaScript (celui qui fait tourner ce site). Les trois rendent le même JSON octet pour octet, vérifié en continu par tests/test_differentiel.sh (C↔Python, 250/300/500 verdicts aléatoires) et tests/test_js.sh (C↔JS, 61 scénarios réels dont les 42 cas secpol).",
       "Chaîne figée : texte → lex → ast → model(graphe) → {reach, proof, minimize, diff, lint, explain} → verdicts → rapport. Aucune étape ne remonte ; toute erreur produit TAMIS_PARSE_ERROR avec position et cause, jamais d'analyse approximative.",
-      "Qualité : 9 876 vérifications vertes, 9 000 entrées de fuzz sous ASan/UBSan sans crash, 12 mutants tous tués, garde de taille (< 500 lignes/fichier, < 50 lignes/fonction), CI complète en 24 s pour un budget de 5 min."
+      "Qualité : la commande `make test` produit le compte courant (537 vérifications C + 9 710 hôtes au 13/11/2026), 9 000 entrées de fuzz sous ASan/UBSan sans crash, 12 mutants tous tués, garde de taille (< 500 lignes/fichier, < 50 lignes/fonction), CI complète en moins de 5 min."
     ],
     "built_en": [
       "core/ is pure C11: no clock, no file, no socket, no global state, no allocation — the caller supplies an arena. That is what makes the kernel unit-testable and embeddable in WASM later.",
       "Three independent implementations, one contract: the C core (authoritative), a Python twin and a JavaScript twin (the one running this site). All three render byte-identical JSON, continuously checked by tests/test_differentiel.sh (C↔Python, 250/300/500 random verdicts) and tests/test_js.sh (C↔JS, 13 real scenarios).",
       "Frozen pipeline: text → lex → ast → model(graph) → {reach, proof, minimize, diff, lint, explain} → verdicts → report. No stage feeds back; any error yields TAMIS_PARSE_ERROR with position and cause, never an approximate analysis.",
-      "Quality: 9,876 green checks, 9,000 fuzz inputs under ASan/UBSan with no crash, 12 mutants all killed, a size guard (< 500 lines per file, < 50 per function), and a full CI in 24 s against a 5-minute budget."
+      "Quality: the `make test` command produces the current count (537 C checks + 9,710 host checks on 2026-11-13), 9,000 fuzz inputs under ASan/UBSan with no crash, 12 mutants all killed, a size guard (< 500 lines per file, < 50 per function), and a full CI in under 5 minutes."
     ],
     "judges_fr": [
       "Ouvrir ce site : aucun compte, aucune installation, aucun téléchargement. Tout tourne dans le navigateur.",
@@ -189,7 +189,7 @@
       "Cliquer sur explain — la chaîne coupable en clair et le correctif minimal (retirer R9) sont donnés.",
       "Charger l'exemple « durcie » puis cliquer sur proof — le certificat de non-interférence passe au vert, avec le nombre de nœuds visités : l'absence est prouvée, pas supposée.",
       "Cliquer sur minimize puis sur diff — la règle redondante R999 est retirée avec preuve d'équivalence, et le diff ne montre qu'une réduction de privilège, aucun élargissement.",
-      "Vérifier l'indépendance du navigateur : cloner le dépôt, make test (9 876 vérifications), make mutants (12 tués), make sanitize (ASan/UBSan). Le CLI build/tamis reproduit exactement ce que le site affiche."
+      "Vérifier l'indépendance du navigateur : cloner le dépôt, make test (10 247 vérifications), make mutants (12 tués), make sanitize (ASan/UBSan). Le CLI build/tamis reproduit exactement ce que le site affiche."
     ],
     "judges_en": [
       "Open this site: no account, no install, no download. Everything runs in the browser.",
@@ -198,7 +198,7 @@
       "Click explain — the guilty chain in plain words and the minimal fix (remove R9) are given.",
       "Load the «durcie» (hardened) example then click proof — the non-interference certificate turns green, with the number of nodes visited: absence is proved, not assumed.",
       "Click minimize then diff — redundant rule R999 is removed with an equivalence proof, and the diff shows only a privilege narrowing, no widening.",
-      "Check that the browser is not smoke and mirrors: clone the repo, make test (9,876 checks), make mutants (12 killed), make sanitize (ASan/UBSan). The build/tamis CLI reproduces exactly what the site displays."
+      "Check that the browser is not smoke and mirrors: clone the repo, make test (10,247 checks), make mutants (12 killed), make sanitize (ASan/UBSan). The build/tamis CLI reproduces exactly what the site displays."
     ]
   },
 
@@ -262,7 +262,7 @@
        "dfr": "Le différentiel C↔Python, le différentiel C↔JS, le fuzz et les mutants sont lançables à la main.",
        "den": "The C↔Python differential, the C↔JS differential, the fuzzer and the mutants can all be run by hand.",
        "cmd": "make test && make sanitize && make mutants\nbash tests/test_js.sh\nbash tests/test_differentiel.sh 999 300",
-       "out": "OK 10 235 checks …\nOK 12 checks (mutants tués)\nOK 61 checks (jumeau navigateur identique au cœur C, dont 42 cas secpol)\nOK 300 checks (différentiel C↔Python, graine 999, 0 divergence)"},
+       "out": "OK 10 247 checks …\nOK 12 checks (mutants tués)\nOK 61 checks (jumeau navigateur identique au cœur C, dont 42 cas secpol)\nOK 300 checks (différentiel C↔Python, graine 999, 0 divergence)"},
     {"tfr": "Le vrai langage QNX 8.0", "ten": "The real QNX 8.0 language", "dfr": "La politique réelle est écrite dans le langage `secpol` de QNX 8.0 : `type`, `class`, `range`, `allow … self:ability { settypeid: … }`. Tamis la lit avec le même cœur que le CLI — pas un format de démonstration.", "den": "The real policy is written in QNX 8.0's `secpol` language: `type`, `class`, `range`, `allow … self:ability { settypeid: … }`. Tamis reads it with the same core as the CLI — not a demo format.", "cmd": "build/tamis lint fixtures/politique-qnx8.secpol", "out": "WARN   TAMIS_MISSING_DEFAULT_SPAWN  fixtures/politique-qnx8.secpol  default_spawn_type absent : les processus spawned ne changent pas de type (trou S7)\nOK"},
     {"tfr": "Secpol reach : la chaîne réelle", "ten": "Secpol reach: the real chain", "dfr": "Sur la vraie politique, le graphe se lit dans les arguments des abilities de transition (`settypeid:`). Le chemin `app_tiers → journal → diag → pompe_critique` existe en 3 sauts.", "den": "On the real policy the graph comes from the transition ability arguments (`settypeid:`). The path `app_tiers → journal → diag → pompe_critique` exists in 3 hops.", "cmd": "build/tamis reach fixtures/politique-qnx8.secpol --src app_tiers --dst pompe_critique", "out": "ERROR  TAMIS_PATH_FOUND  fixtures/politique-qnx8.secpol  app_tiers -> pompe_critique (3 sauts) : settypeid,settypeid,settypeid\nFAILED 1 error(s)"},
     {"tfr": "Secpol proof : l'interférence est possible", "ten": "Secpol proof: interference is possible", "dfr": "La preuve répond la même question que `reach` mais sous forme de certificat : l'interférence est **possible** (le chemin existe). Sur la politique durcie, elle serait **prouvée absente** — c'est la différence entre « pas trouvé » et « prouvé ».", "den": "The proof answers the same question as `reach` but as a certificate: interference is **possible** (the path exists). On the hardened policy it would be **proved absent** — the difference between «not found» and «proved».", "cmd": "build/tamis proof fixtures/politique-qnx8.secpol --src app_tiers --dst pompe_critique", "out": "ERROR  TAMIS_INTERFERENCE_POSSIBLE  fixtures/politique-qnx8.secpol  app_tiers -> pompe_critique (3 sauts) : settypeid,settypeid,settypeid\nFAILED 1 error(s)"}

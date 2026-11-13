@@ -1,0 +1,17 @@
+[Unit]
+Description=API de pilotage de l'invité QNX 8.0 (émulateur QEMU) — projet Tamis
+Documentation=https://github.com/Tradoooo/tamis
+# Pas de Wants= sur tamis-qemu8 : l'invité ne tourne que quand quelqu'un le regarde.
+# Le service le réveille à la demande (voir banc/invite-cycle.py).
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 %h/tamis/banc/service.py
+Environment=TAMIS_EMUL_PORT=8790
+Environment=TAMIS_QNX_BOOT_S=120
+Environment=TAMIS_EMUL_DELAI=75
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
