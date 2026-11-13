@@ -375,13 +375,14 @@
 <div data-lang="fr"><h2>Codelab — Auditer une politique de sécurité QNX en 20 minutes</h2><p class="lead">Objectif : partir d&#x27;une politique trouée, trouver le chemin d&#x27;attaque, le prouver, le corriger, puis prouver la non-interférence — sans QNX, sans QEMU, sans licence.</p></div>
 <div data-lang="en"><h2>Codelab — Audit a QNX security policy in 20 minutes</h2><p class="lead">Goal: start from a holey policy, find the attack path, prove it, fix it, then prove non-interference — with no QNX, no QEMU, no licence.</p></div>
 <div class="steps">
-<div class="step"><div data-lang="fr"><h4>1. Prérequis et construction</h4><p>gcc (C11), python3 (≥ 3.8, bibliothèque standard seule) et make. Aucune dépendance à installer.</p><pre class="cmd">git clone https://github.com/Tradoooo/tamis &amp;&amp; cd tamis
+<div class="step"><div data-lang="fr"><h4>1. Prérequis et construction</h4></div>
+<div data-lang="en"><h4>1. Prerequisites and build</h4></div><div data-lang="fr"><p>gcc (C11), python3 (≥ 3.8, bibliothèque standard seule) et make. Aucune dépendance à installer.</p></div>
+<div data-lang="en"><p>gcc (C11), python3 (≥ 3.8, standard library only) and make. Nothing to install.</p></div><pre class="cmd">git clone https://github.com/Tradoooo/tamis &amp;&amp; cd tamis
 make cli
 build/tamis version</pre><pre class="out">tamis 0.1.0</pre></div>
-<div data-lang="en"><h4>1. Prerequisites and build</h4><p>gcc (C11), python3 (≥ 3.8, standard library only) and make. Nothing to install.</p><pre class="cmd">git clone https://github.com/Tradoooo/tamis &amp;&amp; cd tamis
-make cli
-build/tamis version</pre><pre class="out">tamis 0.1.0</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>2. La politique vulnérable</h4><p>fixtures/attaque.mpf modélise un système où app_tiers atteint pompe_critique de proche en proche. R999 est un doublon de R112, deux processus ne sont pas typés, et aucun default_spawn_type n&#x27;est déclaré.</p><pre class="cmd">cat fixtures/attaque.mpf</pre><pre class="out">type app_tiers
+<div class="step"><div data-lang="fr"><h4>2. La politique vulnérable</h4></div>
+<div data-lang="en"><h4>2. The vulnerable policy</h4></div><div data-lang="fr"><p>fixtures/attaque.mpf modélise un système où app_tiers atteint pompe_critique de proche en proche. R999 est un doublon de R112, deux processus ne sont pas typés, et aucun default_spawn_type n&#x27;est déclaré.</p></div>
+<div data-lang="en"><p>fixtures/attaque.mpf models a system where app_tiers reaches pompe_critique hop by hop. R999 duplicates R112, two processes are untyped, and no default_spawn_type is declared.</p></div><pre class="cmd">cat fixtures/attaque.mpf</pre><pre class="out">type app_tiers
 type journal
 type diag
 type pompe_critique
@@ -393,82 +394,68 @@ allow reseau journal msg @R10
 allow app_tiers journal msg @R999
 untyped /bin/legacy
 untyped /bin/foo</pre></div>
-<div data-lang="en"><h4>2. The vulnerable policy</h4><p>fixtures/attaque.mpf models a system where app_tiers reaches pompe_critique hop by hop. R999 duplicates R112, two processes are untyped, and no default_spawn_type is declared.</p><pre class="cmd">cat fixtures/attaque.mpf</pre><pre class="out">type app_tiers
-type journal
-type diag
-type pompe_critique
-type reseau
-allow app_tiers journal msg @R112
-allow journal diag msg @R87
-allow diag pompe_critique control @R9
-allow reseau journal msg @R10
-allow app_tiers journal msg @R999
-untyped /bin/legacy
-untyped /bin/foo</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>3. Lint : le moindre privilège d&#x27;abord</h4><p>Deux processus sans type (gap S10) et aucun default_spawn_type (gap S7 : QNX ne le génère jamais).</p><pre class="cmd">build/tamis lint fixtures/attaque.mpf</pre><pre class="out">WARN   TAMIS_UNTYPED_PROCESS  fixtures/attaque.mpf:21  processus non typé : /bin/legacy
+<div class="step"><div data-lang="fr"><h4>3. Lint : le moindre privilège d&#x27;abord</h4></div>
+<div data-lang="en"><h4>3. Lint: least privilege first</h4></div><div data-lang="fr"><p>Deux processus sans type (gap S10) et aucun default_spawn_type (gap S7 : QNX ne le génère jamais).</p></div>
+<div data-lang="en"><p>Two untyped processes (gap S10) and no default_spawn_type (gap S7: QNX never generates it).</p></div><pre class="cmd">build/tamis lint fixtures/attaque.mpf</pre><pre class="out">WARN   TAMIS_UNTYPED_PROCESS  fixtures/attaque.mpf:21  processus non typé : /bin/legacy
 WARN   TAMIS_UNTYPED_PROCESS  fixtures/attaque.mpf:22  processus non typé : /bin/foo
 WARN   TAMIS_MISSING_DEFAULT_SPAWN  fixtures/attaque.mpf  default_spawn_type absent : …
-OK</pre></div>
-<div data-lang="en"><h4>3. Lint: least privilege first</h4><p>Two untyped processes (gap S10) and no default_spawn_type (gap S7: QNX never generates it).</p><pre class="cmd">build/tamis lint fixtures/attaque.mpf</pre><pre class="out">WARN   TAMIS_UNTYPED_PROCESS  fixtures/attaque.mpf:21  processus non typé : /bin/legacy
-WARN   TAMIS_UNTYPED_PROCESS  fixtures/attaque.mpf:22  processus non typé : /bin/foo
-WARN   TAMIS_MISSING_DEFAULT_SPAWN  fixtures/attaque.mpf  default_spawn_type absent : …
-OK</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>4. Reach : trouver le chemin d&#x27;attaque</h4><p>Code de retour 1 — utilisable tel quel comme garde de CI.</p><pre class="cmd">build/tamis reach fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  fixtures/attaque.mpf  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
-FAILED 1 error(s)</pre></div>
-<div data-lang="en"><h4>4. Reach: find the attack path</h4><p>Exit status 1 — usable as a CI gate as is.</p><pre class="cmd">build/tamis reach fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  fixtures/attaque.mpf  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
-FAILED 1 error(s)</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>5. Explain : pourquoi, et le correctif minimal</h4><p>C&#x27;est la fonction qui rend l&#x27;outil utilisable par quelqu&#x27;un d&#x27;autre que son auteur.</p><pre class="cmd">build/tamis explain fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  …  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
+OK</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-3" data-policy="attaque" data-cmd="lint"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-3" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>4. Reach : trouver le chemin d&#x27;attaque</h4></div>
+<div data-lang="en"><h4>4. Reach: find the attack path</h4></div><div data-lang="fr"><p>Code de retour 1 — utilisable tel quel comme garde de CI.</p></div>
+<div data-lang="en"><p>Exit status 1 — usable as a CI gate as is.</p></div><pre class="cmd">build/tamis reach fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  fixtures/attaque.mpf  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
+FAILED 1 error(s)</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-4" data-policy="attaque" data-cmd="reach" data-src="app_tiers" data-dst="pompe_critique"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-4" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>5. Explain : pourquoi, et le correctif minimal</h4></div>
+<div data-lang="en"><h4>5. Explain: why, and the minimal fix</h4></div><div data-lang="fr"><p>C&#x27;est la fonction qui rend l&#x27;outil utilisable par quelqu&#x27;un d&#x27;autre que son auteur.</p></div>
+<div data-lang="en"><p>This is the feature that makes the tool usable by someone other than its author.</p></div><pre class="cmd">build/tamis explain fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  …  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
 INFO   TAMIS_OK  …  Pourquoi ce refus : app_tiers atteint pompe_critique via la chaîne
        app_tiers →(R112) journal →(R87) diag →(R9) pompe_critique. Correctif minimal :
-       retirer la règle R9 (dernière arête avant pompe_critique) tue ce chemin …</pre></div>
-<div data-lang="en"><h4>5. Explain: why, and the minimal fix</h4><p>This is the feature that makes the tool usable by someone other than its author.</p><pre class="cmd">build/tamis explain fixtures/attaque.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  …  app_tiers -&gt; pompe_critique (3 sauts) : R112,R87,R9
-INFO   TAMIS_OK  …  Pourquoi ce refus : app_tiers atteint pompe_critique via la chaîne
-       app_tiers →(R112) journal →(R87) diag →(R9) pompe_critique. Correctif minimal :
-       retirer la règle R9 (dernière arête avant pompe_critique) tue ce chemin …</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>6. Corriger et PREUVER la non-interférence</h4><p>La différence avec un linter : l&#x27;absence de chemin est prouvée par un parcours exhaustif dont le compteur de visites est publié.</p><pre class="cmd">build/tamis proof fixtures/durcie.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">INFO   TAMIS_OK  fixtures/durcie.mpf  non-interférence prouvée : app_tiers n&#x27;atteint pas
+       retirer la règle R9 (dernière arête avant pompe_critique) tue ce chemin …</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-5" data-policy="attaque" data-cmd="explain" data-src="app_tiers" data-dst="pompe_critique"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-5" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>6. Corriger et PREUVER la non-interférence</h4></div>
+<div data-lang="en"><h4>6. Fix it and PROVE non-interference</h4></div><div data-lang="fr"><p>La différence avec un linter : l&#x27;absence de chemin est prouvée par un parcours exhaustif dont le compteur de visites est publié.</p></div>
+<div data-lang="en"><p>The difference from a linter: absence is proved by an exhaustive traversal whose visit count is published.</p></div><pre class="cmd">build/tamis proof fixtures/durcie.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">INFO   TAMIS_OK  fixtures/durcie.mpf  non-interférence prouvée : app_tiers n&#x27;atteint pas
        pompe_critique — 3 nœud(s) visité(s), parcours exhaustif
-OK</pre></div>
-<div data-lang="en"><h4>6. Fix it and PROVE non-interference</h4><p>The difference from a linter: absence is proved by an exhaustive traversal whose visit count is published.</p><pre class="cmd">build/tamis proof fixtures/durcie.mpf --src app_tiers --dst pompe_critique</pre><pre class="out">INFO   TAMIS_OK  fixtures/durcie.mpf  non-interférence prouvée : app_tiers n&#x27;atteint pas
-       pompe_critique — 3 nœud(s) visité(s), parcours exhaustif
-OK</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>7. Minimize : retirer les règles mortes, à preuve</h4><p>La preuve d&#x27;équivalence rejoue l&#x27;accessibilité toute-paire avant/après : 25 paires identiques.</p><pre class="cmd">build/tamis minimize fixtures/attaque.mpf</pre><pre class="out">INFO   TAMIS_REDUNDANT_RULE  fixtures/attaque.mpf:18  règle redondante R999 : app_tiers atteint déjà journal sans elle
+OK</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-6" data-policy="durcie" data-cmd="proof" data-src="app_tiers" data-dst="pompe_critique"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-6" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>7. Minimize : retirer les règles mortes, à preuve</h4></div>
+<div data-lang="en"><h4>7. Minimize: remove dead rules, with proof</h4></div><div data-lang="fr"><p>La preuve d&#x27;équivalence rejoue l&#x27;accessibilité toute-paire avant/après : 25 paires identiques.</p></div>
+<div data-lang="en"><p>The equivalence proof replays all-pairs reachability before and after: 25 identical pairs.</p></div><pre class="cmd">build/tamis minimize fixtures/attaque.mpf</pre><pre class="out">INFO   TAMIS_REDUNDANT_RULE  fixtures/attaque.mpf:18  règle redondante R999 : app_tiers atteint déjà journal sans elle
 INFO   TAMIS_OK  fixtures/attaque.mpf  minimisation équivalente : 1 règle(s) retirée(s), 25 paire(s) d&#x27;accessibilité identiques
-OK</pre></div>
-<div data-lang="en"><h4>7. Minimize: remove dead rules, with proof</h4><p>The equivalence proof replays all-pairs reachability before and after: 25 identical pairs.</p><pre class="cmd">build/tamis minimize fixtures/attaque.mpf</pre><pre class="out">INFO   TAMIS_REDUNDANT_RULE  fixtures/attaque.mpf:18  règle redondante R999 : app_tiers atteint déjà journal sans elle
-INFO   TAMIS_OK  fixtures/attaque.mpf  minimisation équivalente : 1 règle(s) retirée(s), 25 paire(s) d&#x27;accessibilité identiques
-OK</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>8. Diff : la non-régression de privilège</h4><p>Dans une CI, tout TAMIS_PRIVILEGE_WIDENED ferait passer ce diff au rouge.</p><pre class="cmd">build/tamis diff fixtures/attaque.mpf fixtures/durcie.mpf</pre><pre class="out">INFO   TAMIS_PRIVILEGE_NARROWED  fixtures/attaque.mpf  réduction de privilège : diag -&gt; pompe_critique [control]
-OK</pre></div>
-<div data-lang="en"><h4>8. Diff: privilege non-regression</h4><p>In CI, any TAMIS_PRIVILEGE_WIDENED would turn this diff red.</p><pre class="cmd">build/tamis diff fixtures/attaque.mpf fixtures/durcie.mpf</pre><pre class="out">INFO   TAMIS_PRIVILEGE_NARROWED  fixtures/attaque.mpf  réduction de privilège : diag -&gt; pompe_critique [control]
-OK</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>9. View : visualiser le graphe</h4><p>Le JSON alimente le graphe interactif de ce site (onglet Playground).</p><pre class="cmd">build/tamis view fixtures/attaque.mpf --src app_tiers --dst pompe_critique &gt; /tmp/graphe.json</pre><pre class="out">{&quot;nodes&quot;:[&quot;app_tiers&quot;,&quot;journal&quot;,&quot;diag&quot;,&quot;pompe_critique&quot;,&quot;reseau&quot;],&quot;edges&quot;:[…],&quot;focus&quot;:{…}}</pre></div>
-<div data-lang="en"><h4>9. View: visualize the graph</h4><p>The JSON feeds this site&#x27;s interactive graph (Playground tab).</p><pre class="cmd">build/tamis view fixtures/attaque.mpf --src app_tiers --dst pompe_critique &gt; /tmp/graphe.json</pre><pre class="out">{&quot;nodes&quot;:[&quot;app_tiers&quot;,&quot;journal&quot;,&quot;diag&quot;,&quot;pompe_critique&quot;,&quot;reseau&quot;],&quot;edges&quot;:[…],&quot;focus&quot;:{…}}</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>10. Le rapport d&#x27;audit</h4><p>Versable tel quel dans un dossier ISO 26262 / IEC 62304 / EN 50128 / UNECE R155 : empreinte SHA-256 de la politique, horodatage, version.</p><pre class="cmd">build/tamis lint fixtures/attaque.mpf --format md</pre><pre class="out"># Rapport d&#x27;audit Tamis
+OK</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-7" data-policy="attaque" data-cmd="minimize"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-7" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>8. Diff : la non-régression de privilège</h4></div>
+<div data-lang="en"><h4>8. Diff: privilege non-regression</h4></div><div data-lang="fr"><p>Dans une CI, tout TAMIS_PRIVILEGE_WIDENED ferait passer ce diff au rouge.</p></div>
+<div data-lang="en"><p>In CI, any TAMIS_PRIVILEGE_WIDENED would turn this diff red.</p></div><pre class="cmd">build/tamis diff fixtures/attaque.mpf fixtures/durcie.mpf</pre><pre class="out">INFO   TAMIS_PRIVILEGE_NARROWED  fixtures/attaque.mpf  réduction de privilège : diag -&gt; pompe_critique [control]
+OK</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-8" data-policy="attaque" data-cmd="diff" data-policy2="durcie"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-8" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>9. View : visualiser le graphe</h4></div>
+<div data-lang="en"><h4>9. View: visualize the graph</h4></div><div data-lang="fr"><p>Le JSON alimente le graphe interactif de ce site (onglet Playground).</p></div>
+<div data-lang="en"><p>The JSON feeds this site&#x27;s interactive graph (Playground tab).</p></div><pre class="cmd">build/tamis view fixtures/attaque.mpf --src app_tiers --dst pompe_critique &gt; /tmp/graphe.json</pre><pre class="out">{&quot;nodes&quot;:[&quot;app_tiers&quot;,&quot;journal&quot;,&quot;diag&quot;,&quot;pompe_critique&quot;,&quot;reseau&quot;],&quot;edges&quot;:[…],&quot;focus&quot;:{…}}</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-9" data-policy="attaque" data-cmd="view" data-src="app_tiers" data-dst="pompe_critique"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-9" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>10. Le rapport d&#x27;audit</h4></div>
+<div data-lang="en"><h4>10. The audit report</h4></div><div data-lang="fr"><p>Versable tel quel dans un dossier ISO 26262 / IEC 62304 / EN 50128 / UNECE R155 : empreinte SHA-256 de la politique, horodatage, version.</p></div>
+<div data-lang="en"><p>Ready to drop into an ISO 26262 / IEC 62304 / EN 50128 / UNECE R155 file: SHA-256 fingerprint of the policy, timestamp, version.</p></div><pre class="cmd">build/tamis lint fixtures/attaque.mpf --format md</pre><pre class="out"># Rapport d&#x27;audit Tamis
 
 - Politique : fixtures/attaque.mpf
 - Empreinte SHA-256 : 3f2a…
 ## Synthèse
 | Sévérité | Nombre |
-…</pre></div>
-<div data-lang="en"><h4>10. The audit report</h4><p>Ready to drop into an ISO 26262 / IEC 62304 / EN 50128 / UNECE R155 file: SHA-256 fingerprint of the policy, timestamp, version.</p><pre class="cmd">build/tamis lint fixtures/attaque.mpf --format md</pre><pre class="out"># Rapport d&#x27;audit Tamis
-
-- Politique : fixtures/attaque.mpf
-- Empreinte SHA-256 : 3f2a…
-## Synthèse
-| Sévérité | Nombre |
-…</pre></div></div>
-<div class="step"><div data-lang="fr"><h4>11. Vérifier les preuves eux-mêmes</h4><p>Le différentiel C↔Python, le différentiel C↔JS, le fuzz et les mutants sont lançables à la main.</p><pre class="cmd">make test &amp;&amp; make sanitize &amp;&amp; make mutants
+…</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-10" data-policy="attaque" data-cmd="lint" data-fmt="md"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-10" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>11. Vérifier les preuves eux-mêmes</h4></div>
+<div data-lang="en"><h4>11. Verify the evidence itself</h4></div><div data-lang="fr"><p>Le différentiel C↔Python, le différentiel C↔JS, le fuzz et les mutants sont lançables à la main.</p></div>
+<div data-lang="en"><p>The C↔Python differential, the C↔JS differential, the fuzzer and the mutants can all be run by hand.</p></div><pre class="cmd">make test &amp;&amp; make sanitize &amp;&amp; make mutants
 bash tests/test_js.sh
-bash tests/test_differentiel.sh 999 300</pre><pre class="out">OK 9876 checks …
+bash tests/test_differentiel.sh 999 300</pre><pre class="out">OK 10 235 checks …
 OK 12 checks (mutants tués)
-OK 13 checks (jumeau navigateur identique au cœur C)
+OK 61 checks (jumeau navigateur identique au cœur C, dont 42 cas secpol)
 OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div>
-<div data-lang="en"><h4>11. Verify the evidence itself</h4><p>The C↔Python differential, the C↔JS differential, the fuzzer and the mutants can all be run by hand.</p><pre class="cmd">make test &amp;&amp; make sanitize &amp;&amp; make mutants
-bash tests/test_js.sh
-bash tests/test_differentiel.sh 999 300</pre><pre class="out">OK 9876 checks …
-OK 12 checks (mutants tués)
-OK 13 checks (jumeau navigateur identique au cœur C)
-OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div></div>
+<div class="step"><div data-lang="fr"><h4>12. Le vrai langage QNX 8.0</h4></div>
+<div data-lang="en"><h4>12. The real QNX 8.0 language</h4></div><div data-lang="fr"><p>La politique réelle est écrite dans le langage <code>secpol</code> de QNX 8.0 : <code>type</code>, <code>class</code>, <code>range</code>, <code>allow … self:ability { settypeid: … }</code>. Tamis la lit avec le même cœur que le CLI — pas un format de démonstration.</p></div>
+<div data-lang="en"><p>The real policy is written in QNX 8.0&#x27;s <code>secpol</code> language: <code>type</code>, <code>class</code>, <code>range</code>, <code>allow … self:ability { settypeid: … }</code>. Tamis reads it with the same core as the CLI — not a demo format.</p></div><pre class="cmd">build/tamis lint fixtures/politique-qnx8.secpol</pre><pre class="out">WARN   TAMIS_MISSING_DEFAULT_SPAWN  fixtures/politique-qnx8.secpol  default_spawn_type absent : les processus spawned ne changent pas de type (trou S7)
+OK</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-12" data-policy="qnx8" data-cmd="lint"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-12" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>13. Secpol reach : la chaîne réelle</h4></div>
+<div data-lang="en"><h4>13. Secpol reach: the real chain</h4></div><div data-lang="fr"><p>Sur la vraie politique, le graphe se lit dans les arguments des abilities de transition (<code>settypeid:</code>). Le chemin <code>app_tiers → journal → diag → pompe_critique</code> existe en 3 sauts.</p></div>
+<div data-lang="en"><p>On the real policy the graph comes from the transition ability arguments (<code>settypeid:</code>). The path <code>app_tiers → journal → diag → pompe_critique</code> exists in 3 hops.</p></div><pre class="cmd">build/tamis reach fixtures/politique-qnx8.secpol --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_PATH_FOUND  fixtures/politique-qnx8.secpol  app_tiers -&gt; pompe_critique (3 sauts) : settypeid,settypeid,settypeid
+FAILED 1 error(s)</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-13" data-policy="qnx8" data-cmd="reach" data-src="app_tiers" data-dst="pompe_critique"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-13" hidden></pre></div>
+<div class="step"><div data-lang="fr"><h4>14. Secpol proof : l&#x27;interférence est possible</h4></div>
+<div data-lang="en"><h4>14. Secpol proof: interference is possible</h4></div><div data-lang="fr"><p>La preuve répond la même question que <code>reach</code> mais sous forme de certificat : l&#x27;interférence est <b>possible</b> (le chemin existe). Sur la politique durcie, elle serait <b>prouvée absente</b> — c&#x27;est la différence entre « pas trouvé » et « prouvé ».</p></div>
+<div data-lang="en"><p>The proof answers the same question as <code>reach</code> but as a certificate: interference is <b>possible</b> (the path exists). On the hardened policy it would be <b>proved absent</b> — the difference between «not found» and «proved».</p></div><pre class="cmd">build/tamis proof fixtures/politique-qnx8.secpol --src app_tiers --dst pompe_critique</pre><pre class="out">ERROR  TAMIS_INTERFERENCE_POSSIBLE  fixtures/politique-qnx8.secpol  app_tiers -&gt; pompe_critique (3 sauts) : settypeid,settypeid,settypeid
+FAILED 1 error(s)</pre><div class="replay-bar"><button class="ghost replay" data-codelab="1" data-target="replay-14" data-policy="qnx8" data-cmd="proof" data-src="app_tiers" data-dst="pompe_critique"><span data-lang="fr">▶ Rejouer ici</span><span data-lang="en">▶ Run here</span></button><span class="mini-note"><span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span><span data-lang="en">runs in your browser, same code as the CLI</span></span></div><pre class="out replay-out" id="replay-14" hidden></pre></div>
 </div>
 <div data-lang="fr"><div class="panel"><h3>Angles morts déclarés</h3><p>Angles morts bornés (honnêteté, TAM-21) : flux IPC indirects (MsgSend/ConnectAttach), permissions de fichiers, transitions root→non-root — la documentation QNX elle-même les dit invisibles à l&#x27;analyse de politique. Tamis les signale comme non couverts, il ne prétend pas les résoudre.</p></div></div>
 <div data-lang="en"><div class="panel"><h3>Declared blind spots</h3><p>Bounded blind spots (honesty, TAM-21): indirect IPC flows (MsgSend/ConnectAttach), file permissions, root→non-root transitions — QNX&#x27;s own documentation calls these invisible to policy analysis. Tamis reports them as not covered; it does not claim to solve them.</p></div></div>
@@ -753,7 +740,9 @@ tamis version</pre>
 <script src="tamis-secpol-lex.js"></script>
 <script src="tamis-secpol-prod.js"></script>
 <script src="tamis-secpol.js"></script>
+<script src="tamis-run.js"></script>
 <script src="app.js"></script>
+<script src="codelab.js"></script>
 <script src="bridge.js"></script>
 </body>
 </html>

@@ -240,20 +240,40 @@ def gen_submission(c: dict) -> str:
     ])
 
 
-def _codelab_step(i: int, st: dict) -> str:
-    cmds = (f'<pre class="cmd">{html.escape(st["cmd"])}</pre>'
-            f'<pre class="out">{html.escape(st["out"])}</pre>')
-    return bi(f'<h4>{i}. {inline(st["tfr"])}</h4><p>{inline(st["dfr"])}</p>{cmds}',
-              f'<h4>{i}. {inline(st["ten"])}</h4><p>{inline(st["den"])}</p>{cmds}')
+def _replay_bar(i: int, replay: dict) -> str:
+    """Bouton « rejouer ici » : exécute l'étape dans le navigateur (site/codelab.js)."""
+    attrs = " ".join(f'data-{k}="{html.escape(str(v))}"' for k, v in replay.items())
+    barre = ('<div class="replay-bar">'
+             '<button class="ghost replay" data-codelab="1" '
+             f'data-target="replay-{i}" {attrs}>'
+             '<span data-lang="fr">▶ Rejouer ici</span>'
+             '<span data-lang="en">▶ Run here</span></button>'
+             '<span class="mini-note">'
+             '<span data-lang="fr">exécuté dans votre navigateur, même code que le CLI</span>'
+             '<span data-lang="en">runs in your browser, same code as the CLI</span></span></div>')
+    return barre + f'<pre class="out replay-out" id="replay-{i}" hidden></pre>'
+
+
+def _codelab_step(i: int, st: dict, replay: dict | None) -> str:
+    """Titre + description bilingues (deux blocs frères), commande/sortie/rejeu UNIQUES :
+    ils sont neutres et ne doivent exister qu'une fois (un id de cible par étape)."""
+    entete = bi(f'<h4>{i}. {inline(st["tfr"])}</h4>', f'<h4>{i}. {inline(st["ten"])}</h4>')
+    desc = bi(f'<p>{inline(st["dfr"])}</p>', f'<p>{inline(st["den"])}</p>')
+    blocs = (f'<pre class="cmd">{html.escape(st["cmd"])}</pre>'
+             f'<pre class="out">{html.escape(st["out"])}</pre>')
+    if replay:
+        blocs += _replay_bar(i, replay)
+    return entete + desc + blocs
 
 
 def gen_codelab(c: dict) -> str:
     cl = c["codelab"]
+    reps = c.get("codelab_replay", {})
     out = [bi(f'<h2>Codelab — {inline(cl["title_fr"])}</h2><p class="lead">{inline(cl["intro_fr"])}</p>',
               f'<h2>Codelab — {inline(cl["title_en"])}</h2><p class="lead">{inline(cl["intro_en"])}</p>'),
            '<div class="steps">']
     for i, st in enumerate(cl["steps"], 1):
-        out.append(f'<div class="step">{_codelab_step(i, st)}</div>')
+        out.append(f'<div class="step">{_codelab_step(i, st, reps.get(str(i)))}</div>')
     out.append("</div>")
     out.append(bi(f'<div class="panel"><h3>Angles morts déclarés</h3><p>{inline(cl["blind_fr"])}</p></div>',
                   f'<div class="panel"><h3>Declared blind spots</h3><p>{inline(cl["blind_en"])}</p></div>'))

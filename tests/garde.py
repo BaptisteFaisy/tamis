@@ -9,7 +9,7 @@ import sys
 RACINE = pathlib.Path(__file__).resolve().parent.parent
 MAX_FICHIER = 500
 MAX_FONCTION = 50
-SUFFIXES = {".sh", ".py", ".c", ".h"}
+SUFFIXES = {".sh", ".py", ".c", ".h", ".js"}   # .js : garde de taille seulement (pas de heuristique de fonction)
 IGNORE = {".git", "artefacts", "__pycache__", "fixtures", "build"}
 RE_DEF_PY = re.compile(r"^\s*(?:async\s+)?def\s+(\w+)")
 RE_DEF_C = re.compile(r"^[A-Za-z_][\w \t\*]*?\b(\w+)\s*\([^;]*\)\s*\{?\s*$")

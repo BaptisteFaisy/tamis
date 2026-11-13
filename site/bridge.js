@@ -5,8 +5,9 @@
 (function () {
   const C = window.TamisCore;
   const R = window.TamisRender;
+  const Run = window.TamisRun;
   const $ = (id) => document.getElementById(id);
-  if (!$("bridgeConnect") || !C || !R) return;
+  if (!$("bridgeConnect") || !C || !R || !Run) return;
 
   const bridge = { url: "http://127.0.0.1:8787", token: "", online: false };
   const LABEL = "policy.mpf";
@@ -56,40 +57,14 @@
     };
   }
 
-  /* ——— rendu du jumeau JS, pour comparaison ——— */
-  /* Détection du format, identique à app.js : « ; » hors commentaire ⇒ vrai secpol. */
-  function parsePolicy(texte) {
-    const sans = String(texte || "").replace(/#[^\n]*/g, "");
-    if (sans.indexOf(";") >= 0 && window.TamisSecpol) {
-      const r = window.TamisSecpol.parseSecpol(texte);
-      if (r.error) throw r.error;
-      return r.model;
-    }
-    return C.parseModel(texte);
-  }
-
+  /* ——— rendu du jumeau JS, pour comparaison (parse/exécution partagés) ——— */
   function jsonJS(rq) {
-    let m;
-    try { m = parsePolicy(rq.policy); }
-    catch (e) {
-      return R.renderJson([{ code: 1, sev: 2, file: rq.label, line: e.line || 0, column: e.column || 0,
-        message: e.message || "erreur", src: null, dst: null, path: null, rules: null }],
-        C.verdictName, C.sevName);
-    }
-    let res;
-    if (rq.cmd === "lint") res = C.lint(m, rq.label);
-    else if (rq.cmd === "minimize") res = C.minimize(m, rq.label);
-    else if (rq.cmd === "reach") res = C.reach(m, rq.src, rq.dst, rq.label);
-    else if (rq.cmd === "proof") res = C.proof(m, rq.src, rq.dst, rq.label);
-    else if (rq.cmd === "explain") res = C.explain(m, rq.src, rq.dst, rq.label);
-    else if (rq.cmd === "diff") {
-      let m2;
-      try { m2 = parsePolicy(rq.policy2 || ""); }
-      catch (e) { return "(politique candidate invalide)"; }
-      res = C.diff(m, m2, rq.label);
-    } else return "(commande non comparable)";
-    if (res.err) return "(type inconnu)";
-    return R.renderJson(res.verdicts, C.verdictName, C.sevName);
+    const r = Run.executer({ cmd: rq.cmd, policy: rq.policy, policy2: rq.policy2,
+      src: rq.src, dst: rq.dst, label: rq.label });
+    if (r.nonComparable) return "(commande non comparable)";
+    if (r.phase === "policy2") return "(politique candidate invalide)";
+    if (r.errType) return "(type inconnu)";
+    return Run.rendre("json", r.verdicts, null);
   }
 
   /* ——— connexion ——— */

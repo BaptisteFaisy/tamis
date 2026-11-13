@@ -168,6 +168,11 @@ pre.cmd, pre.out {
 pre.cmd { background: #0c1018; border: 1px solid #2b3244; color: #cfe3ff; }
 pre.cmd::before { content: "$ "; color: var(--mut); }
 pre.out { background: var(--bg2); border: 1px solid var(--line); color: var(--mut); }
+/* Codelab interactif : barre « rejouer ici » + sortie produite dans le navigateur */
+.replay-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 8px; }
+.replay-bar .mini-note { color: var(--mut); font-size: 12px; }
+button.replay.done { border-color: var(--good); color: var(--good); }
+pre.replay-out { border-color: #2f5d43; background: #0f1a14; color: #bfe8cc; }
 
 /* ——— preuve QNX réelle ——— */
 .proof-panel { border-color: #2f5d43; background: linear-gradient(135deg, #14201a, #141926); margin-bottom: 18px; }

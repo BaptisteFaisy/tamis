@@ -135,7 +135,7 @@ les juges). Sept onglets :
 | **Features** | 21 fonctionnalités : commande, apport, exigence TAM, état |
 | **Evidence** | les 8 niveaux de vérification + la traçabilité des **24 exigences** du cahier |
 | **Submission** | le dossier de soumission complet : pitch, catégorie, bonus, **preuve d'usage QNX**, comment c'est construit, instructions pour les juges, script vidéo 3 min, liens |
-| **Codelab** | le tutoriel 20 min en 11 étapes, avec les commandes et leurs sorties réelles |
+| **Codelab** | le tutoriel 20 min en 14 étapes, **rejouable dans le navigateur** (bouton « Rejouer ici ») : les 3 dernières étapes portent sur le vrai langage `secpol` QNX 8.0 |
 | **100 ideas** | la feuille de route, ✓ sur ce qui est déjà livré |
 | **Grammar & contract** | ce qui est gelé, ce qui est `À VÉRIFIER`, et pourquoi |
 

@@ -5,12 +5,15 @@
 (function () {
   const C = window.TamisCore;
   const R = window.TamisRender;
+  const Run = window.TamisRun;
   const $ = (id) => document.getElementById(id);
   const SVGNS = "http://www.w3.org/2000/svg";
 
   /* FIXTURES:START */
 const EXAMPLES = {"attaque": "# Politique de démonstration — format PROVISOIRE (model text format, voir core/src/model.c).\n# À remplacer par du vrai secpol dès que la grammaire est gelée (lot L1, docs/GRAMMAR.md).\n#\n# Scénario : un tiers applicatif peut atteindre la pompe critique en 3 sauts\n# (app_tiers -> journal -> diag -> pompe_critique). C'est le chemin d'attaque de la démo.\ntype app_tiers\ntype journal\ntype diag\ntype pompe_critique\ntype reseau\n\nallow app_tiers journal msg @R112\nallow journal diag msg @R87\nallow diag pompe_critique control @R9\nallow reseau journal msg @R10\n\n# Doublon : même arête app_tiers -> journal déjà accordée par R112 (redondante, vu par minimize).\nallow app_tiers journal msg @R999\n\n# Processus sans type (lint TAM-06) :\nuntyped /bin/legacy\nuntyped /bin/foo\n\n# Pas de default_spawn_type déclaré -> le lint le signale (trou S7).\n", "durcie": "# Politique DURCIE — format PROVISOIRE. Version corrigée de attaque.mpf.\n# Le chemin d'attaque vers pompe_critique est coupé (R9 supprimée), le doublon R999 retiré,\n# et default_spawn_type déclaré. Sert de cible au diff sémantique (TAM-08).\ntype app_tiers\ntype journal\ntype diag\ntype pompe_critique\ntype reseau\n\nallow app_tiers journal msg @R112\nallow journal diag msg @R87\nallow reseau journal msg @R10\n\n# R9 (diag -> pompe_critique) SUPPRIMÉE : plus aucun chemin app_tiers -> pompe_critique.\n# R999 (doublon de R112) SUPPRIMÉE.\n\ndefault_spawn\n", "qnx8": "# Politique réelle au format QNX 8.0 (syntaxe relevée dans la doc officielle du SDP 8.0,\n# docs : secpol_language.html). C'est le fixture du différentiel oracle (TAM-12) :\n# secpolcompile doit l'accepter, et Tamis doit produire le même verdict.\n#\n# Le graphe de privilège est porté par les ARGUMENTS des abilities de transition :\n#   settypeid:<type>  = ce type peut devenir <type>\n#   gain_priv:<type>  = ce type peut hériter des privilèges de <type>\n# D'où : app_tiers -> journal -> diag -> pompe_critique.\n#\n# La cible d'une règle d'abilities est `self` : un type n'accorde pas les abilities\n# d'un autre type (erreur du compilateur officiel : « cannot target the abilities of\n# another type »).\n\ntype app_tiers;\ntype journal;\ntype diag;\ntype pompe_critique;\ntype reseau;\ntype server3;\ntype mm_client;\ntype mm_server;\ntype file1_t;\n\n# Plage nommée : résolue au boot via le fichier de plages (named_range_file.html).\nrange gpu_mem;\n\n# Classe custom : permissions fines sur un objet non-canal (using_security_policy_types.html).\nclass file { read write delete execute };\n\n# Premier saut : app_tiers peut devenir journal.\nallow app_tiers self:ability {\n    mem_phys:1024-4096,0x1200000-0x24000000\n    setuid:4,6,23\n    able_create\n    settypeid:journal\n};\n\n# Deuxième saut : journal peut devenir diag, et se connecter au canal de server3.\nallow journal self:ability {\n    nonroot\n    settypeid:diag\n    channel_connect:server3\n};\n\n# Troisième saut : diag hérite des privilèges de pathspace et devient la pompe critique.\nallow diag self:ability {\n    gain_priv:pathspace\n    interrupt:gpu_mem\n    settypeid:pompe_critique\n};\n\n# Connexion de canal : forme sur une ligne, cible un autre type (autorisé pour les canaux).\nallow mm_client mm_server:channel connect;\n\n# Permission de classe custom : file:read:<type>.\nallow app_tiers self:ability {\n    gain_priv: file:read:file1_t\n};\n"};
 /* FIXTURES:END */
+  /* Les exemples sont exposés pour le codelab (site/codelab.js) : même source, pas de copie. */
+  window.TAMIS_EXAMPLES = EXAMPLES;
 
   const state = { cmd: "lint", fmt: "text", verdicts: [], model: null, modelB: null, fileA: "policy.mpf" };
 
@@ -80,28 +83,8 @@ const EXAMPLES = {"attaque": "# Politique de démonstration — format PROVISOIR
     return function () { clearTimeout(t); t = setTimeout(fn, ms); };
   }
 
-  /* ——— analyse ——— */
-  /* Détection du format : le provisoire (.mpf) n'utilise jamais « ; » ; toute politique
-   * qui contient un point-virgule hors commentaire est du vrai secpol QNX 8.0. */
-  function detectFormat(texte) {
-    const sansCommentaires = String(texte || "").replace(/#[^\n]*/g, "");
-    return sansCommentaires.indexOf(";") >= 0 ? "secpol" : "mpf";
-  }
-
-  /* Parse une politique dans le format détecté ; lève { line, column, message } en cas d'erreur. */
-  function parsePolicy(texte) {
-    if (detectFormat(texte) === "secpol" && window.TamisSecpol) {
-      const r = window.TamisSecpol.parseSecpol(texte);
-      if (r.error) throw r.error;
-      return r.model;
-    }
-    return C.parseModel(texte);
-  }
-
-  function parseErrVerdict(e, file) {
-    return [{ code: 1, sev: 2, file, line: e.line || 0, column: e.column || 0,
-      message: e.message || "erreur de syntaxe", src: null, dst: null, path: null, rules: null }];
-  }
+  /* ——— analyse : parse et exécution partagés (site/tamis-run.js), zéro duplication ——— */
+  const parsePolicy = Run.parsePolicy;
 
   function refreshTypes() {
     let m;
@@ -128,35 +111,14 @@ const EXAMPLES = {"attaque": "# Politique de démonstration — format PROVISOIR
     document.querySelectorAll("#toolbar button").forEach((b) =>
       b.classList.toggle("active", b.dataset.cmd === cmd));
     $("panelB").hidden = (cmd !== "diff");
-
-    let mA;
-    try { mA = parsePolicy($("policyA").value); }
-    catch (e) { state.verdicts = parseErrVerdict(e, state.fileA); return finish(); }
-    state.model = mA;
-    const src = $("src").value;
-    const dst = $("dst").value;
-    let res;
-    try {
-      if (cmd === "lint") res = C.lint(mA, state.fileA);
-      else if (cmd === "reach") res = C.reach(mA, src, dst, state.fileA);
-      else if (cmd === "proof") res = C.proof(mA, src, dst, state.fileA);
-      else if (cmd === "explain") res = C.explain(mA, src, dst, state.fileA);
-      else if (cmd === "minimize") res = C.minimize(mA, state.fileA);
-      else if (cmd === "diff") {
-        let mB;
-        try { mB = parsePolicy($("policyB").value); }
-        catch (e) { state.verdicts = parseErrVerdict(e, "candidate.mpf"); return finish(); }
-        state.modelB = mB;
-        res = C.diff(mA, mB, state.fileA);
-      } else res = { verdicts: [] };
-    } catch (e) { state.verdicts = parseErrVerdict(e, state.fileA); return finish(); }
-
-    if (res.err) {
-      state.verdicts = [{ code: 12, sev: 2, file: state.fileA, line: 0, column: 0,
-        message: "type inconnu : src ou dst absent du modèle", src: src, dst: dst, path: null, rules: null }];
-    } else {
-      state.verdicts = res.verdicts;
-    }
+    const r = Run.executer({
+      cmd, policy: $("policyA").value, policy2: $("policyB").value,
+      src: $("src").value, dst: $("dst").value,
+      label: state.fileA, label2: "candidate.mpf",
+    });
+    state.model = r.model || null;
+    state.modelB = r.modelB || null;
+    state.verdicts = r.verdicts || [];
     finish();
   }
 
@@ -168,15 +130,7 @@ const EXAMPLES = {"attaque": "# Politique de démonstration — format PROVISOIR
   function show() {
     const vs = state.verdicts || [];
     const out = $("output");
-    if (state.fmt === "json") {
-      out.textContent = R.renderJson(vs, C.verdictName, C.sevName) || "(aucun verdict)";
-    } else if (state.fmt === "md") {
-      out.textContent = R.renderMarkdown(vs, meta(), C.verdictName, C.sevName, C.DEFAULT_SEV, C.VERDICT_COUNT);
-    } else {
-      out.textContent = vs.length
-        ? R.renderText(vs, C.verdictName, C.sevName, C.SEV_LABEL)
-        : "OK\n";
-    }
+    out.textContent = Run.rendre(state.fmt, vs, meta());
     const badge = $("exitBadge");
     const errs = vs.filter((v) => v.sev === 2).length;
     const warns = vs.filter((v) => v.sev === 1).length;

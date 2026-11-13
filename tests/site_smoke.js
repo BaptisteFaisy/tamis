@@ -127,12 +127,24 @@ require(path.join(__dirname, "..", "site", "tamis-secpol-decl.js"));
 require(path.join(__dirname, "..", "site", "tamis-secpol-lex.js"));
 require(path.join(__dirname, "..", "site", "tamis-secpol-prod.js"));
 require(path.join(__dirname, "..", "site", "tamis-secpol.js"));
+require(path.join(__dirname, "..", "site", "tamis-run.js"));
 ck(typeof global.TamisCore === "object", "TamisCore exposé sur window");
 ck(typeof global.TamisRender === "object", "TamisRender exposé sur window");
 ck(typeof global.TamisSecpol === "object", "TamisSecpol exposé sur window");
 ck(typeof global.TamisSecpol.parseSecpol === "function", "TamisSecpol.parseSecpol exposé");
 
 require(path.join(__dirname, "..", "site", "app.js"));
+/* Boutons de codelab factices pour tester le câblage réel (querySelectorAll + clic). */
+const codaBtns = [{
+  dataset: { target: "replay-14", policy: "qnx8", cmd: "proof",
+    src: "app_tiers", dst: "pompe_critique", fmt: "text" },
+  _ev: {}, addEventListener(t, f) { this._ev[t] = f; }, fire(t) { if (this._ev[t]) this._ev[t](); },
+}];
+const qsaAvant = global.document.querySelectorAll;
+global.document.querySelectorAll = (sel) => (sel === "[data-codelab]" ? codaBtns : qsaAvant(sel));
+require(path.join(__dirname, "..", "site", "codelab.js"));
+ck(typeof global.TamisRun === "object", "TamisRun exposé sur window");
+ck(typeof global.TamisCodelab === "object", "TamisCodelab exposé sur window");
 
 /* ——— démarrage : lint sur la fixture « attaque » ——— */
 const out = byId.output;
@@ -243,6 +255,42 @@ ck(out.textContent.indexOf("app_tiers -> pompe_critique") >= 0, "secpol reach : 
 ck(out.textContent.indexOf("(3 sauts)") >= 0, "secpol reach : 3 sauts");
 toolBtns.find((b) => b.dataset.cmd === "lint").onclick();
 ck(out.textContent.indexOf("TAMIS_MISSING_DEFAULT_SPAWN") >= 0, "secpol lint : default_spawn_type absent");
+
+/* ——— codelab interactif : rejouer une étape dans le navigateur ——— */
+byId["replay-13"] = makeEl("replay-13", "pre");
+const codaReach = global.TamisCodelab.lancer({
+  dataset: { target: "replay-13", policy: "qnx8", cmd: "reach",
+    src: "app_tiers", dst: "pompe_critique", fmt: "text" },
+});
+ck(byId["replay-13"].hidden === false, "codelab : sortie révélée au clic");
+ck(codaReach.indexOf("TAMIS_PATH_FOUND") >= 0, "codelab reach : chemin trouvé");
+ck(codaReach.indexOf("app_tiers -> pompe_critique") >= 0, "codelab reach : chaîne réelle");
+ck(codaReach.indexOf("(3 sauts)") >= 0, "codelab reach : 3 sauts");
+byId["replay-9"] = makeEl("replay-9", "pre");
+const codaView = global.TamisCodelab.lancer({
+  dataset: { target: "replay-9", policy: "attaque", cmd: "view",
+    src: "app_tiers", dst: "pompe_critique", fmt: "text" },
+});
+ck(codaView.trim().startsWith("{"), "codelab view : JSON du graphe");
+ck(codaView.indexOf('"focus"') >= 0, "codelab view : focus présent");
+byId["replay-10"] = makeEl("replay-10", "pre");
+const codaMd = global.TamisCodelab.lancer({
+  dataset: { target: "replay-10", policy: "attaque", cmd: "lint", fmt: "md" },
+});
+ck(codaMd.indexOf("# Rapport d'audit Tamis") >= 0, "codelab md : rapport d'audit");
+byId["replay-12"] = makeEl("replay-12", "pre");
+const codaLint = global.TamisCodelab.lancer({
+  dataset: { target: "replay-12", policy: "qnx8", cmd: "lint", fmt: "text" },
+});
+ck(codaLint.indexOf("TAMIS_MISSING_DEFAULT_SPAWN") >= 0, "codelab secpol lint : avertissement");
+
+/* câblage réel : brancher() attache le clic, le clic rejoue l'étape */
+byId["replay-14"] = makeEl("replay-14", "pre");
+global.TamisCodelab.brancher();
+codaBtns[0].fire("click");
+ck(byId["replay-14"].hidden === false, "codelab : clic réel révèle la sortie");
+ck(byId["replay-14"].textContent.indexOf("TAMIS_INTERFERENCE_POSSIBLE") >= 0,
+  "codelab : clic réel rejoue la preuve secpol");
 
 /* ——— secpol invalide : refus avec position ——— */
 byId.policyA.value = "type a;\nallow a self:ability { unknown_ability };\n";
