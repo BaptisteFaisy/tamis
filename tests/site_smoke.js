@@ -38,7 +38,7 @@ function makeEl(id, tag) {
 }
 
 const byId = {};
-const TABS = ["playground", "features", "proofs", "submission", "codelab", "ideas", "bench", "grammar"];
+const TABS = ["playground", "features", "proofs", "submission", "codelab", "ideas", "bench", "live", "grammar"];
 const CMDS = ["lint", "reach", "proof", "explain", "minimize", "diff", "view"];
 const FMTS = ["text", "json", "md"];
 const LANGS = ["fr", "en"];
@@ -191,6 +191,8 @@ ck(byId.panelB.hidden === true, "lint : le panneau candidat est masqué");
 navBtns.find((b) => b.dataset.tab === "ideas").onclick();
 ck(byId.ideas.classList.contains("active"), "onglet idées activé");
 ck(!byId.playground.classList.contains("active"), "onglet playground désactivé");
+navBtns.find((b) => b.dataset.tab === "live").onclick();
+ck(byId.live.classList.contains("active"), "onglet invité QNX en direct activé");
 
 /* ——— bascule de langue FR/EN ——— */
 byId.example.value = "attaque";

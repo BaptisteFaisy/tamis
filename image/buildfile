@@ -1,0 +1,103 @@
+# image/buildfile — image invitée QNX 8.0 (x86_64) pour la démo Tamis.
+#
+# Contenu : le noyau (procnto), un shell, les outils QNX utiles à l'analyse
+# (pidin, secpolmonitor, slog2info, dumper) et le binaire du projet :
+# `tamis` — le cœur C de Tamis compilé pour QNX 8.0 — avec la politique
+# QNX 8.0 réelle à analyser et le script de scénario.
+#
+# Construction : voir image/README.md (image/build-qnx.sh appelle le paquet
+# réutilisable qnx-emu, qui fournit la chaîne qcc -> mkifs -> IFS et le
+# lancement QEMU).
+#
+# La liste de recherche (search) commence par le répertoire courant : les
+# fichiers du projet (./tamis, ./politique.secpol, ./demo.sh) doivent y avoir
+# été copiés. Les entrées suivantes sont relatives à la racine de la cible.
+
+[search=.:$QNX_TARGET/x86_64:$QNX_TARGET/x86_64/boot/sys:]
+
+[+dupignore]
+[+optional]
+
+[uid=0 gid=0 dperms=0555 perms=0555]
+
+[image=20m]
+[virtual=x86_64,multiboot ] boot = {
+    startup-x86 -D8250..115200 -zz -f 0,0,1000M
+    PATH=/proc/boot:/system/bin
+    LD_LIBRARY_PATH=/proc/boot:/system/lib:/system/lib/dll
+    [+keeplinked uid=0 gid=0 perms=0700 ] CONFIG_PATH=/proc/boot:/system/etc procnto-smp-instr -mr -d 022 -u 066 -F 2000
+}
+
+# ------------------------------------------------------------------ démarrage
+[+script] startup-script = {
+    procmgr_symlink /proc/boot/ksh /bin/sh
+    procmgr_symlink /proc/boot/ksh /bin/ksh
+    procmgr_symlink /var/tmp /tmp
+    procmgr_symlink /proc/boot/ldqnx-64.so.2 /usr/lib/ldqnx-64.so.2
+    procmgr_symlink /proc/boot/slog2info /bin/slog2
+    procmgr_symlink /proc/boot/pidin /bin/pidin
+    procmgr_symlink /proc/boot/tracelogger /bin/tracelogger
+    procmgr_symlink /proc/boot/dumper /bin/dumper
+    PATH=/proc/boot:/system/bin
+    LD_LIBRARY_PATH=/proc/boot:/system/lib:/system/lib/dll
+    HOME=/proc/boot
+    TERM=qansi
+    devc-con
+    devc-ser8250 -e
+    waitfor /dev/ser1
+    display_msg "Tamis - analyse de politique QNX 8.0 (demo Tamis)"
+    # Deux consoles : la serie (texte, capture) et la VGA (capture d'ecran
+    # pour la vitrine web). Le meme shell sur les deux.
+    on -d -t /dev/con1 -e HOME=/proc/boot ksh -l
+    on -d -t /dev/ser1 -e HOME=/proc/boot ksh -l
+    # Le scenario Tamis joue sur les DEUX consoles : la VGA donne l'ecran
+    # capture par la vitrine web, la serie donne le journal texte complet.
+    on -d -t /dev/con1 -e HOME=/proc/boot ksh -c /proc/boot/demo.sh
+    on -d -t /dev/ser1 -e HOME=/proc/boot ksh -c /proc/boot/demo.sh
+}
+
+# ------------------------------------------------------------------- fichiers
+multiboot.boot = boot/sys/multiboot.boot
+procnto-smp-instr = boot/sys/procnto-smp-instr
+startup-x86 = boot/sys/startup-x86
+
+# --- projet Tamis ------------------------------------------------------------
+tamis = ./tamis
+politique.secpol = ./politique.secpol
+demo.sh = ./demo.sh
+
+# --- outils QNX --------------------------------------------------------------
+devc-con = sbin/devc-con
+devc-ser8250 = sbin/devc-ser8250
+on = bin/on
+sh = bin/sh
+ksh = bin/ksh
+pidin = bin/pidin
+secpolmonitor = bin/secpolmonitor
+slay = bin/slay
+slog2info = bin/slog2info
+tracelogger = usr/sbin/tracelogger
+dumper = usr/sbin/dumper
+
+# --- bibliotheques -----------------------------------------------------------
+ldqnx-64.so.2 = usr/lib/ldqnx-64.so.2
+libc.so.6 = lib/libc.so.6
+libgcc_s.so.1 = lib/libgcc_s.so.1
+libm.so.3 = lib/libm.so.3
+libsecpol.so.1 = lib/libsecpol.so.1
+libz.so.2 = usr/lib/libz.so.2
+libsocket.so.4 = lib/libsocket.so.4
+libcrypto.so.3 = lib/libcrypto.so.3
+libexpat.so.2 = lib/libexpat.so.2
+libregex.so.1 = lib/libregex.so.1
+libjson.so.1 = lib/libjson.so.1
+
+# --- coreutils QNX 8.0 : toybox multi-applets (un lien par applet) -----------
+toybox = usr/bin/toybox
+[type=link] /proc/boot/echo=/proc/boot/toybox
+[type=link] /proc/boot/cat=/proc/boot/toybox
+[type=link] /proc/boot/sleep=/proc/boot/toybox
+[type=link] /proc/boot/ls=/proc/boot/toybox
+[type=link] /proc/boot/head=/proc/boot/toybox
+[type=link] /proc/boot/wc=/proc/boot/toybox
+[type=link] /proc/boot/mkdir=/proc/boot/toybox

@@ -171,6 +171,17 @@ depuis l'interface réseau »). Détails : [`docs/BANC-REEL.md`](docs/BANC-REEL.
 
 Sans pont, le Playground reste entièrement fonctionnel via le jumeau JS.
 
+## Invité QNX 8.0 en direct — le cœur C dans une vraie cible
+
+Le cœur C **compile pour QNX 8.0** (`qcc -V gcc_ntox86_64`, `-Werror`) et tourne
+**dans** un invité QNX 8.0 réel (QEMU, sur le serveur `r630`) : au démarrage, il
+analyse la politique QNX 8.0 embarquée et affiche ses verdicts — les mêmes octets
+que sur le poste. Vitrine en direct (écran VGA + console série + injection de
+touches), vue sur le site (onglet **Invité QNX en direct**) et sur la page du
+dossier QNX.
+
+Construction et pièges : [`image/README.md`](image/README.md).
+
 ## 1 000 idées de consolidation
 
 Catalogue complet : [`docs/1000-idees-consolidation.md`](docs/1000-idees-consolidation.md)

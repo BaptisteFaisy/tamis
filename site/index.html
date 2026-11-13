@@ -29,6 +29,7 @@
       <button data-tab="codelab">Codelab</button>
       <button data-tab="ideas"><span data-lang="fr">100 idées</span><span data-lang="en">100 ideas</span></button>
       <button data-tab="bench"><span data-lang="fr">Banc réel</span><span data-lang="en">Real bench</span></button>
+      <button data-tab="live"><span data-lang="fr">Invité QNX en direct</span><span data-lang="en">Live QNX guest</span></button>
       <button data-tab="grammar"><span data-lang="fr">Grammaire &amp; preuve QNX</span><span data-lang="en">Grammar &amp; QNX evidence</span></button>
     </nav>
     <div class="lang" id="lang">
@@ -143,6 +144,7 @@
 <tr><td><b>Jumeau Python + différentiel</b></td><td><code>make test</code></td><td>Deux implémentations indépendantes comparées sur 250/300/500 verdicts : 0 divergence</td><td>TAM-09</td><td class="ok">✅ fait</td></tr>
 <tr><td><b>Jumeau navigateur + différentiel</b></td><td><code>tests/test_js.sh</code></td><td>Le moteur JS de ce site rend exactement le JSON du cœur C sur 13 scénarios réels</td><td>TAM-09</td><td class="ok">✅ fait</td></tr>
 <tr><td><b>Fuzz + mutants</b></td><td><code>make mutants</code></td><td>9 000 entrées aléatoires sous ASan/UBSan sans crash ; 12 mutants, tous tués</td><td>TAM-11</td><td class="ok">✅ fait</td></tr>
+<tr><td><b>Invité QNX 8.0 en direct</b></td><td><code>image/build-qnx.sh</code></td><td>Le cœur C recompilé pour QNX 8.0 par qcc analyse, dans l&#x27;invité, une vraie politique secpol : verdicts identiques à ceux du poste</td><td>TAM-12</td><td class="ok">✅ fait</td></tr>
 <tr><td><b>Différentiel vs secpolcompile</b></td><td><code>oracle/</code></td><td>La preuve la plus forte : accord avec le compilateur officiel QNX, sans cible</td><td>TAM-12</td><td class="wait">⏳ harnais prêt, attend le SDP</td></tr>
 <tr><td><b>Parseur du vrai secpol</b></td><td><code>lot L1</code></td><td>Lecture du langage officiel QNX à la place du format provisoire</td><td>TAM-01/02</td><td class="wait">🚧 grammaire À VÉRIFIER (licence QNX)</td></tr>
 <tr><td><b>Plages nommées à froid</b></td><td><code>lot L8</code></td><td>Existence, disjonction, couverture des range avant déploiement (gap S13)</td><td>TAM-13</td><td class="wait">⏳ à venir</td></tr>
@@ -173,6 +175,7 @@
 <tr><td><b>Python twin + differential</b></td><td><code>make test</code></td><td>Two independent implementations compared over 250/300/500 verdicts: zero divergence</td><td>TAM-09</td><td class="ok">✅ done</td></tr>
 <tr><td><b>Browser twin + differential</b></td><td><code>tests/test_js.sh</code></td><td>This site&#x27;s JS engine renders exactly the C core&#x27;s JSON across 13 real scenarios</td><td>TAM-09</td><td class="ok">✅ done</td></tr>
 <tr><td><b>Fuzz + mutants</b></td><td><code>make mutants</code></td><td>9,000 random inputs under ASan/UBSan with no crash; 12 mutants, all killed</td><td>TAM-11</td><td class="ok">✅ done</td></tr>
+<tr><td><b>Live QNX 8.0 guest</b></td><td><code>image/build-qnx.sh</code></td><td>The C core, cross-compiled for QNX 8.0 with qcc, analyses a real secpol policy inside the guest: verdicts identical to the workstation&#x27;s</td><td>TAM-12</td><td class="ok">✅ done</td></tr>
 <tr><td><b>Differential vs secpolcompile</b></td><td><code>oracle/</code></td><td>The strongest proof: agreement with the official QNX compiler, with no target needed</td><td>TAM-12</td><td class="wait">⏳ harness ready, waiting for the SDP</td></tr>
 <tr><td><b>Real secpol parser</b></td><td><code>lot L1</code></td><td>Parse the official QNX language instead of the provisional format</td><td>TAM-01/02</td><td class="wait">🚧 grammar TO VERIFY (QNX licence)</td></tr>
 <tr><td><b>Cold validation of named ranges</b></td><td><code>lot L8</code></td><td>Existence, disjointness and coverage of range entries before deployment (gap S13)</td><td>TAM-13</td><td class="wait">⏳ next</td></tr>
@@ -515,7 +518,7 @@ OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div></
 <li><b>I.</b> Performance &amp; scale</li>
 <li><b>J.</b> Advanced / 3-month horizon</li>
 </ul>
-<h3>The 13 ideas already shipped</h3><ol>
+<h3>The 14 ideas already shipped</h3><ol>
 <li class='done'>✓ Least-privilege lint — <code>lint</code></li>
 <li class='done'>✓ Reachability — <code>reach</code></li>
 <li class='done'>✓ Non-interference certificate — <code>proof</code></li>
@@ -529,6 +532,7 @@ OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div></
 <li class='done'>✓ Python twin + differential — <code>make test</code></li>
 <li class='done'>✓ Browser twin + differential — <code>tests/test_js.sh</code></li>
 <li class='done'>✓ Fuzz + mutants — <code>make mutants</code></li>
+<li class='done'>✓ Live QNX 8.0 guest — <code>image/build-qnx.sh</code></li>
 </ol></div></div>
 <!-- IDEES:END -->
 </section>
@@ -599,9 +603,71 @@ OK 300 checks (différentiel C↔Python, graine 999, 0 divergence)</pre></div></
       <ul>
         <li><span data-lang="fr"><b>Prouvé maintenant</b> : le navigateur ne triche pas — le jumeau JS rend exactement ce que rend le vrai binaire C, sur ta machine, à la demande.</span><span data-lang="en"><b>Proved now</b>: the browser is not faking it — the JS twin renders exactly what the real C binary renders, on your machine, on demand.</span></li>
         <li><span data-lang="fr"><b>Prouvé maintenant</b> : l'environnement QNX est réel — version du noyau, <code>libsecpol</code>, outils <code>secpol</code>/<code>secpolmonitor</code> et leur comportement exact sans politique.</span><span data-lang="en"><b>Proved now</b>: the QNX environment is real — kernel version, <code>libsecpol</code>, the <code>secpol</code>/<code>secpolmonitor</code> tools and their exact behaviour with no policy loaded.</span></li>
-        <li><span data-lang="fr"><b>En attente du SDP 8.0</b> : la boucle <i>prédit ↔ observé</i>. Il manque <code>secpolcompile</code> (outil hôte) pour produire un <code>secpol.bin</code>, l'insérer dans l'IFS et faire constater par QNX les refus que Tamis prédit. Le harnais <code>oracle/</code> est déjà écrit.</span><span data-lang="en"><b>Waiting for the 8.0 SDP</b>: the <i>predicted ↔ observed</i> loop. <code>secpolcompile</code> (a host tool) is missing to produce a <code>secpol.bin</code>, insert it in the IFS and have QNX confirm the denials Tamis predicts. The <code>oracle/</code> harness is already written.</span></li>
+        <li><span data-lang="fr"><b>En attente</b> : la boucle <i>prédit ↔ observé</i>, où Tamis annonce un refus et QNX le confirme en exécutant la politique. Le SDP 8.0 est disponible (<code>secpolcompile</code>) ; il reste à produire un <code>secpol.bin</code>, l'injecter dans l'IFS et faire constater les refus par <code>secpolmonitor</code>. Le harnais <code>oracle/</code> est déjà écrit.</span><span data-lang="en"><b>Pending</b>: the <i>predicted ↔ observed</i> loop, where Tamis predicts a denial and QNX confirms it by enforcing the policy. The 8.0 SDP is available (<code>secpolcompile</code>); what remains is to build a <code>secpol.bin</code>, inject it into the IFS and have <code>secpolmonitor</code> confirm the denials. The <code>oracle/</code> harness is already written.</span></li>
       </ul>
     </div>
+  </div>
+</section>
+
+<!-- ══════════════════ INVITÉ QNX 8.0 EN DIRECT ══════════════════ -->
+<section id="live" class="tab">
+  <h2><span data-lang="fr">Un invité QNX 8.0 qui fait tourner Tamis, en direct</span><span data-lang="en">A live QNX 8.0 guest running Tamis</span></h2>
+  <p class="lead">
+    <span data-lang="fr">Voici un <b>invité QNX 8.0 réel</b> (QEMU, sur le serveur <code>r630</code>) : au démarrage, le <b>cœur C de Tamis</b> — recompilé pour QNX 8.0 par <code>qcc</code> — analyse une politique <code>secpol</code> QNX 8.0 véritable, embarquée dans l'image, et affiche ses verdicts. Rien n'est simulé : c'est le même code source que sur POSIX, exécuté dans la cible QNX. L'écran de gauche est la console VGA de l'invité (les touches sont injectées dans la vraie cible), la console de droite est le port série, où se déroule le même scénario.</span>
+    <span data-lang="en">Below is a <b>real QNX 8.0 guest</b> (QEMU, on the <code>r630</code> server): at boot, the <b>Tamis C core</b> — cross-compiled for QNX 8.0 with <code>qcc</code> — analyses a genuine QNX 8.0 <code>secpol</code> policy embedded in the image and prints its verdicts. Nothing is simulated: it is the same source code as on POSIX, running inside the QNX target. The left pane is the guest VGA console (keys are injected into the real target), the right pane is the serial port, where the same scenario runs.</span>
+  </p>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h3><span data-lang="fr">L'invité : écran VGA + console série, touches injectables</span><span data-lang="en">The guest: VGA screen + serial console, injectable keys</span></h3>
+      <span class="badge ok"><span data-lang="fr">en direct</span><span data-lang="en">live</span></span>
+    </div>
+    <iframe src="https://r630-debian.tail3a8bdf.ts.net:8092/" title="Invité QNX 8.0 de Tamis — écran VGA et console série" style="width:100%;height:660px;border:1px solid var(--line);border-radius:8px;background:#0e1016"></iframe>
+    <p class="hint">
+      <span data-lang="fr">Vitrine servie par le serveur (QEMU + moniteur QEMU), exposée en HTTPS par <code>tailscale funnel</code>. La page de la vitrine est en français ; les <b>verdicts</b>, eux, sont ceux du cœur C — les codes (<code>TAMIS_PATH_FOUND</code>) et la structure sont neutres.</span>
+      <span data-lang="en">The showcase is served by the server (QEMU + QEMU monitor), exposed over HTTPS via <code>tailscale funnel</code>. The showcase page is in French; the <b>verdicts</b> themselves come from the C core — the codes (<code>TAMIS_PATH_FOUND</code>) and the structure are language-neutral.</span>
+    </p>
+  </div>
+
+  <div class="two">
+    <div class="panel">
+      <h3><span data-lang="fr">Ce qui s'exécute dans l'invité</span><span data-lang="en">What runs inside the guest</span></h3>
+      <pre class="cmd">tamis reach   /proc/boot/politique.secpol --src app_tiers --dst pompe_critique
+tamis lint    /proc/boot/politique.secpol
+tamis explain /proc/boot/politique.secpol --src app_tiers --dst pompe_critique
+tamis proof   /proc/boot/politique.secpol --src app_tiers --dst pompe_critique
+tamis version</pre>
+      <p class="hint">
+        <span data-lang="fr">Sortie réelle relevée dans l'invité : <code>TAMIS_PATH_FOUND</code> (3 sauts : <code>settypeid</code>), <code>TAMIS_MISSING_DEFAULT_SPAWN</code> au lint, <code>TAMIS_INTERFERENCE_POSSIBLE</code> au certificat de non-interférence.</span>
+        <span data-lang="en">Real output captured in the guest: <code>TAMIS_PATH_FOUND</code> (3 hops: <code>settypeid</code>), <code>TAMIS_MISSING_DEFAULT_SPAWN</code> from lint, <code>TAMIS_INTERFERENCE_POSSIBLE</code> from the non-interference certificate.</span>
+      </p>
+    </div>
+    <div class="panel">
+      <h3><span data-lang="fr">Capture de l'écran VGA</span><span data-lang="en">VGA screen capture</span></h3>
+      <p><img src="screenshots/invite-qnx800.png" alt="écran de l'invité QNX 8.0 de Tamis" style="max-width:100%;border:1px solid var(--line);border-radius:8px"></p>
+      <p class="hint">
+        <span data-lang="fr">Relevé sur l'invité (QNX 8.0) : le résumé des verdicts du cœur C.</span>
+        <span data-lang="en">Captured on the guest (QNX 8.0): the summary of the C core's verdicts.</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3><span data-lang="fr">Ce que cette vitrine prouve — et ce qu'elle ne prouve pas</span><span data-lang="en">What this showcase proves — and what it does not</span></h3>
+    <table>
+      <thead><tr><th><span data-lang="fr">Preuve</span><span data-lang="en">Evidence</span></th><th><span data-lang="fr">Résultat</span><span data-lang="en">Result</span></th></tr></thead>
+      <tbody>
+        <tr><td><span data-lang="fr">Le cœur C compile pour QNX 8.0 (<code>qcc -V gcc_ntox86_64</code>, <code>-Werror</code>)</span><span data-lang="en">The C core compiles for QNX 8.0 (<code>qcc -V gcc_ntox86_64</code>, <code>-Werror</code>)</span></td><td class="ok"><span data-lang="fr">réussi — binaire ELF QNX embarqué dans l'IFS</span><span data-lang="en">done — QNX ELF binary embedded in the IFS</span></td></tr>
+        <tr><td><span data-lang="fr">Le <b>même</b> binaire analyse une politique QNX 8.0 <i>dans</i> l'invité</span><span data-lang="en">The <b>same</b> binary analyses a QNX 8.0 policy <i>inside</i> the guest</span></td><td class="ok"><span data-lang="fr">réussi — verdicts identiques à ceux du poste</span><span data-lang="en">done — verdicts identical to the workstation's</span></td></tr>
+        <tr><td><span data-lang="fr">Politique acceptée par le compilateur officiel <code>secpolcompile</code> (SDP 8.0)</span><span data-lang="en">Policy accepted by the official <code>secpolcompile</code> (8.0 SDP)</span></td><td class="ok"><span data-lang="fr">0 erreur</span><span data-lang="en">0 errors</span></td></tr>
+        <tr><td><span data-lang="fr">Différentiel C ↔ Python ↔ JS (même contrat, octet pour octet)</span><span data-lang="en">C ↔ Python ↔ JS differential (same contract, byte for byte)</span></td><td class="ok"><span data-lang="fr">0 divergence</span><span data-lang="en">0 divergence</span></td></tr>
+        <tr><td><span data-lang="fr">Le refus <b>prédit</b> par Tamis, <b>confirmé</b> par QNX en exécution</span><span data-lang="en">The denial <b>predicted</b> by Tamis, <b>confirmed</b> by QNX at runtime</span></td><td class="wait"><span data-lang="fr">pas encore — il faut un <code>secpol.bin</code> compilé et injecté dans l'IFS (SDP requis)</span><span data-lang="en">not yet — it needs a compiled <code>secpol.bin</code> injected into the IFS (SDP required)</span></td></tr>
+      </tbody>
+    </table>
+    <p class="hint">
+      <span data-lang="fr">Piège QNX 8.0 connu et contourné : sans disque, le <code>ksh</code> de l'invité ne peut ni créer de tube (<code>pipe</code>) ni faire de substitution de commande — le scénario embarqué n'en utilise aucun (même constat que sur la démo Réplique).</span>
+      <span data-lang="en">Known QNX 8.0 pitfall, worked around: without a disk, the guest's <code>ksh</code> can neither create a pipe nor perform command substitution — the embedded scenario uses neither (same finding as on the Réplique demo).</span>
+    </p>
   </div>
 </section>
 
