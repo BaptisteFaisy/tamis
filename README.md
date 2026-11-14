@@ -200,7 +200,11 @@ curl -s http://127.0.0.1:8790/etat          # état de l'invité + étapes dispo
 curl -s http://127.0.0.1:8790/preuve/reach  # la preuve, dans l'invité
 ```
 
-Exposé en HTTPS par `tailscale funnel` (port 8094). L'invité QNX 8.0 ne tourne que
+Exposé en HTTPS par `tailscale funnel` sous le montage public
+`https://r630-debian.tail3a8bdf.ts.net:8443/tamis-api` (Funnel ne publie que
+443, 8443, 10000 — les ports `:8092`/`:8094` ne s'ouvrent pas à internet ;
+preuve et contrôle : [`docs/VITRINE-PUBLIQUE.md`](docs/VITRINE-PUBLIQUE.md),
+`banc/prouve-public.sh`). L'invité QNX 8.0 ne tourne que
 quand quelqu'un le regarde : la vitrine en est le seul propriétaire (arrêt après 5 min
 d'inactivité), le service le réveille à la demande. Détails :
 [`banc/LISEZMOI.md`](banc/LISEZMOI.md).

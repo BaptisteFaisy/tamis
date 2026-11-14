@@ -54,11 +54,18 @@ curl -s http://127.0.0.1:8790/etat
 curl -s http://127.0.0.1:8790/preuve/reach
 ```
 
-Exposition publique (le site est statique, il ne peut pas joindre `127.0.0.1`) :
+Exposition publique (le site est statique, il ne peut pas joindre `127.0.0.1`).
+**Tailscale Funnel ne publie que les ports 443, 8443 et 10000**
+(<https://tailscale.com/kb/1223/funnel>) : un montage sur un autre port reste
+joignable **depuis le tailnet seulement**, bien que `tailscale serve status`
+annonce « Funnel on ». On monte donc les deux surfaces sous `:8443` :
 
 ```sh
-tailscale funnel --bg --https=8094 http://127.0.0.1:8790
-# → https://r630-debian.tail3a8bdf.ts.net:8094/
+tailscale funnel --bg --yes --https=8443 --set-path=/tamis-api http://127.0.0.1:8790
+tailscale funnel --bg --yes --https=8443 --set-path=/tamis      http://127.0.0.1:8092
+# → https://r630-debian.tail3a8bdf.ts.net:8443/tamis-api/etat
+# → https://r630-debian.tail3a8bdf.ts.net:8443/tamis/
+banc/prouve-public.sh    # preuve : résolution publique + requête épinglée sur l'IP publique
 ```
 
 Le CORS autorise explicitement l'origine du site (`https://tradoooo.github.io`,

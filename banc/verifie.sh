@@ -21,11 +21,8 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-checks=0; fail=0
-ck() {  # ck <condition 0/1> <message>
-  checks=$((checks + 1))
-  if [ "$1" -eq 0 ]; then echo "OK   $2"; else echo "KO   $2"; fail=1; fi
-}
+# shellcheck source=./ck.sh
+source "$DIR/ck.sh"   # ck(), $checks, $fail, ck_final — même sémantique qu'avant
 
 out() { printf '%s\n' "$*" >> "$RAPPORT"; }
 run_preset() {  # run_preset <nom> → met la sortie dans $SORTIE

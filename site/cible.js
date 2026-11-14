@@ -9,7 +9,9 @@
   const live = document.getElementById("live");
   if (!live) return;
 
-  const SERVICE = window.TAMIS_EMUL_URL || "https://r630-debian.tail3a8bdf.ts.net:8094";
+  // Port 8443 : Tailscale Funnel ne publie que 443, 8443 et 10000 — un montage sur
+  // :8094 n'est joignable que depuis le tailnet (voir docs/VITRINE-PUBLIQUE.md).
+  const SERVICE = window.TAMIS_EMUL_URL || "https://r630-debian.tail3a8bdf.ts.net:8443/tamis-api";
   const DELAI = 150000;          // l'invité peut avoir besoin de démarrer
 
   function lang() { return document.body.classList.contains("lang-fr") ? "fr" : "en"; }

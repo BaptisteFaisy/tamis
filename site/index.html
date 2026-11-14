@@ -611,10 +611,10 @@ FAILED 1 error(s)</pre><div class="replay-bar"><button class="ghost replay" data
       <h3><span data-lang="fr">L'invité : écran VGA + console série, touches injectables</span><span data-lang="en">The guest: VGA screen + serial console, injectable keys</span></h3>
       <span class="badge ok"><span data-lang="fr">en direct</span><span data-lang="en">live</span></span>
     </div>
-    <iframe src="https://r630-debian.tail3a8bdf.ts.net:8092/" title="Invité QNX 8.0 de Tamis — écran VGA et console série" style="width:100%;height:660px;border:1px solid var(--line);border-radius:8px;background:#0e1016"></iframe>
+    <iframe src="https://r630-debian.tail3a8bdf.ts.net:8443/tamis/" title="Invité QNX 8.0 de Tamis — écran VGA et console série" style="width:100%;height:660px;border:1px solid var(--line);border-radius:8px;background:#0e1016"></iframe>
     <p class="hint">
-      <span data-lang="fr">Vitrine servie par le serveur (QEMU + moniteur QEMU), exposée en HTTPS par <code>tailscale funnel</code>. La page de la vitrine est en français ; les <b>verdicts</b>, eux, sont ceux du cœur C — les codes (<code>TAMIS_PATH_FOUND</code>) et la structure sont neutres.</span>
-      <span data-lang="en">The showcase is served by the server (QEMU + QEMU monitor), exposed over HTTPS via <code>tailscale funnel</code>. The showcase page is in French; the <b>verdicts</b> themselves come from the C core — the codes (<code>TAMIS_PATH_FOUND</code>) and the structure are language-neutral.</span>
+      <span data-lang="fr">Vitrine servie par le serveur (QEMU + moniteur QEMU), exposée en HTTPS par <code>tailscale funnel</code> sous le montage public <code>:8443/tamis/</code> — Funnel ne publie que les ports 443, 8443 et 10000, donc les montages tailnet <code>:8092</code>/<code>:8094</code> ne s’ouvrent pas à internet. La page de la vitrine est en français ; les <b>verdicts</b>, eux, sont ceux du cœur C — les codes (<code>TAMIS_PATH_FOUND</code>) et la structure sont neutres.</span>
+      <span data-lang="en">The showcase is served by the server (QEMU + QEMU monitor), exposed over HTTPS via <code>tailscale funnel</code> under the public mount <code>:8443/tamis/</code> — Funnel only publishes ports 443, 8443 and 10000, so the tailnet-only mounts <code>:8092</code>/<code>:8094</code> never reach the internet. The showcase page is in French; the <b>verdicts</b> themselves come from the C core — the codes (<code>TAMIS_PATH_FOUND</code>) and the structure are language-neutral.</span>
     </p>
   </div>
 
